@@ -16,19 +16,15 @@ pub fn rope1(input: &str) -> i32 {
         for _ in 0..m.x.abs() {
             h.x += if m.x > 0 { 1 } else { -1 };
             t = tail_position(&h, &t);
-            // println!("{} {}", t.x, t.y);
             visited.insert((t.x, t.y));
         }
 
         for _ in 0..m.y.abs() {
             h.y += if m.y > 0 { 1 } else { -1 };
             t = tail_position(&h, &t);
-            // println!("{} {}", t.x, t.y);
             visited.insert((t.x, t.y));
         }
     });
-
-    // visited.iter().for_each(|x| println!("{} {}", x.0, x.1));
 
     visited.len() as i32
 }
@@ -121,6 +117,55 @@ fn is_touching(h: &Position, t: &Position) -> bool {
     (h.x - t.x).abs() == 1 && (h.y - t.y).abs() == 1
 }
 
+pub fn rope2(input: &str) -> i32 {
+    let lines: Vec<_> = input.lines().collect();
+
+    let mut visited = HashSet::new();
+
+    let mut h = Position { x: 0, y: 0 };
+    let mut knots = vec![];
+    for _ in 0..9 {
+        knots.push(Position { x: 0, y: 0 })
+    }
+
+    visited.insert((0, 0));
+    lines.iter().for_each(|line| {
+        let m = get_move(line);
+
+        for _ in 0..m.x.abs() {
+            h.x += if m.x > 0 { 1 } else { -1 };
+            for i in 0..9 {
+                let mut before = &h;
+                if i > 0 {
+                    before = &knots.get(i - 1).unwrap();
+                }
+                let res = tail_position(before, &knots.get(i).unwrap());
+                let mut elem = &mut knots[i];
+                elem.x = res.x;
+                elem.y = res.y;
+            }
+            visited.insert((knots.get(8).unwrap().x, knots.get(8).unwrap().y));
+        }
+
+        for _ in 0..m.y.abs() {
+            h.y += if m.y > 0 { 1 } else { -1 };
+            for i in 0..9 {
+                let mut before = &h;
+                if i > 0 {
+                    before = &knots.get(i - 1).unwrap();
+                }
+                let res = tail_position(before, &knots.get(i).unwrap());
+                let mut elem = &mut knots[i];
+                elem.x = res.x;
+                elem.y = res.y;
+            }
+            visited.insert((knots.get(8).unwrap().x, knots.get(8).unwrap().y));
+        }
+    });
+
+    visited.len() as i32
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -136,5 +181,17 @@ mod tests {
     fn test_rope1_input() {
         let s = fs::read_to_string("input.txt").unwrap();
         assert_eq!(rope1(s.as_str()), 5245);
+    }
+
+    #[test]
+    fn test_rope2_unit() {
+        let s = fs::read_to_string("larger_test.txt").unwrap();
+        assert_eq!(rope2(s.as_str()), 36);
+    }
+
+    #[test]
+    fn test_rope2_input() {
+        let s = fs::read_to_string("input.txt").unwrap();
+        assert_eq!(rope2(s.as_str()), 2717);
     }
 }
