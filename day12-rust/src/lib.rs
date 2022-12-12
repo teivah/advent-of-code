@@ -75,7 +75,7 @@ pub fn fn1(input: &str) -> i32 {
 
             if lines[col] == 'S' {
                 visited_line.push(0);
-                pq.push(node.clone(), 0);
+                pq.push(node, 0);
             } else {
                 visited_line.push(std::i32::MAX);
             }
@@ -99,9 +99,9 @@ pub fn fn1(input: &str) -> i32 {
         // Left
         if node.col > 0 && visited[node.row][node.col - 1] > distance + 1 {
             if let Some(pos) = node.left {
-                let n = &nodes[pos.row][pos.col];
+                let n = nodes[pos.row][pos.col];
                 if n.elevation <= node.elevation + 1 {
-                    pq.push(n.clone(), distance + 1);
+                    pq.push(n, distance + 1);
                     visited[node.row][node.col - 1] = distance + 1;
                 }
             }
@@ -110,9 +110,9 @@ pub fn fn1(input: &str) -> i32 {
         // Right
         if node.col < visited[0].len() - 1 && visited[node.row][node.col + 1] > distance + 1 {
             if let Some(pos) = node.right {
-                let n = &nodes[pos.row][pos.col];
+                let n = nodes[pos.row][pos.col];
                 if n.elevation <= node.elevation + 1 {
-                    pq.push(n.clone(), distance + 1);
+                    pq.push(n, distance + 1);
                     visited[node.row][node.col + 1] = distance + 1;
                 }
             }
@@ -121,9 +121,9 @@ pub fn fn1(input: &str) -> i32 {
         // Top
         if node.row > 0 && visited[node.row - 1][node.col] > distance + 1 {
             if let Some(pos) = node.top {
-                let n = &nodes[pos.row][pos.col];
+                let n = nodes[pos.row][pos.col];
                 if n.elevation <= node.elevation + 1 {
-                    pq.push(n.clone(), distance + 1);
+                    pq.push(n, distance + 1);
                     visited[node.row - 1][node.col] = distance + 1;
                 }
             }
@@ -132,9 +132,9 @@ pub fn fn1(input: &str) -> i32 {
         // Bottom
         if node.row < visited.len() - 1 && visited[node.row + 1][node.col] > distance + 1 {
             if let Some(pos) = node.bottom {
-                let n = &nodes[pos.row][pos.col];
+                let n = nodes[pos.row][pos.col];
                 if n.elevation <= node.elevation + 1 {
-                    pq.push(n.clone(), distance + 1);
+                    pq.push(n, distance + 1);
                     visited[node.row + 1][node.col] = distance + 1;
                 }
             }
@@ -245,7 +245,7 @@ pub fn fn2(input: &str) -> i32 {
 
             if lines[col] == 'S' || lines[col] == 'a' {
                 visited_line.push(0);
-                start.push(node.clone());
+                start.push(node);
             } else {
                 visited_line.push(std::i32::MAX);
             }
@@ -256,7 +256,7 @@ pub fn fn2(input: &str) -> i32 {
 
     let mut min = std::i32::MAX;
     for i in 0..start.len() {
-        pq.push(start[i].clone(), 0);
+        pq.push(start[i], 0);
         while !pq.is_empty() {
             let v = pq.pop().unwrap();
             let node = v.0;
@@ -271,9 +271,9 @@ pub fn fn2(input: &str) -> i32 {
             // Left
             if node.col > 0 && visited[node.row][node.col - 1] > distance + 1 {
                 if let Some(pos) = node.left {
-                    let n = &nodes[pos.row][pos.col];
+                    let n = nodes[pos.row][pos.col];
                     if n.elevation <= node.elevation + 1 {
-                        pq.push(n.clone(), distance + 1);
+                        pq.push(n, distance + 1);
                         visited[node.row][node.col - 1] = distance + 1;
                     }
                 }
@@ -282,9 +282,9 @@ pub fn fn2(input: &str) -> i32 {
             // Right
             if node.col < visited[0].len() - 1 && visited[node.row][node.col + 1] > distance + 1 {
                 if let Some(pos) = node.right {
-                    let n = &nodes[pos.row][pos.col];
+                    let n = nodes[pos.row][pos.col];
                     if n.elevation <= node.elevation + 1 {
-                        pq.push(n.clone(), distance + 1);
+                        pq.push(n, distance + 1);
                         visited[node.row][node.col + 1] = distance + 1;
                     }
                 }
@@ -293,9 +293,9 @@ pub fn fn2(input: &str) -> i32 {
             // Top
             if node.row > 0 && visited[node.row - 1][node.col] > distance + 1 {
                 if let Some(pos) = node.top {
-                    let n = &nodes[pos.row][pos.col];
+                    let n = nodes[pos.row][pos.col];
                     if n.elevation <= node.elevation + 1 {
-                        pq.push(n.clone(), distance + 1);
+                        pq.push(n, distance + 1);
                         visited[node.row - 1][node.col] = distance + 1;
                     }
                 }
@@ -304,9 +304,9 @@ pub fn fn2(input: &str) -> i32 {
             // Bottom
             if node.row < visited.len() - 1 && visited[node.row + 1][node.col] > distance + 1 {
                 if let Some(pos) = node.bottom {
-                    let n = &nodes[pos.row][pos.col];
+                    let n = nodes[pos.row][pos.col];
                     if n.elevation <= node.elevation + 1 {
-                        pq.push(n.clone(), distance + 1);
+                        pq.push(n, distance + 1);
                         visited[node.row + 1][node.col] = distance + 1;
                     }
                 }
