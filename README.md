@@ -11,3 +11,4 @@
 * [Day 9](https://adventofcode.com/2022/day/9): [Rust](day9-rust)
 * [Day 10](https://adventofcode.com/2022/day/10): [Rust](day10-rust)
 * [Day 11](https://adventofcode.com/2022/day/11): [Rust](day11-rust)
+* [Day 12](https://adventofcode.com/2022/day/12): [Rust](day12-rust)
