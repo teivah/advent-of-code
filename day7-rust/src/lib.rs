@@ -1,5 +1,4 @@
-use std::borrow::{Borrow, BorrowMut};
-use std::cell::{Ref, RefCell};
+use std::cell::{Ref, RefCell, RefMut};
 use std::collections::HashMap;
 use std::rc::{Rc, Weak};
 
@@ -9,34 +8,41 @@ pub fn disk1(input: &str) -> i64 {
     let mut root = Node {
         size: 0,
         total_size: 0,
-        children: RefCell::new(HashMap::new()),
-        parent: RefCell::new(Weak::new()),
+        children: HashMap::new(),
+        parent: None,
     };
+    let mut current: &mut Node = &mut node;
 
-    // run_through(commands, 0, Rc::new(RefCell::new(Node)));
-    run_through(commands, 0, &root);
+    commands.iter().for_each(|line| {
+        if line == "$ cd /" {
+            current = &mut root;
+        } else if line == "$ cd .." {
+            // current = &mut current.parent.unwrap().borrow_mut();
+        }
+    });
+
+    run_through(commands, 0, &mut root);
 
     1
 }
 
-fn run_through(commands: Vec<&str>, idx: usize, current: &Node) {
-    if idx == commands.len() {
-        return;
-    }
-
-    let command = *commands.get(idx).unwrap();
-
-    if command == "$ cd .." {
-        let current1 = current.parent.borrow().upgrade().unwrap().borrow();
-        run_through(commands, idx + 1, current1)
-    }
+fn run_through(commands: Vec<&str>, idx: usize, current: &mut Node) {
+    let mut x = current.children.get("a").unwrap().borrow_mut();
+    // x.size = 1;
+    run_through(commands, idx, &mut x);
 }
 
 struct Node {
     size: i64,
     total_size: i64, // size + all the children
-    children: RefCell<HashMap<String, Rc<Node>>>,
-    parent: RefCell<Weak<Node>>,
+    children: HashMap<String, Rc<RefCell<Node>>>,
+    parent: Option<Rc<RefCell<Node>>>,
+}
+
+impl Node {
+    fn add_child(&mut self, name:String, node: Node) {
+        self.children.insert(name, Rc::new(RefCell::new(node)));
+    }
 }
 
 #[cfg(test)]
