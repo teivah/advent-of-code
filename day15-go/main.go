@@ -1,4 +1,4 @@
-package main
+package day15_go
 
 import (
 	"bufio"

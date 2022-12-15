@@ -1,4 +1,4 @@
-package main
+package day15_go
 
 import (
 	"fmt"
@@ -38,7 +38,7 @@ func TestFs2Input(t *testing.T) {
 	require.NoError(t, err)
 	v, err := fn2(f, 4000000)
 	require.NoError(t, err)
-	assert.Equal(t, 95437, v)
+	assert.Equal(t, 11645454855041, v)
 }
 
 func TestRow(t *testing.T) {
