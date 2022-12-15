@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"math"
-	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -266,34 +265,6 @@ func (g *graph) print() {
 	}
 	fmt.Println()
 	fmt.Println()
-}
-
-func (g *graph) write() {
-	f, err := os.Create("/tmp/dat2")
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-	w := bufio.NewWriter(f)
-
-	for i, r := range g.rows {
-		_ = i
-		for x := g.minX; x <= g.maxX; x++ {
-			item := r.get(x)
-			switch item {
-			case sensorItem:
-				w.WriteString("S")
-			case beaconItem:
-				w.WriteString("B")
-			case noBeaconItem:
-				w.WriteString("#")
-			case emptyItem:
-				w.WriteString(".")
-			}
-		}
-		w.WriteString("\n")
-	}
-	w.Flush()
 }
 
 type interval struct {
