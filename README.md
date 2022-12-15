@@ -14,4 +14,4 @@
 * [Day 12](https://adventofcode.com/2022/day/12): [Rust](day12-rust/src/lib.rs)
 * [Day 13](https://adventofcode.com/2022/day/13): [Rust](day13-rust/src/lib.rs)
 * [Day 14](https://adventofcode.com/2022/day/14): [Rust](day14-rust/src/lib.rs)
-* [Day 15](https://adventofcode.com/2022/day/15): [Rust](day15-rust/src/lib.rs)
+* [Day 15](https://adventofcode.com/2022/day/15): [Go](day15-go/main.go)
