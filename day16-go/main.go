@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -77,16 +76,17 @@ func fn1(input io.Reader) (int, error) {
 		fmt.Printf("%v\n", time.Since(start))
 	}()
 
-	v := make(map[string]bool)
+	v := make(map[string]int)
 	for _, valveNames := range valveNames {
-		v[valveNames] = false
+		v[valveNames] = -1
 	}
 
-	// 2=0, 3=20
-	depth := 4
-	return find("AA", valves, depth, 0, 0, v), nil
+	// 2=0, 3=20, 4=40, 5=63, 10=246
+	return find("AA", valves, depth, v), nil
 	//return findx("", "AA", valves, depth, 0, 0, len(valves)), nil
 }
+
+var depth = 30
 
 func key(valves map[string]*Valve) int {
 	k := 0
@@ -193,108 +193,68 @@ func delVisited(current string, valves map[string]*Valve) {
 	delete(v, k)
 }
 
-func remaining(v map[string]bool) bool {
+func remaining(v map[string]int) bool {
 	for _, visited := range v {
-		if !visited {
+		if visited == -1 {
 			return true
 		}
 	}
 	return false
 }
 
-func find(current string, valves map[string]*Valve, left int, buffer, pressure int, visited map[string]bool) int {
-	if left == 0 {
-		return pressure
+func score(valves map[string]*Valve, visited map[string]int) int {
+	sum := 0
+	for name, valve := range valves {
+		since := visited[name]
+		if since == -1 {
+			continue
+		}
+
+		sum += valve.rate * (depth - since - 1)
 	}
-	if left < 0 {
-		return 0
+	return sum
+}
+
+func find(current string, valves map[string]*Valve, left int, visited map[string]int) int {
+	if left == 0 {
+		return score(valves, visited)
 	}
 
 	if !remaining(visited) {
-		return pressure + find(current, valves, left-1, 0, buffer+pressure, visited)
+		return score(valves, visited)
 	}
 
 	valve := valves[current]
 	best := 0
 	if !valve.open {
 		valve.open = true
-		addVisited(current, valves)
-		best = find(current, valves, left-1, valve.rate, buffer+pressure, visited)
-		delVisited(current, valves)
+		visited[current] = depth - left
+		best = find(current, valves, left-1, visited)
+		visited[current] = -1
 		valve.open = false
 	}
 
 	for child, alreadyVisited := range visited {
-		if alreadyVisited {
+		if current == child {
+			continue
+		}
+		if alreadyVisited != -1 {
 			continue
 		}
 		distance := valve.distance[child]
 		if left <= distance {
 			continue
 		}
-		v := pressure*distance + find(child, valves, left-distance, 0, buffer+pressure, visited)
+		v := find(child, valves, left-distance, visited)
 		if v > best {
 			best = v
 		}
 	}
 
-	return pressure + best + buffer
-}
-
-func findy(current string, valves map[string]*Valve, left int, buffer, currentPressure int, visited map[string]bool) int {
-	if left == 0 {
-		return currentPressure
+	if best == 0 {
+		return score(valves, visited)
 	}
-	if left < 0 {
-		return math.MinInt
-	}
-
-	//if v, exists := getCache(current, valves, left, pressure, buffer); exists {
-	//	return v
-	//}
-
-	if !remaining(visited) {
-		return currentPressure + findy(current, valves, left-1, 0, buffer+currentPressure, visited)
-	}
-
-	best := 0
-	valve := valves[current]
-	bestWhenOpen := false
-	if !valve.open {
-		valve.open = true
-		visited[current] = true
-		best = findy(current, valves, left-1, valve.rate, buffer+currentPressure, visited)
-		valve.open = false
-		visited[current] = false
-		bestWhenOpen = true
-	}
-
-	for dest := range visited {
-		distance := valve.distance[dest]
-		if left <= distance {
-			continue
-		}
-
-		visited[dest] = true
-		v := currentPressure*distance + findy(dest, valves, left-distance, 0, buffer+currentPressure, visited)
-		visited[dest] = false
-
-		if v > best {
-			best = v
-			bestWhenOpen = false
-		}
-	}
-	_ = bestWhenOpen
-
-	//if bestWhenOpen {
-	//	valve.open = true
-	//	addCache(current, valves, left, pressure, buffer, best+pressure)
-	//	valve.open = false
-	//} else {
-	//	addCache(current, valves, left, pressure, buffer, best+pressure)
-	//}
-
-	return best + currentPressure + buffer
+	return best
 }
 
 func findx(parent, current string, valves map[string]*Valve, left int, buffer, pressure int, closed int) int {
