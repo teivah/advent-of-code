@@ -2,9 +2,11 @@ package day15_go
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type Valve struct {
@@ -37,7 +39,11 @@ func fn1(input io.Reader) (int, error) {
 
 	cache = make(map[int]map[int]map[int]map[int]map[string]int)
 
-	return find("", "AA", valves, 20, 0, 0, len(valves)), nil
+	start := time.Now()
+	defer func() {
+		fmt.Printf("%v\n", time.Since(start))
+	}()
+	return find("", "AA", valves, 19, 0, 0, len(valves)), nil
 }
 
 func key(valves map[string]*Valve) int {
