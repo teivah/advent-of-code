@@ -38,6 +38,7 @@ func fn1(input io.Reader) (int, error) {
 	}
 
 	cache = make(map[int]map[int]map[int]map[int]map[string]int)
+	visited = make(map[string]map[int]struct{})
 
 	start := time.Now()
 	defer func() {
@@ -116,6 +117,41 @@ func getCache(current string, valves map[string]*Valve, left, pressure, buffer i
 	return v5, exists
 }
 
+// Current, key
+var visited map[string]map[int]struct{}
+
+func isVisited(current string, valves map[string]*Valve) bool {
+	v, exists := visited[current]
+	if !exists {
+		return false
+	}
+
+	k := key(valves)
+	_, exists = v[k]
+	return exists
+}
+
+func addVisited(current string, valves map[string]*Valve) {
+	v, exists := visited[current]
+	if !exists {
+		v = make(map[int]struct{})
+		visited[current] = v
+	}
+
+	k := key(valves)
+	v[k] = struct{}{}
+}
+
+func delVisited(current string, valves map[string]*Valve) {
+	v, exists := visited[current]
+	if !exists {
+		return
+	}
+
+	k := key(valves)
+	delete(v, k)
+}
+
 func find(parent, current string, valves map[string]*Valve, left int, buffer, pressure int, closed int) int {
 	if left == 0 {
 		return pressure
@@ -123,6 +159,10 @@ func find(parent, current string, valves map[string]*Valve, left int, buffer, pr
 
 	if v, exists := getCache(current, valves, left, pressure, buffer); exists {
 		return v
+	}
+
+	if isVisited(current, valves) {
+		return -1
 	}
 
 	if closed == 0 {
@@ -143,7 +183,9 @@ func find(parent, current string, valves map[string]*Valve, left int, buffer, pr
 		if child == parent {
 			continue
 		}
+		addVisited(current, valves)
 		v := find(current, child, valves, left-1, 0, buffer+pressure, closed)
+		delVisited(current, valves)
 		if v > best {
 			best = v
 			bestWhenOpen = false
