@@ -25,6 +25,7 @@ func fn1(input io.Reader) (int, error) {
 			return 0, err
 		}
 		valves[valve.name] = &valve
+		valveNames = append(valveNames, valve.name)
 	}
 
 	for _, valve := range valves {
@@ -34,59 +35,124 @@ func fn1(input io.Reader) (int, error) {
 		}
 	}
 
-	i := find("AA", valves, 20, 0, 0, len(valves))
-	return i, nil
+	cache = make(map[int]map[int]map[int]map[int]map[string]int)
+
+	return find("", "AA", valves, 20, 0, 0, len(valves)), nil
 }
 
-func find(current string, valves map[string]*Valve, left int, buffer, pressure int, closed int) int {
+func key(valves map[string]*Valve) int {
+	k := 0
+	for i, name := range valveNames {
+		v := valves[name]
+		if v.open {
+			k += 1 << i
+		}
+	}
+	return k
+}
+
+var valveNames []string
+
+// Left, Pressure, Buffer, Key, Current, Value
+var cache map[int]map[int]map[int]map[int]map[string]int
+
+func addCache(current string, valves map[string]*Valve, left int, pressure int, buffer int, best int) {
+	v, exists := cache[left]
+	if !exists {
+		v = make(map[int]map[int]map[int]map[string]int)
+		cache[left] = v
+	}
+
+	v2, exists := v[pressure]
+	if !exists {
+		v2 = make(map[int]map[int]map[string]int)
+		v[pressure] = v2
+	}
+
+	v3, exists := v2[buffer]
+	if !exists {
+		v3 = make(map[int]map[string]int)
+		v2[buffer] = v3
+	}
+
+	k := key(valves)
+	v4, exists := v3[k]
+	if !exists {
+		v4 = make(map[string]int)
+		v3[k] = v4
+	}
+
+	v4[current] = best
+}
+
+func getCache(current string, valves map[string]*Valve, left, pressure, buffer int) (int, bool) {
+	v, exists := cache[left]
+	if !exists {
+		return 0, false
+	}
+
+	v2, exists := v[pressure]
+	if !exists {
+		return 0, false
+	}
+
+	v3, exists := v2[buffer]
+	if !exists {
+		return 0, false
+	}
+
+	v4, exists := v3[key(valves)]
+	if !exists {
+		return 0, false
+	}
+
+	v5, exists := v4[current]
+	return v5, exists
+}
+
+func find(parent, current string, valves map[string]*Valve, left int, buffer, pressure int, closed int) int {
 	if left == 0 {
 		return pressure
 	}
 
+	if v, exists := getCache(current, valves, left, pressure, buffer); exists {
+		return v
+	}
+
 	if closed == 0 {
-		return pressure + find(current, valves, left-1, buffer, pressure, closed)
+		return pressure + find(parent, current, valves, left-1, buffer, pressure, closed)
 	}
 
 	best := -1
 	valve := valves[current]
+	bestWhenOpen := false
 	if !valve.open {
 		valve.open = true
-		best = find(current, valves, left-1, valve.rate, buffer+pressure, closed-1)
+		best = find("", current, valves, left-1, valve.rate, buffer+pressure, closed-1)
+		bestWhenOpen = true
 		valve.open = false
 	}
 
 	for child := range valve.children {
-		v := find(child, valves, left-1, 0, buffer+pressure, closed)
+		if child == parent {
+			continue
+		}
+		v := find(current, child, valves, left-1, 0, buffer+pressure, closed)
 		if v > best {
 			best = v
+			bestWhenOpen = false
 		}
 	}
 
-	return best + pressure
-}
-
-func isVisited(parent, child string, visited map[string]struct{}) bool {
-	_, exists := visited[key(parent, child)]
-	return exists
-}
-
-func addVisited(parent, child string, visited map[string]struct{}) {
-	visited[key(parent, child)] = struct{}{}
-}
-
-func delVisited(parent, child string, visited map[string]struct{}) {
-	delete(visited, key(parent, child))
-}
-
-func key(parent, child string) string {
-	return parent + ":" + child
-}
-
-func max(a, b int) int {
-	if a > b {
-		return a
+	if bestWhenOpen {
+		valve.open = true
+		addCache(current, valves, left, pressure, buffer, best+pressure)
+		valve.open = false
+	} else {
+		addCache(current, valves, left, pressure, buffer, best+pressure)
 	}
-	return b
+
+	return best + pressure
 }
 
 func toValve(s string) (Valve, error) {
