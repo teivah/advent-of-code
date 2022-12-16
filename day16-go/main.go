@@ -2,7 +2,6 @@ package day15_go
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"strconv"
 	"strings"
@@ -35,43 +34,35 @@ func fn1(input io.Reader) (int, error) {
 		}
 	}
 
-	i, s := find("", "AA", valves, 0, 0, 0, make(map[string]struct{}))
-	fmt.Println(s)
+	i := find("AA", valves, 20, 0, 0, len(valves))
 	return i, nil
 }
 
-func find(path, current string, valves map[string]*Valve, left int, buffer, pressure int, visited map[string]struct{}) (int, string) {
+func find(current string, valves map[string]*Valve, left int, buffer, pressure int, closed int) int {
 	if left == 0 {
-		return pressure, path
+		return pressure
+	}
+
+	if closed == 0 {
+		return pressure + find(current, valves, left-1, buffer, pressure, closed)
 	}
 
 	best := -1
-	bestPath := ""
 	valve := valves[current]
 	if !valve.open {
 		valve.open = true
-		best, bestPath = find(
-			path+fmt.Sprintf("open %v, ", current), current, valves, left-1, valve.rate, buffer+pressure, visited,
-		)
+		best = find(current, valves, left-1, valve.rate, buffer+pressure, closed-1)
 		valve.open = false
 	}
 
 	for child := range valve.children {
-		if isVisited(current, child, visited) {
-			continue
-		}
-		addVisited(current, child, visited)
-		v, p := find(
-			path+fmt.Sprintf("from %v to %v, ", current, child), child, valves, left-1, 0, buffer+pressure, visited,
-		)
+		v := find(child, valves, left-1, 0, buffer+pressure, closed)
 		if v > best {
 			best = v
-			bestPath = p
 		}
-		delVisited(current, child, visited)
 	}
 
-	return best + pressure, bestPath
+	return best + pressure
 }
 
 func isVisited(parent, child string, visited map[string]struct{}) bool {
