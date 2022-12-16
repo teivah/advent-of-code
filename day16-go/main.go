@@ -43,7 +43,7 @@ func fn1(input io.Reader) (int, error) {
 	defer func() {
 		fmt.Printf("%v\n", time.Since(start))
 	}()
-	return find("", "AA", valves, 19, 0, 0, len(valves)), nil
+	return find("", "AA", valves, 30, 0, 0, len(valves)), nil
 }
 
 func key(valves map[string]*Valve) int {
