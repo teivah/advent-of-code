@@ -65,12 +65,15 @@ func test1(t *testing.T, r io.Reader, depth int, expected int) {
 
 func TestFs2Unit(t *testing.T) {
 	test2(t, fileReader(t, "test.txt"), 26, 1707)
-	//test2(t, fileReader(t, "test.txt"), 12, 40)
+}
+
+func TestFs2Test(t *testing.T) {
+	test2(t, fileReader(t, "input.txt"), 26, 1707)
 }
 
 func TestConsistency(t *testing.T) {
 	for i := 0; i < 100; i++ {
-		test2(t, fileReader(t, "test.txt"), 10, 414)
+		test2(t, fileReader(t, "test.txt"), 26, 1707)
 	}
 }
 
