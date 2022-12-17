@@ -42,10 +42,6 @@ func floydWarshall(valves map[string]*Valve) {
 	}
 }
 
-func setDistance(valves map[string]*Valve, from, to string, distance int) {
-	valves[from].distance[to] = distance
-}
-
 func fn1(input io.Reader, depth int) (int, error) {
 	scanner := bufio.NewScanner(input)
 	valves := make(map[string]*Valve)
@@ -81,9 +77,10 @@ func fn1(input io.Reader, depth int) (int, error) {
 		v[valveNames] = false
 	}
 
-	// 2=0, 3=20, 4=40, 5=63, 10=246
-	return find("AA", valves, depth, v, 0, 0, 0), nil
-	//return findx("", "AA", valves, depth, 0, 0, len(valves)), nil
+	// First approach, navigate in all the nodes
+	//return find1("", "AA", valves, depth, 0, 0, len(valves)), nil
+	// Second approach, precompute the node distance (using floyd warshall) to navigate faster
+	return find2(NewKey(), "AA", valves, depth, v, 0, 0, 0, len(valveNames)), nil
 }
 
 func key(valves map[string]*Valve) int {
@@ -101,6 +98,118 @@ var valveNames []string
 
 // Left, Pressure, Buffer, Key, Current, Value
 var cache map[int]map[int]map[int]map[int]map[string]int
+
+var cacheHuman map[int]map[int]map[int]map[int]map[string]int
+var cacheElephant map[int]map[int]map[int]map[int]map[string]int
+
+// CurrentHuman, LeftHuman, PressureHuman, BufferHuman, CurrentElephant, LeftElephant, PressureElephant, BufferElephant, Key, Value
+var cacheHumanElephant map[string]map[int]map[int]map[int]map[string]map[int]map[int]map[int]map[int]int
+
+var cacheHumanElephant2 map[string]int
+
+func getCacheHumanElephant(currentHuman string, leftHuman int, pressureHuman int, bufferHuman int, currentElephant string, leftElephant int, pressureElephant int, bufferElephant int, key *Key) (int, bool) {
+	//v, exists := cacheHumanElephant2[fmt.Sprintf("%s:%d:%d:%d:%s:%d:%d:%d:%d",
+	//	currentHuman, leftHuman, pressureHuman, bufferHuman, currentElephant, leftElephant, pressureElephant, bufferElephant, key.toKey())]
+	//return v, exists
+
+	v, exists := cacheHumanElephant[currentHuman]
+	if !exists {
+		return 0, false
+	}
+
+	v2, exists := v[leftHuman]
+	if !exists {
+		return 0, false
+	}
+
+	v3, exists := v2[pressureHuman]
+	if !exists {
+		return 0, false
+	}
+
+	v4, exists := v3[bufferHuman]
+	if !exists {
+		return 0, false
+	}
+
+	v5, exists := v4[currentElephant]
+	if !exists {
+		return 0, false
+	}
+
+	v6, exists := v5[leftElephant]
+	if !exists {
+		return 0, false
+	}
+
+	v7, exists := v6[pressureElephant]
+	if !exists {
+		return 0, false
+	}
+
+	v8, exists := v7[bufferElephant]
+	if !exists {
+		return 0, false
+	}
+
+	v9, exists := v8[key.toKey()]
+	return v9, exists
+}
+
+func addCacheHumanElephant(currentHuman string, leftHuman int, pressureHuman int, bufferHuman int, currentElephant string, leftElephant int, pressureElephant int, bufferElephant int, key *Key, value int) {
+	//cacheHumanElephant2[fmt.Sprintf("%s:%d:%d:%d:%s:%d:%d:%d:%d",
+	//	currentHuman, leftHuman, pressureHuman, bufferHuman, currentElephant, leftElephant, pressureElephant, bufferElephant, key.toKey())] = value
+
+	v, exists := cacheHumanElephant[currentHuman]
+	if !exists {
+		v = make(map[int]map[int]map[int]map[string]map[int]map[int]map[int]map[int]int)
+		cacheHumanElephant[currentHuman] = v
+	}
+
+	v2, exists := v[leftHuman]
+	if !exists {
+		v2 = make(map[int]map[int]map[string]map[int]map[int]map[int]map[int]int)
+		v[leftHuman] = v2
+	}
+
+	v3, exists := v2[pressureHuman]
+	if !exists {
+		v3 = make(map[int]map[string]map[int]map[int]map[int]map[int]int)
+		v2[pressureHuman] = v3
+	}
+
+	v4, exists := v3[bufferHuman]
+	if !exists {
+		v4 = make(map[string]map[int]map[int]map[int]map[int]int)
+		v3[bufferHuman] = v4
+	}
+
+	v5, exists := v4[currentElephant]
+	if !exists {
+		v5 = make(map[int]map[int]map[int]map[int]int)
+		v4[currentElephant] = v5
+	}
+
+	v6, exists := v5[leftElephant]
+	if !exists {
+		v6 = make(map[int]map[int]map[int]int)
+		v5[leftElephant] = v6
+	}
+
+	v7, exists := v6[pressureElephant]
+	if !exists {
+		v7 = make(map[int]map[int]int)
+		v6[pressureElephant] = v7
+	}
+
+	v8, exists := v7[bufferElephant]
+	if !exists {
+		v8 = make(map[int]int)
+		v7[bufferElephant] = v8
+	}
+
+	v8[key.toKey()] = value
+}
 
 func addCache(current string, valves map[string]*Valve, left int, pressure int, buffer int, best int) {
 	v, exists := cache[left]
@@ -131,6 +240,93 @@ func addCache(current string, valves map[string]*Valve, left int, pressure int, 
 	v4[current] = best
 }
 
+func addCache2(current string, key *Key, left int, pressure int, buffer int, best int) {
+	v, exists := cache[left]
+	if !exists {
+		v = make(map[int]map[int]map[int]map[string]int)
+		cache[left] = v
+	}
+
+	v2, exists := v[pressure]
+	if !exists {
+		v2 = make(map[int]map[int]map[string]int)
+		v[pressure] = v2
+	}
+
+	v3, exists := v2[buffer]
+	if !exists {
+		v3 = make(map[int]map[string]int)
+		v2[buffer] = v3
+	}
+
+	k := key.toKey()
+	v4, exists := v3[k]
+	if !exists {
+		v4 = make(map[string]int)
+		v3[k] = v4
+	}
+
+	v4[current] = best
+}
+
+func addCacheHuman(current string, key *Key, left int, pressure int, buffer int, best int) {
+	v, exists := cacheHuman[left]
+	if !exists {
+		v = make(map[int]map[int]map[int]map[string]int)
+		cacheHuman[left] = v
+	}
+
+	v2, exists := v[pressure]
+	if !exists {
+		v2 = make(map[int]map[int]map[string]int)
+		v[pressure] = v2
+	}
+
+	v3, exists := v2[buffer]
+	if !exists {
+		v3 = make(map[int]map[string]int)
+		v2[buffer] = v3
+	}
+
+	k := key.toKey()
+	v4, exists := v3[k]
+	if !exists {
+		v4 = make(map[string]int)
+		v3[k] = v4
+	}
+
+	v4[current] = best
+}
+
+func addCacheElephant(current string, key *Key, left int, pressure int, buffer int, best int) {
+	v, exists := cacheElephant[left]
+	if !exists {
+		v = make(map[int]map[int]map[int]map[string]int)
+		cacheElephant[left] = v
+	}
+
+	v2, exists := v[pressure]
+	if !exists {
+		v2 = make(map[int]map[int]map[string]int)
+		v[pressure] = v2
+	}
+
+	v3, exists := v2[buffer]
+	if !exists {
+		v3 = make(map[int]map[string]int)
+		v2[buffer] = v3
+	}
+
+	k := key.toKey()
+	v4, exists := v3[k]
+	if !exists {
+		v4 = make(map[string]int)
+		v3[k] = v4
+	}
+
+	v4[current] = best
+}
+
 func getCache(current string, valves map[string]*Valve, left, pressure, buffer int) (int, bool) {
 	v, exists := cache[left]
 	if !exists {
@@ -148,6 +344,81 @@ func getCache(current string, valves map[string]*Valve, left, pressure, buffer i
 	}
 
 	v4, exists := v3[key(valves)]
+	if !exists {
+		return 0, false
+	}
+
+	v5, exists := v4[current]
+	return v5, exists
+}
+
+func getCache2(current string, key *Key, left, pressure, buffer int) (int, bool) {
+	v, exists := cache[left]
+	if !exists {
+		return 0, false
+	}
+
+	v2, exists := v[pressure]
+	if !exists {
+		return 0, false
+	}
+
+	v3, exists := v2[buffer]
+	if !exists {
+		return 0, false
+	}
+
+	v4, exists := v3[key.toKey()]
+	if !exists {
+		return 0, false
+	}
+
+	v5, exists := v4[current]
+	return v5, exists
+}
+
+func getCacheHuman(current string, key *Key, left, pressure, buffer int) (int, bool) {
+	v, exists := cacheHuman[left]
+	if !exists {
+		return 0, false
+	}
+
+	v2, exists := v[pressure]
+	if !exists {
+		return 0, false
+	}
+
+	v3, exists := v2[buffer]
+	if !exists {
+		return 0, false
+	}
+
+	v4, exists := v3[key.toKey()]
+	if !exists {
+		return 0, false
+	}
+
+	v5, exists := v4[current]
+	return v5, exists
+}
+
+func getCacheElephant(current string, key *Key, left, pressure, buffer int) (int, bool) {
+	v, exists := cacheElephant[left]
+	if !exists {
+		return 0, false
+	}
+
+	v2, exists := v[pressure]
+	if !exists {
+		return 0, false
+	}
+
+	v3, exists := v2[buffer]
+	if !exists {
+		return 0, false
+	}
+
+	v4, exists := v3[key.toKey()]
 	if !exists {
 		return 0, false
 	}
@@ -191,18 +462,6 @@ func delVisited(current string, valves map[string]*Valve) {
 	delete(v, k)
 }
 
-func remaining(v map[string]bool) bool {
-	for _, visited := range v {
-		if !visited {
-			return true
-		}
-	}
-	return false
-}
-
-// current, left, visited, score
-var x = make(map[string]map[int]map[string]int)
-
 func formatKey(visited map[string]int) string {
 	sb := strings.Builder{}
 	for _, name := range valveNames {
@@ -214,96 +473,46 @@ func formatKey(visited map[string]int) string {
 	return sb.String()
 }
 
-func getCacheEntry(current string, left int, visited map[string]int) (int, bool) {
-	v, exists := x[current]
-	if !exists {
-		return 0, false
-	}
-
-	v2, exists := v[left]
-	if !exists {
-		return 0, false
-	}
-
-	v3, exists := v2[formatKey(visited)]
-	return v3, exists
+type Key struct {
+	data []bool
+	idx  map[string]int
 }
 
-func setCacheEntry(current string, left int, visited map[string]int, score int) {
-	v, exists := x[current]
-	if !exists {
-		v = make(map[int]map[string]int)
-		x[current] = v
+func NewKey() *Key {
+	data := make([]bool, len(valveNames))
+
+	idx := make(map[string]int)
+	for i, name := range valveNames {
+		idx[name] = i
 	}
 
-	v2, exists := v[left]
-	if !exists {
-		v2 = make(map[string]int)
-		v[left] = v2
-	}
-
-	k := formatKey(visited)
-	v3, exists := v2[k]
-	if !exists {
-		v2[k] = score
-	} else {
-		if score > v3 {
-			v2[k] = score
-		}
+	return &Key{
+		data: data,
+		idx:  idx,
 	}
 }
 
-func find(current string, valves map[string]*Valve, left int, visited map[string]bool, buffer, pressure, travel int) int {
-	//if (current == "AA" && left == 3) || (current == "DD" && left == 2) || (current == "DD" && left == 1)
-
-	if left == 0 {
-		if travel != 0 {
-			return 0
-		}
-		return pressure
-	}
-
-	if travel > 0 {
-		return pressure + find(current, valves, left-1, visited, 0, buffer+pressure, travel-1)
-	}
-
-	if !remaining(visited) {
-		return pressure + find(current, valves, left-1, visited, 0, buffer+pressure, 0)
-	}
-
-	valve := valves[current]
-	best := 0
-	if !valve.open {
-		valve.open = true
-		visited[current] = true
-		best = find(current, valves, left-1, visited, valve.rate, buffer+pressure, 0)
-		visited[current] = false
-		valve.open = false
-	}
-
-	v := find(current, valves, left-1, visited, 0, buffer+pressure, 0)
-	if v > best {
-		best = v
-	}
-
-	for child, alreadyVisited := range visited {
-		if current == child || alreadyVisited || valves[child].rate == 0 {
-			continue
-		}
-		distance := valve.distance[child]
-		if left <= distance {
-			continue
-		}
-		v := find(child, valves, left-1, visited, 0, buffer+pressure, distance-1)
-		if v > best {
-			best = v
-		}
-	}
-
-	return pressure + best
+func (k *Key) visit(name string) {
+	idx := k.idx[name]
+	k.data[idx] = true
 }
 
-func findx(parent, current string, valves map[string]*Valve, left int, buffer, pressure int, closed int) int {
+func (k *Key) unvisit(name string) {
+	idx := k.idx[name]
+	k.data[idx] = false
+}
+
+func (k *Key) toKey() int {
+	x := 0
+	for i, ok := range k.data {
+		if ok {
+			x += 1 << i
+		}
+	}
+	return x
+}
+
+func find1(parent, current string, valves map[string]*Valve, left int, buffer, pressure int, closed int) int {
 	if left == 0 {
 		return pressure
 	}
@@ -317,7 +526,7 @@ func findx(parent, current string, valves map[string]*Valve, left int, buffer, p
 	}
 
 	if closed == 0 {
-		return pressure + findx(parent, current, valves, left-1, buffer, pressure, closed)
+		return pressure + find1(parent, current, valves, left-1, buffer, pressure, closed)
 	}
 
 	best := -1
@@ -325,7 +534,7 @@ func findx(parent, current string, valves map[string]*Valve, left int, buffer, p
 	bestWhenOpen := false
 	if !valve.open {
 		valve.open = true
-		best = findx("", current, valves, left-1, valve.rate, buffer+pressure, closed-1)
+		best = find1("", current, valves, left-1, valve.rate, buffer+pressure, closed-1)
 		bestWhenOpen = true
 		valve.open = false
 	}
@@ -335,7 +544,7 @@ func findx(parent, current string, valves map[string]*Valve, left int, buffer, p
 			continue
 		}
 		addVisited(current, valves)
-		v := findx(current, child, valves, left-1, 0, buffer+pressure, closed)
+		v := find1(current, child, valves, left-1, 0, buffer+pressure, closed)
 		delVisited(current, valves)
 		if v > best {
 			best = v
@@ -352,6 +561,72 @@ func findx(parent, current string, valves map[string]*Valve, left int, buffer, p
 	}
 
 	return best + pressure
+}
+
+func find2(key *Key, current string, valves map[string]*Valve, left int, visited map[string]bool, buffer, pressure, travel int, remaining int) int {
+	if left == 0 {
+		if travel != 0 {
+			return 0
+		}
+		return pressure
+	}
+
+	if travel > 0 {
+		return pressure + find2(key, current, valves, left-1, visited, 0, buffer+pressure, travel-1, remaining)
+	}
+
+	if v, exists := getCache2(current, key, left, pressure, buffer); exists {
+		return v
+	}
+
+	if remaining == 0 {
+		return pressure + find2(key, current, valves, left-1, visited, 0, buffer+pressure, 0, 0)
+	}
+
+	valve := valves[current]
+	best := 0
+	bestWhenOpen := false
+	if !valve.open {
+		valve.open = true
+		visited[current] = true
+		key.visit(current)
+		best = find2(key, current, valves, left-1, visited, valve.rate, buffer+pressure, 0, remaining-1)
+		key.unvisit(current)
+		visited[current] = false
+		valve.open = false
+		bestWhenOpen = true
+	}
+
+	v := find2(key, current, valves, left-1, visited, 0, buffer+pressure, 0, remaining)
+	if v > best {
+		best = v
+		bestWhenOpen = false
+	}
+
+	for child, alreadyVisited := range visited {
+		if current == child || alreadyVisited || valves[child].rate == 0 {
+			continue
+		}
+		distance := valve.distance[child]
+		if left <= distance {
+			continue
+		}
+		v := find2(key, child, valves, left-1, visited, 0, buffer+pressure, distance-1, remaining)
+		if v > best {
+			best = v
+			bestWhenOpen = false
+		}
+	}
+
+	if bestWhenOpen {
+		valve.open = true
+		addCache2(current, key, left, pressure, buffer, best+pressure)
+		valve.open = false
+	} else {
+		addCache2(current, key, left, pressure, buffer, best+pressure)
+	}
+
+	return pressure + best
 }
 
 func toValve(s string) (Valve, error) {
@@ -381,4 +656,174 @@ func toValve(s string) (Valve, error) {
 		children:     make(map[string]*Valve),
 		distance:     make(map[string]int),
 	}, nil
+}
+
+func fn2(input io.Reader, depth int) (int, error) {
+	scanner := bufio.NewScanner(input)
+	valves := make(map[string]*Valve)
+	for scanner.Scan() {
+		s := scanner.Text()
+		valve, err := toValve(s)
+		if err != nil {
+			return 0, err
+		}
+		valves[valve.name] = &valve
+		valveNames = append(valveNames, valve.name)
+	}
+
+	for _, valve := range valves {
+		for _, child := range valve.listChildren {
+			childValve := valves[child]
+			valve.children[child] = childValve
+		}
+	}
+
+	floydWarshall(valves)
+
+	cacheHumanElephant = make(map[string]map[int]map[int]map[int]map[string]map[int]map[int]map[int]map[int]int)
+	cacheHumanElephant2 = make(map[string]int)
+
+	start := time.Now()
+	defer func() {
+		fmt.Printf("%v\n", time.Since(start))
+	}()
+
+	v := make(map[string]bool)
+	for _, valveNames := range valveNames {
+		v[valveNames] = false
+	}
+
+	return findWithElephant(NewKey(), "AA", "AA", valves, depth, depth, v, 0, 0, 0, 0, 0, 0, len(valveNames)), nil
+}
+
+func findWithElephant(key *Key, currentHuman, currentElephant string, valves map[string]*Valve, leftHuman, leftElephant int, visited map[string]bool, bufferHuman, pressureHuman, travelHuman, bufferElephant, pressureElephant, travelElephant int, remaining int) int {
+	if leftHuman == 0 && leftElephant == 0 {
+		return findHuman(key, currentHuman, currentElephant, valves, leftHuman, leftElephant, visited, bufferHuman, pressureHuman, travelHuman, bufferElephant, pressureElephant, travelElephant, remaining) +
+			findElephant(key, currentHuman, currentElephant, valves, leftHuman, leftElephant, visited, bufferHuman, pressureHuman, travelHuman, bufferElephant, pressureElephant, travelElephant, remaining)
+	}
+
+	if v, exists := getCacheHumanElephant(currentHuman, leftHuman, pressureHuman, bufferHuman, currentElephant, leftElephant, pressureElephant, bufferElephant, key); exists {
+		return v
+	}
+
+	if leftHuman == 0 {
+		v := findElephant(key, currentHuman, currentElephant, valves, leftHuman, leftElephant, visited, bufferHuman, pressureHuman, travelHuman, bufferElephant, pressureElephant, travelElephant, remaining)
+		addCacheHumanElephant(currentHuman, leftHuman, pressureHuman, bufferHuman, currentElephant, leftElephant, pressureElephant, bufferElephant, key, v)
+		return v
+	}
+
+	if leftElephant == 0 {
+		v := findHuman(key, currentHuman, currentElephant, valves, leftHuman, leftElephant, visited, bufferHuman, pressureHuman, travelHuman, bufferElephant, pressureElephant, travelElephant, remaining)
+		addCacheHumanElephant(currentHuman, leftHuman, pressureHuman, bufferHuman, currentElephant, leftElephant, pressureElephant, bufferElephant, key, v)
+		return v
+	}
+
+	a := findHuman(key, currentHuman, currentElephant, valves, leftHuman, leftElephant, visited, bufferHuman, pressureHuman, travelHuman, bufferElephant, pressureElephant, travelElephant, remaining)
+	b := findElephant(key, currentHuman, currentElephant, valves, leftHuman, leftElephant, visited, bufferHuman, pressureHuman, travelHuman, bufferElephant, pressureElephant, travelElephant, remaining)
+	if a > b {
+		addCacheHumanElephant(currentHuman, leftHuman, pressureHuman, bufferHuman, currentElephant, leftElephant, pressureElephant, bufferElephant, key, a)
+		return a
+	}
+	addCacheHumanElephant(currentHuman, leftHuman, pressureHuman, bufferHuman, currentElephant, leftElephant, pressureElephant, bufferElephant, key, b)
+	return b
+}
+
+func findHuman(key *Key, currentHuman, currentElephant string, valves map[string]*Valve, leftHuman, leftElephant int, visited map[string]bool, bufferHuman, pressureHuman, travelHuman, bufferElephant, pressureElephant, travelElephant int, remaining int) int {
+	if leftHuman == 0 {
+		if travelHuman != 0 {
+			return 0
+		}
+		return pressureHuman
+	}
+
+	if travelHuman > 0 {
+		return pressureHuman + findWithElephant(key, currentHuman, currentElephant, valves, leftHuman-1, leftElephant, visited, 0, bufferHuman+pressureHuman, travelHuman-1, bufferElephant, pressureElephant, travelElephant, remaining)
+	}
+
+	if remaining == 0 {
+		return pressureHuman + findWithElephant(key, currentHuman, currentElephant, valves, leftHuman-1, leftElephant, visited, 0, bufferHuman+pressureHuman, 0, bufferElephant, pressureElephant, travelElephant, 0)
+	}
+
+	valve := valves[currentHuman]
+	best := 0
+	if !valve.open {
+		valve.open = true
+		visited[currentHuman] = true
+		key.visit(currentHuman)
+		best = findWithElephant(key, currentHuman, currentElephant, valves, leftHuman-1, leftElephant, visited, valve.rate, bufferHuman+pressureHuman, 0, bufferElephant, pressureElephant, travelElephant, remaining-1)
+		key.unvisit(currentHuman)
+		visited[currentHuman] = false
+		valve.open = false
+	}
+
+	v := findWithElephant(key, currentHuman, currentElephant, valves, leftHuman-1, leftElephant, visited, 0, bufferHuman+pressureHuman, 0, bufferElephant, pressureElephant, travelElephant, remaining)
+	if v > best {
+		best = v
+	}
+
+	for child, alreadyVisited := range visited {
+		if currentHuman == child || alreadyVisited || valves[child].rate == 0 {
+			continue
+		}
+		distance := valve.distance[child]
+		if leftHuman <= distance {
+			continue
+		}
+		v := findWithElephant(key, child, currentElephant, valves, leftHuman-1, leftElephant, visited, 0, bufferHuman+pressureHuman, distance-1, bufferElephant, pressureElephant, travelElephant, remaining)
+		if v > best {
+			best = v
+		}
+	}
+
+	return pressureHuman + best
+}
+
+func findElephant(key *Key, currentHuman, currentElephant string, valves map[string]*Valve, leftHuman, leftElephant int, visited map[string]bool, bufferHuman, pressureHuman, travelHuman, bufferElephant, pressureElephant, travelElephant int, remaining int) int {
+	if leftElephant == 0 {
+		if travelElephant != 0 {
+			return 0
+		}
+		return pressureElephant
+	}
+
+	if travelElephant > 0 {
+		return pressureElephant + findWithElephant(key, currentHuman, currentElephant, valves, leftHuman, leftElephant-1, visited, bufferHuman, pressureHuman, travelHuman, 0, bufferElephant+pressureElephant, travelElephant-1, remaining)
+	}
+
+	if remaining == 0 {
+		return pressureElephant + findWithElephant(key, currentHuman, currentElephant, valves, leftHuman, leftElephant-1, visited, bufferHuman, pressureHuman, travelHuman, 0, bufferElephant+pressureElephant, 0, 0)
+	}
+
+	valve := valves[currentElephant]
+	best := 0
+	if !valve.open {
+		valve.open = true
+		visited[currentElephant] = true
+		key.visit(currentElephant)
+		best = findWithElephant(key, currentHuman, currentElephant, valves, leftHuman, leftElephant-1, visited, bufferHuman, pressureHuman, travelHuman, valve.rate, bufferElephant+pressureElephant, 0, remaining-1)
+		key.unvisit(currentElephant)
+		visited[currentElephant] = false
+		valve.open = false
+	}
+
+	v := findWithElephant(key, currentHuman, currentElephant, valves, leftHuman, leftElephant-1, visited, bufferHuman, pressureHuman, travelHuman, 0, bufferElephant+pressureElephant, 0, remaining)
+	if v > best {
+		best = v
+	}
+
+	for child, alreadyVisited := range visited {
+		if currentElephant == child || alreadyVisited || valves[child].rate == 0 {
+			continue
+		}
+		distance := valve.distance[child]
+		if leftElephant <= distance {
+			continue
+		}
+		v := findWithElephant(key, currentHuman, child, valves, leftHuman, leftElephant-1, visited, bufferHuman, pressureHuman, travelHuman, 0, bufferElephant+pressureElephant, distance-1, remaining)
+		if v > best {
+			best = v
+		}
+	}
+
+	return pressureElephant + best
 }
