@@ -100,7 +100,7 @@ var valveNames []string
 var cache map[int]map[int]map[int]map[int]map[string]int
 
 var cacheHuman map[int]map[int]map[int]map[int]map[string]int
-var cacheElephant map[int]map[int]map[int]map[int]map[string]int
+var cacheElephant map[string]map[int]map[int]map[int]map[int]int
 
 // CurrentHuman, LeftHuman, PressureHuman, BufferHuman, CurrentElephant, LeftElephant, PressureElephant, BufferElephant, Key, Value
 var cacheHumanElephant map[string]map[int]map[int]map[int]map[string]map[int]map[int]map[int]map[int]int
@@ -111,6 +111,31 @@ func getCacheHumanElephant(currentHuman string, leftHuman int, pressureHuman int
 	//v, exists := cacheHumanElephant2[fmt.Sprintf("%s:%d:%d:%d:%s:%d:%d:%d:%d",
 	//	currentHuman, leftHuman, pressureHuman, bufferHuman, currentElephant, leftElephant, pressureElephant, bufferElephant, key.toKey())]
 	//return v, exists
+
+	if leftHuman == 0 {
+		v5, exists := cacheElephant[currentElephant]
+		if !exists {
+			return 0, false
+		}
+
+		v6, exists := v5[leftElephant]
+		if !exists {
+			return 0, false
+		}
+
+		v7, exists := v6[pressureElephant]
+		if !exists {
+			return 0, false
+		}
+
+		v8, exists := v7[bufferElephant]
+		if !exists {
+			return 0, false
+		}
+
+		v9, exists := v8[key.toKey()]
+		return v9, exists
+	}
 
 	v, exists := cacheHumanElephant[currentHuman]
 	if !exists {
@@ -159,6 +184,34 @@ func getCacheHumanElephant(currentHuman string, leftHuman int, pressureHuman int
 func addCacheHumanElephant(currentHuman string, leftHuman int, pressureHuman int, bufferHuman int, currentElephant string, leftElephant int, pressureElephant int, bufferElephant int, key *Key, value int) {
 	//cacheHumanElephant2[fmt.Sprintf("%s:%d:%d:%d:%s:%d:%d:%d:%d",
 	//	currentHuman, leftHuman, pressureHuman, bufferHuman, currentElephant, leftElephant, pressureElephant, bufferElephant, key.toKey())] = value
+
+	if leftHuman == 0 {
+		v5, exists := cacheElephant[currentElephant]
+		if !exists {
+			v5 = make(map[int]map[int]map[int]map[int]int)
+			cacheElephant[currentElephant] = v5
+		}
+
+		v6, exists := v5[leftElephant]
+		if !exists {
+			v6 = make(map[int]map[int]map[int]int)
+			v5[leftElephant] = v6
+		}
+
+		v7, exists := v6[pressureElephant]
+		if !exists {
+			v7 = make(map[int]map[int]int)
+			v6[pressureElephant] = v7
+		}
+
+		v8, exists := v7[bufferElephant]
+		if !exists {
+			v8 = make(map[int]int)
+			v7[bufferElephant] = v8
+		}
+
+		v8[key.toKey()] = value
+	}
 
 	v, exists := cacheHumanElephant[currentHuman]
 	if !exists {
@@ -298,35 +351,6 @@ func addCacheHuman(current string, key *Key, left int, pressure int, buffer int,
 	v4[current] = best
 }
 
-func addCacheElephant(current string, key *Key, left int, pressure int, buffer int, best int) {
-	v, exists := cacheElephant[left]
-	if !exists {
-		v = make(map[int]map[int]map[int]map[string]int)
-		cacheElephant[left] = v
-	}
-
-	v2, exists := v[pressure]
-	if !exists {
-		v2 = make(map[int]map[int]map[string]int)
-		v[pressure] = v2
-	}
-
-	v3, exists := v2[buffer]
-	if !exists {
-		v3 = make(map[int]map[string]int)
-		v2[buffer] = v3
-	}
-
-	k := key.toKey()
-	v4, exists := v3[k]
-	if !exists {
-		v4 = make(map[string]int)
-		v3[k] = v4
-	}
-
-	v4[current] = best
-}
-
 func getCache(current string, valves map[string]*Valve, left, pressure, buffer int) (int, bool) {
 	v, exists := cache[left]
 	if !exists {
@@ -379,31 +403,6 @@ func getCache2(current string, key *Key, left, pressure, buffer int) (int, bool)
 
 func getCacheHuman(current string, key *Key, left, pressure, buffer int) (int, bool) {
 	v, exists := cacheHuman[left]
-	if !exists {
-		return 0, false
-	}
-
-	v2, exists := v[pressure]
-	if !exists {
-		return 0, false
-	}
-
-	v3, exists := v2[buffer]
-	if !exists {
-		return 0, false
-	}
-
-	v4, exists := v3[key.toKey()]
-	if !exists {
-		return 0, false
-	}
-
-	v5, exists := v4[current]
-	return v5, exists
-}
-
-func getCacheElephant(current string, key *Key, left, pressure, buffer int) (int, bool) {
-	v, exists := cacheElephant[left]
 	if !exists {
 		return 0, false
 	}
@@ -675,7 +674,7 @@ func fn2(input io.Reader, depth int) (int, error) {
 	floydWarshall(valves)
 
 	cacheHumanElephant = make(map[string]map[int]map[int]map[int]map[string]map[int]map[int]map[int]map[int]int)
-	cacheHumanElephant2 = make(map[string]int)
+	cacheElephant = make(map[string]map[int]map[int]map[int]map[int]int)
 
 	start := time.Now()
 	defer func() {
