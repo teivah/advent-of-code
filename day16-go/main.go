@@ -726,7 +726,7 @@ func findHuman(key *Key, currentHuman, currentElephant string, valves map[string
 		valve.open = true
 		visited[currentHuman] = true
 		key.visit(currentHuman)
-		best = findWithElephant(key, currentHuman, currentElephant, valves, leftHuman-1, leftElephant, visited, valve.rate, bufferHuman+pressureHuman, bufferElephant, pressureElephant, remaining-1)
+		best = findHuman(key, currentHuman, currentElephant, valves, leftHuman-1, leftElephant, visited, valve.rate, bufferHuman+pressureHuman, bufferElephant, pressureElephant, remaining-1)
 		key.unvisit(currentHuman)
 		visited[currentHuman] = false
 		valve.open = false
@@ -770,7 +770,7 @@ func findElephant(key *Key, currentHuman, currentElephant string, valves map[str
 		valve.open = true
 		visited[currentElephant] = true
 		key.visit(currentElephant)
-		best = findWithElephant(key, currentHuman, currentElephant, valves, leftHuman, leftElephant-1, visited, bufferHuman, pressureHuman, valve.rate, bufferElephant+pressureElephant, remaining-1)
+		best = findElephant(key, currentHuman, currentElephant, valves, leftHuman, leftElephant-1, visited, bufferHuman, pressureHuman, valve.rate, bufferElephant+pressureElephant, remaining-1)
 		key.unvisit(currentElephant)
 		visited[currentElephant] = false
 		valve.open = false
