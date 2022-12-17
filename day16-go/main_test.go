@@ -40,12 +40,21 @@ func TestFs1Input(t *testing.T) {
 }
 
 func TestFs1Tests(t *testing.T) {
-	test1(t, strings.NewReader(`Valve AA has flow rate=10; tunnels lead to valve BB
-Valve BB has flow rate=50; tunnels lead to valves AA`), 2, 10)
-	test1(t, strings.NewReader(`Valve AA has flow rate=10; tunnels lead to valve BB
-Valve BB has flow rate=50; tunnels lead to valves AA`), 3, 50)
-	test1(t, strings.NewReader(`Valve AA has flow rate=10; tunnels lead to valve BB
-Valve BB has flow rate=50; tunnels lead to valves AA`), 5, 160)
+	//test1(t, strings.NewReader(`Valve AA has flow rate=10; tunnels lead to valve BB
+	//Valve BB has flow rate=50; tunnels lead to valves AA`), 2, 10)
+	//test1(t, strings.NewReader(`Valve AA has flow rate=10; tunnels lead to valve BB
+	//Valve BB has flow rate=50; tunnels lead to valves AA`), 3, 50)
+	//	test1(t, strings.NewReader(`Valve AA has flow rate=10; tunnels lead to valve BB
+	//Valve BB has flow rate=50; tunnels lead to valves AA`), 5, 160)
+
+	test1(t, strings.NewReader(`Valve AA has flow rate=40; tunnels lead to valve BB
+Valve BB has flow rate=10; tunnels lead to valves AA, CC
+Valve CC has flow rate=50; tunnels lead to valves BB`), 7, 400)
+
+	test1(t, strings.NewReader(`Valve AA has flow rate=10; tunnels lead to valves BB, DD
+Valve BB has flow rate=10; tunnels lead to valves AA, CC
+Valve CC has flow rate=50; tunnels lead to valves BB
+Valve DD has flow rate=50; tunnels lead to valves AA`), 4, 100)
 }
 
 func test1(t *testing.T, r io.Reader, depth int, expected int) {
@@ -55,9 +64,13 @@ func test1(t *testing.T, r io.Reader, depth int, expected int) {
 }
 
 func TestFs2Unit(t *testing.T) {
-	//test2(t, fileReader(t, "test.txt"), 26, 1707)
+	test2(t, fileReader(t, "test.txt"), 26, 1707)
+	//test2(t, fileReader(t, "test.txt"), 12, 40)
+}
+
+func TestConsistency(t *testing.T) {
 	for i := 0; i < 100; i++ {
-		test2(t, fileReader(t, "test.txt"), 10, 294)
+		test2(t, fileReader(t, "test.txt"), 10, 414)
 	}
 }
 
@@ -74,7 +87,7 @@ func TestFs2Tests(t *testing.T) {
 	test2(t, strings.NewReader(`Valve AA has flow rate=10; tunnels lead to valves BB, DD
 Valve BB has flow rate=10; tunnels lead to valves AA, CC
 Valve CC has flow rate=50; tunnels lead to valves BB
-Valve DD has flow rate=50; tunnels lead to valves AA`), 4, 140)
+Valve DD has flow rate=50; tunnels lead to valves AA`), 4, 150)
 }
 
 func test2(t *testing.T, r io.Reader, depth int, expected int) {
