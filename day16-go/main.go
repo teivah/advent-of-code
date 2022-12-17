@@ -46,7 +46,7 @@ func setDistance(valves map[string]*Valve, from, to string, distance int) {
 	valves[from].distance[to] = distance
 }
 
-func fn1(input io.Reader) (int, error) {
+func fn1(input io.Reader, depth int) (int, error) {
 	scanner := bufio.NewScanner(input)
 	valves := make(map[string]*Valve)
 	for scanner.Scan() {
@@ -76,17 +76,15 @@ func fn1(input io.Reader) (int, error) {
 		fmt.Printf("%v\n", time.Since(start))
 	}()
 
-	v := make(map[string]int)
+	v := make(map[string]bool)
 	for _, valveNames := range valveNames {
-		v[valveNames] = -1
+		v[valveNames] = false
 	}
 
 	// 2=0, 3=20, 4=40, 5=63, 10=246
-	return find("AA", valves, depth, v), nil
+	return find("AA", valves, depth, v, 0, 0, 0), nil
 	//return findx("", "AA", valves, depth, 0, 0, len(valves)), nil
 }
-
-var depth = 30
 
 func key(valves map[string]*Valve) int {
 	k := 0
@@ -193,68 +191,116 @@ func delVisited(current string, valves map[string]*Valve) {
 	delete(v, k)
 }
 
-func remaining(v map[string]int) bool {
+func remaining(v map[string]bool) bool {
 	for _, visited := range v {
-		if visited == -1 {
+		if !visited {
 			return true
 		}
 	}
 	return false
 }
 
-func score(valves map[string]*Valve, visited map[string]int) int {
-	sum := 0
-	for name, valve := range valves {
-		since := visited[name]
-		if since == -1 {
-			continue
-		}
+// current, left, visited, score
+var x = make(map[string]map[int]map[string]int)
 
-		sum += valve.rate * (depth - since - 1)
+func formatKey(visited map[string]int) string {
+	sb := strings.Builder{}
+	for _, name := range valveNames {
+		v := visited[name]
+		if v != -1 {
+			sb.WriteString(fmt.Sprintf("%v:%d", name, v))
+		}
 	}
-	return sum
+	return sb.String()
 }
 
-func find(current string, valves map[string]*Valve, left int, visited map[string]int) int {
+func getCacheEntry(current string, left int, visited map[string]int) (int, bool) {
+	v, exists := x[current]
+	if !exists {
+		return 0, false
+	}
+
+	v2, exists := v[left]
+	if !exists {
+		return 0, false
+	}
+
+	v3, exists := v2[formatKey(visited)]
+	return v3, exists
+}
+
+func setCacheEntry(current string, left int, visited map[string]int, score int) {
+	v, exists := x[current]
+	if !exists {
+		v = make(map[int]map[string]int)
+		x[current] = v
+	}
+
+	v2, exists := v[left]
+	if !exists {
+		v2 = make(map[string]int)
+		v[left] = v2
+	}
+
+	k := formatKey(visited)
+	v3, exists := v2[k]
+	if !exists {
+		v2[k] = score
+	} else {
+		if score > v3 {
+			v2[k] = score
+		}
+	}
+}
+
+func find(current string, valves map[string]*Valve, left int, visited map[string]bool, buffer, pressure, travel int) int {
+	//if (current == "AA" && left == 3) || (current == "DD" && left == 2) || (current == "DD" && left == 1)
+
 	if left == 0 {
-		return score(valves, visited)
+		if travel != 0 {
+			return 0
+		}
+		return pressure
+	}
+
+	if travel > 0 {
+		return pressure + find(current, valves, left-1, visited, 0, buffer+pressure, travel-1)
 	}
 
 	if !remaining(visited) {
-		return score(valves, visited)
+		return pressure + find(current, valves, left-1, visited, 0, buffer+pressure, 0)
 	}
 
 	valve := valves[current]
 	best := 0
 	if !valve.open {
 		valve.open = true
-		visited[current] = depth - left
-		best = find(current, valves, left-1, visited)
-		visited[current] = -1
+		visited[current] = true
+		best = find(current, valves, left-1, visited, valve.rate, buffer+pressure, 0)
+		visited[current] = false
 		valve.open = false
 	}
 
+	v := find(current, valves, left-1, visited, 0, buffer+pressure, 0)
+	if v > best {
+		best = v
+	}
+
 	for child, alreadyVisited := range visited {
-		if current == child {
-			continue
-		}
-		if alreadyVisited != -1 {
+		if current == child || alreadyVisited || valves[child].rate == 0 {
 			continue
 		}
 		distance := valve.distance[child]
 		if left <= distance {
 			continue
 		}
-		v := find(child, valves, left-distance, visited)
+		v := find(child, valves, left-1, visited, 0, buffer+pressure, distance-1)
 		if v > best {
 			best = v
 		}
 	}
 
-	if best == 0 {
-		return score(valves, visited)
-	}
-	return best
+	return pressure + best
 }
 
 func findx(parent, current string, valves map[string]*Valve, left int, buffer, pressure int, closed int) int {
