@@ -102,7 +102,7 @@ var cache map[int]map[int]map[int]map[int]map[string]int
 var cacheHuman map[int]map[int]map[int]map[int]map[string]int
 var cacheElephant map[string]map[int]map[int]map[int]map[int]int
 
-// CurrentHuman, LeftHuman, PressureHuman, BufferHuman, CurrentElephant, LeftElephant, PressureElephant, BufferElephant, Key, Value
+// Current human position, left human, pressure human, buffer human, current elephant position, left elephant, pressure elephant, buffer elephant, visited
 var cacheHumanElephant map[string]map[int]map[int]map[int]map[string]map[int]map[int]map[int]map[int]int
 
 var cacheHumanElephant2 map[string]int
@@ -604,7 +604,9 @@ func find2(key *Key, current string, valves map[string]*Valve, left int, visited
 			continue
 		}
 		//v := find2(key, child, valves, left-1, visited, 0, buffer+pressure, distance-1, remaining)
-		v := find2(key, child, valves, left-distance, visited, 0, buffer+pressure, remaining) + (pressure+buffer)*(distance-1)
+		v := find2(
+			key, child, valves, left-distance, visited, 0, buffer+pressure, remaining,
+		) + (pressure+buffer)*(distance-1)
 		if v > best {
 			best = v
 			bestWhenOpen = false
@@ -691,22 +693,43 @@ func fn2(input io.Reader, depth int) (int, error) {
 
 func findWithElephant(key *Key, currentHuman, currentElephant string, valves map[string]*Valve, leftHuman, leftElephant int, visited map[string]bool, bufferHuman, pressureHuman, bufferElephant, pressureElephant, remaining int) int {
 	if leftHuman == 0 && leftElephant == 0 {
-		return findHuman(key, currentHuman, currentElephant, valves, leftHuman, leftElephant, visited, bufferHuman, pressureHuman, bufferElephant, pressureElephant, remaining) +
-			findElephant(key, currentHuman, currentElephant, valves, leftHuman, leftElephant, visited, bufferHuman, pressureHuman, bufferElephant, pressureElephant, remaining)
+		return findHuman(
+			key, currentHuman, currentElephant, valves, leftHuman, leftElephant, visited, bufferHuman, pressureHuman,
+			bufferElephant, pressureElephant, remaining,
+		) +
+			findElephant(
+				key, currentHuman, currentElephant, valves, leftHuman, leftElephant, visited, bufferHuman,
+				pressureHuman, bufferElephant, pressureElephant, remaining,
+			)
 	}
 
-	if v, exists := getCacheHumanElephant(currentHuman, leftHuman, pressureHuman, bufferHuman, currentElephant, leftElephant, pressureElephant, bufferElephant, key); exists {
+	if v, exists := getCacheHumanElephant(
+		currentHuman, leftHuman, pressureHuman, bufferHuman, currentElephant, leftElephant, pressureElephant,
+		bufferElephant, key,
+	); exists {
 		return v
 	}
 
 	if leftHuman == 0 {
-		v := findElephant(key, currentHuman, currentElephant, valves, leftHuman, leftElephant, visited, bufferHuman, pressureHuman, bufferElephant, pressureElephant, remaining)
-		addCacheHumanElephant(currentHuman, leftHuman, pressureHuman, bufferHuman, currentElephant, leftElephant, pressureElephant, bufferElephant, key, v)
+		v := findElephant(
+			key, currentHuman, currentElephant, valves, leftHuman, leftElephant, visited, bufferHuman, pressureHuman,
+			bufferElephant, pressureElephant, remaining,
+		)
+		addCacheHumanElephant(
+			currentHuman, leftHuman, pressureHuman, bufferHuman, currentElephant, leftElephant, pressureElephant,
+			bufferElephant, key, v,
+		)
 		return v
 	}
 
-	v := findHuman(key, currentHuman, currentElephant, valves, leftHuman, leftElephant, visited, bufferHuman, pressureHuman, bufferElephant, pressureElephant, remaining)
-	addCacheHumanElephant(currentHuman, leftHuman, pressureHuman, bufferHuman, currentElephant, leftElephant, pressureElephant, bufferElephant, key, v)
+	v := findHuman(
+		key, currentHuman, currentElephant, valves, leftHuman, leftElephant, visited, bufferHuman, pressureHuman,
+		bufferElephant, pressureElephant, remaining,
+	)
+	addCacheHumanElephant(
+		currentHuman, leftHuman, pressureHuman, bufferHuman, currentElephant, leftElephant, pressureElephant,
+		bufferElephant, key, v,
+	)
 	return v
 }
 
@@ -716,7 +739,10 @@ func findHuman(key *Key, currentHuman, currentElephant string, valves map[string
 	}
 
 	if remaining == 0 {
-		return pressureHuman + findWithElephant(key, currentHuman, currentElephant, valves, leftHuman-1, leftElephant, visited, 0, bufferHuman+pressureHuman, bufferElephant, pressureElephant, 0)
+		return pressureHuman + findWithElephant(
+			key, currentHuman, currentElephant, valves, leftHuman-1, leftElephant, visited, 0,
+			bufferHuman+pressureHuman, bufferElephant, pressureElephant, 0,
+		)
 	}
 
 	valve := valves[currentHuman]
@@ -725,13 +751,19 @@ func findHuman(key *Key, currentHuman, currentElephant string, valves map[string
 		valve.open = true
 		visited[currentHuman] = true
 		key.visit(currentHuman)
-		best = findHuman(key, currentHuman, currentElephant, valves, leftHuman-1, leftElephant, visited, valve.rate, bufferHuman+pressureHuman, bufferElephant, pressureElephant, remaining-1)
+		best = findHuman(
+			key, currentHuman, currentElephant, valves, leftHuman-1, leftElephant, visited, valve.rate,
+			bufferHuman+pressureHuman, bufferElephant, pressureElephant, remaining-1,
+		)
 		key.unvisit(currentHuman)
 		visited[currentHuman] = false
 		valve.open = false
 	}
 
-	v := findWithElephant(key, currentHuman, currentElephant, valves, leftHuman-1, leftElephant, visited, 0, bufferHuman+pressureHuman, bufferElephant, pressureElephant, remaining)
+	v := findWithElephant(
+		key, currentHuman, currentElephant, valves, leftHuman-1, leftElephant, visited, 0, bufferHuman+pressureHuman,
+		bufferElephant, pressureElephant, remaining,
+	)
 	if v > best {
 		best = v
 	}
@@ -744,7 +776,10 @@ func findHuman(key *Key, currentHuman, currentElephant string, valves map[string
 		if leftHuman <= distance {
 			continue
 		}
-		v := findWithElephant(key, child, currentElephant, valves, leftHuman-distance, leftElephant, visited, 0, bufferHuman+pressureHuman, bufferElephant, pressureElephant, remaining) +
+		v := findWithElephant(
+			key, child, currentElephant, valves, leftHuman-distance, leftElephant, visited, 0,
+			bufferHuman+pressureHuman, bufferElephant, pressureElephant, remaining,
+		) +
 			(pressureHuman+bufferHuman)*(distance-1)
 		if v > best {
 			best = v
@@ -760,7 +795,10 @@ func findElephant(key *Key, currentHuman, currentElephant string, valves map[str
 	}
 
 	if remaining == 0 {
-		return pressureElephant + findWithElephant(key, currentHuman, currentElephant, valves, leftHuman, leftElephant-1, visited, bufferHuman, pressureHuman, 0, bufferElephant+pressureElephant, 0)
+		return pressureElephant + findWithElephant(
+			key, currentHuman, currentElephant, valves, leftHuman, leftElephant-1, visited, bufferHuman, pressureHuman,
+			0, bufferElephant+pressureElephant, 0,
+		)
 	}
 
 	valve := valves[currentElephant]
@@ -769,13 +807,19 @@ func findElephant(key *Key, currentHuman, currentElephant string, valves map[str
 		valve.open = true
 		visited[currentElephant] = true
 		key.visit(currentElephant)
-		best = findElephant(key, currentHuman, currentElephant, valves, leftHuman, leftElephant-1, visited, bufferHuman, pressureHuman, valve.rate, bufferElephant+pressureElephant, remaining-1)
+		best = findElephant(
+			key, currentHuman, currentElephant, valves, leftHuman, leftElephant-1, visited, bufferHuman, pressureHuman,
+			valve.rate, bufferElephant+pressureElephant, remaining-1,
+		)
 		key.unvisit(currentElephant)
 		visited[currentElephant] = false
 		valve.open = false
 	}
 
-	v := findWithElephant(key, currentHuman, currentElephant, valves, leftHuman, leftElephant-1, visited, bufferHuman, pressureHuman, 0, bufferElephant+pressureElephant, remaining)
+	v := findWithElephant(
+		key, currentHuman, currentElephant, valves, leftHuman, leftElephant-1, visited, bufferHuman, pressureHuman, 0,
+		bufferElephant+pressureElephant, remaining,
+	)
 	if v > best {
 		best = v
 	}
@@ -788,7 +832,10 @@ func findElephant(key *Key, currentHuman, currentElephant string, valves map[str
 		if leftElephant <= distance {
 			continue
 		}
-		v := findWithElephant(key, currentHuman, child, valves, leftHuman, leftElephant-distance, visited, bufferHuman, pressureHuman, 0, bufferElephant+pressureElephant, remaining) +
+		v := findWithElephant(
+			key, currentHuman, child, valves, leftHuman, leftElephant-distance, visited, bufferHuman, pressureHuman, 0,
+			bufferElephant+pressureElephant, remaining,
+		) +
 			(pressureElephant+bufferElephant)*(distance-1)
 		if v > best {
 			best = v

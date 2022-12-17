@@ -584,15 +584,17 @@ func fn2(input io.Reader, moves int) (int, error) {
 
 	previous := 0
 	for i := 0; i < moves; i++ {
+		if (i-1751)%1755 == 0 {
+			fmt.Printf("%d: %d, +%d\n", i, t.highestRock, t.highestRock-previous)
+			previous = t.highestRock
+		}
+
 		p := t.getNextPiece(i)
 
 		for {
 			direction := directions[idx]
 			idx++
 			if idx >= len(directions) {
-				//t.print()
-				fmt.Printf("%d: %d, +%d\n", i, t.highestRock, t.highestRock-previous)
-				previous = t.highestRock
 				idx = 0
 			}
 			if direction == Left {
@@ -606,10 +608,18 @@ func fn2(input io.Reader, moves int) (int, error) {
 			}
 		}
 		t.setHighestRock()
-		if isFull(t) {
-			fmt.Printf("%v\n", i)
-		}
 	}
 
 	return t.highestRock, nil
 }
+
+/*
+From move 1751, every 1755 moves add 2768
+
+1000000000000-1751=999999998249 (we have to add 2726 in the end, the res during the first 1751 moves)
+
+999999998249, we can fit 569800568 times 1755 (but we're missing 999999998249-999999996840=1409)
+569800568 * 2768 = 1,577,207,972,224
+
+1,577,207,972,224 + 2726 + how many moves in 1409 ? 3068
+*/

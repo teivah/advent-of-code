@@ -34,7 +34,7 @@ func TestUnit2(t *testing.T) {
 }
 
 func TestInput2(t *testing.T) {
-	v, err := fn2(fileReader(t, "test.txt"), 1000000000000)
+	v, err := fn2(fileReader(t, "input.txt"), 1000000000000)
 	require.NoError(t, err)
 	assert.Equal(t, 3068, v)
 }
