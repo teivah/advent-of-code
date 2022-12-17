@@ -584,9 +584,13 @@ func fn2(input io.Reader, moves int) (int, error) {
 
 	previous := 0
 	for i := 0; i < moves; i++ {
-		if (i-1751)%1755 == 0 {
-			fmt.Printf("%d: %d, +%d\n", i, t.highestRock, t.highestRock-previous)
+		if i == 1751 {
 			previous = t.highestRock
+		}
+
+		if i == 3160 {
+			fmt.Printf("%v\n", t.highestRock-previous)
+			return 0, nil
 		}
 
 		p := t.getNextPiece(i)
@@ -621,5 +625,5 @@ From move 1751, every 1755 moves add 2768
 999999998249, we can fit 569800568 times 1755 (but we're missing 999999998249-999999996840=1409)
 569800568 * 2768 = 1,577,207,972,224
 
-1,577,207,972,224 + 2726 + how many moves in 1409 ? 3068
+1,577,207,972,224 + 2726 + how many moves in 1409 ? 2236
 */
