@@ -68,7 +68,7 @@ func TestFs2Unit(t *testing.T) {
 }
 
 func TestFs2Test(t *testing.T) {
-	test2(t, fileReader(t, "input.txt"), 17, 1049)
+	test2(t, fileReader(t, "input.txt"), 26, 1049)
 }
 
 func TestConsistency(t *testing.T) {
