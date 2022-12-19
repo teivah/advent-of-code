@@ -36,12 +36,10 @@ pub fn fn1(input: &str, minute: i32) -> i32 {
     sum
 }
 
-fn get_cache(cache: &mut HashMap<i32, HashMap<u64, i32>>, left: i32, state: u64) -> (i32, bool) {
-    if let Entry::Occupied(v) = cache.entry(left) {
-        let m = v.into_mut();
-        if let Entry::Occupied(v) = m.entry(state) {
-            let m = v.into_mut();
-            return (*m, true);
+fn get_cache(cache: &HashMap<i32, HashMap<u64, i32>>, left: i32, state: u64) -> (i32, bool) {
+    if let Some(v) = cache.get(&left) {
+        if let Some(v2) = v.get(&state) {
+            return (*v2, true);
         }
     }
 
@@ -285,7 +283,7 @@ mod tests {
     #[test]
     fn test_fn1_unit_test() {
         let s = fs::read_to_string("test.txt").unwrap();
-        assert_eq!(fn1(s.as_str(), 20), 33);
+        assert_eq!(fn1(s.as_str(), 22), 17);
     }
 
     #[test]
