@@ -215,10 +215,24 @@ fn get_cost(s: &str, sep: &str) -> u64 {
         .unwrap()
 }
 
-pub fn fn2(input: &str) -> i32 {
+pub fn fn2(input: &str, minute: u64, mut remaining: u64) -> u64 {
     let lines: Vec<_> = input.lines().collect();
 
-    1
+    let mut sum = 1;
+    for line in lines.iter() {
+        if remaining == 0 {
+            return sum;
+        }
+
+        let blueprint = to_blueprints(line);
+
+        let mut cache: HashMap<_, _> = HashMap::new();
+        let v = best(&mut cache, &blueprint, 0, 0, 0, 0, 1, 0, 0, 0, minute);
+        println!("{} {}", blueprint.id, v);
+        sum *= v;
+    }
+
+    sum
 }
 
 #[cfg(test)]
@@ -247,12 +261,12 @@ mod tests {
     #[test]
     fn test_fn2_unit() {
         let s = fs::read_to_string("test.txt").unwrap();
-        assert_eq!(fn2(s.as_str()), 1);
+        assert_eq!(fn2(s.as_str(), 32, 3), 3472);
     }
 
     #[test]
     fn test_fn2_input() {
         let s = fs::read_to_string("input.txt").unwrap();
-        assert_eq!(fn2(s.as_str()), 1);
+        assert_eq!(fn2(s.as_str(), 32, 3), 3472);
     }
 }
