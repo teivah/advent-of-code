@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"strconv"
 	"strings"
@@ -18,13 +19,14 @@ func fs1(input io.Reader, minute int) (int, error) {
 		}
 
 		v := best(&blueprint, State{nbOreRobot: 1}, minute)
+		fmt.Println(blueprint.id, v)
 		sum += blueprint.id * v
 	}
 
 	return sum, nil
 }
 
-var cache = make(map[int]map[State]int)
+var cache = make(map[int]map[State]int, 24)
 
 func getCache(left int, state State) (int, bool) {
 	v, exists := cache[left]
@@ -48,20 +50,19 @@ func addCache(left int, state State, best int) {
 
 func best(blueprint *Blueprint, state State, left int) int {
 	if left == 0 {
-		return state.nbObsidian
-	}
-
-	if v, exists := getCache(left, state); exists {
-		return v
+		return state.nbGeode
 	}
 
 	stateCollect := collect(state)
 	v := build(blueprint, state, stateCollect, left)
-	addCache(left, state, v)
 	return v
 }
 
 func build(blueprint *Blueprint, state, stateCollect State, left int) int {
+	if v, exists := getCache(left, state); exists {
+		return v
+	}
+
 	v := 0
 
 	newState, canBuild := newOreRobot(blueprint, state)
@@ -84,7 +85,9 @@ func build(blueprint *Blueprint, state, stateCollect State, left int) int {
 		v = max(v, build(blueprint, newState, stateCollect, left))
 	}
 
-	return max(v, best(blueprint, state.combine(stateCollect), left-1))
+	v = max(v, best(blueprint, state.combine(stateCollect), left-1))
+	addCache(left, state, v)
+	return v
 }
 
 func max(a, b int) int {
@@ -114,9 +117,9 @@ func newClayRobot(blueprint *Blueprint, state State) (State, bool) {
 
 func newObsidianRobot(blueprint *Blueprint, state State) (State, bool) {
 	if blueprint.obsidianOreCost <= state.nbOre &&
-		blueprint.obsidianClayCost <= state.nbObsidian {
+		blueprint.obsidianClayCost <= state.nbClay {
 		state.nbOre -= blueprint.obsidianOreCost
-		state.nbObsidian -= blueprint.obsidianClayCost
+		state.nbClay -= blueprint.obsidianClayCost
 		state.nbObsidianRobot++
 		return state, true
 	}
