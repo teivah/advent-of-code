@@ -74,6 +74,7 @@ func best(blueprint *Blueprint, state *State, left int) int {
 		s := newState.combineGeode()
 		v = best(blueprint, &s, left-1)
 		addCache(left, state, v)
+		// If we can build a geode robot now, we should build it
 		return v
 	}
 
