@@ -6,6 +6,7 @@ import (
 	"io"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func fs1(input io.Reader, minute int) (int, error) {
@@ -18,15 +19,24 @@ func fs1(input io.Reader, minute int) (int, error) {
 			return 0, err
 		}
 
+		cache = make(map[int]map[State]int, 24)
+		d := duration()
 		v := best(&blueprint, State{nbOreRobot: 1}, minute)
-		fmt.Println(blueprint.id, v)
+		fmt.Println(blueprint.id, v, d())
 		sum += blueprint.id * v
 	}
 
 	return sum, nil
 }
 
-var cache = make(map[int]map[State]int, 24)
+func duration() func() time.Duration {
+	start := time.Now()
+	return func() time.Duration {
+		return time.Since(start)
+	}
+}
+
+var cache map[int]map[State]int
 
 func getCache(left int, state State) (int, bool) {
 	v, exists := cache[left]
