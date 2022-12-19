@@ -27,7 +27,7 @@ func TestFs1Input(t *testing.T) {
 func TestFs2Test(t *testing.T) {
 	f, err := os.Open("test.txt")
 	require.NoError(t, err)
-	v, err := fs2(f)
+	v, err := fs2(f, 32, 3)
 	require.NoError(t, err)
 	assert.Equal(t, 24933642, v)
 }
@@ -35,7 +35,7 @@ func TestFs2Test(t *testing.T) {
 func TestFs2Input(t *testing.T) {
 	f, err := os.Open("input.txt")
 	require.NoError(t, err)
-	v, err := fs2(f)
+	v, err := fs2(f, 32, 3)
 	require.NoError(t, err)
 	assert.Equal(t, 4370655, v)
 }

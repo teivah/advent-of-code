@@ -240,12 +240,25 @@ func getCost(s string, sep string) (int, error) {
 	return strconv.Atoi(s[start+len(sep) : end+start+len(sep)])
 }
 
-func fs2(input io.Reader) (int, error) {
+func fs2(input io.Reader, minute int, remaining int) (int, error) {
 	scanner := bufio.NewScanner(input)
+	sum := 1
 	for scanner.Scan() {
+		if remaining == 0 {
+			return sum, nil
+		}
 		line := scanner.Text()
-		_ = line
+		blueprint, err := toBlueprints(line)
+		if err != nil {
+			return 0, err
+		}
+
+		cache = make(map[int]map[State]int, 24)
+		d := duration()
+		v := best(&blueprint, State{nbOreRobot: 1}, minute)
+		fmt.Println(blueprint.id, v, d())
+		sum *= v
 	}
 
-	return 0, nil
+	return sum, nil
 }
