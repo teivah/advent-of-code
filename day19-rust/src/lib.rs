@@ -6,29 +6,15 @@ use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::ops::Index;
 
-pub fn fn1(input: &str, minute: i32) -> i32 {
+pub fn fn1(input: &str, minute: u64) -> u64 {
     let lines: Vec<_> = input.lines().collect();
 
     let mut sum = 0;
     for line in lines.iter() {
         let blueprint = to_blueprints(line);
 
-        let mut cache: HashMap<i32, HashMap<u64, i32>> = HashMap::new();
-        let v = best(
-            &mut cache,
-            &blueprint,
-            State {
-                nb_ore: 0,
-                nb_clay: 0,
-                nb_obsidian: 0,
-                nb_geode: 0,
-                nb_ore_robot: 1,
-                nb_clay_robot: 0,
-                nb_obsidian_robot: 0,
-                nb_geode_robot: 0,
-            },
-            minute,
-        );
+        let mut cache: HashMap<_, _> = HashMap::new();
+        let v = best(&mut cache, &blueprint, 0, 0, 0, 0, 1, 0, 0, 0, minute);
         println!("{} {}", blueprint.id, v);
         sum += blueprint.id * v;
     }
@@ -36,122 +22,149 @@ pub fn fn1(input: &str, minute: i32) -> i32 {
     sum
 }
 
-fn get_cache(cache: &HashMap<i32, HashMap<u64, i32>>, left: i32, state: u64) -> (i32, bool) {
-    if let Some(v) = cache.get(&left) {
-        if let Some(v2) = v.get(&state) {
-            return (*v2, true);
-        }
+fn get_cache(cache: &HashMap<u64, u64>, k: u64) -> Option<u64> {
+    if let Some(v) = cache.get(&k) {
+        return Some(*v);
     }
 
-    (0, false)
+    None
 }
 
-fn add_cache(cache: &mut HashMap<i32, HashMap<u64, i32>>, left: i32, state: u64, best: i32) {
-    let m = cache.entry(left).or_insert(HashMap::new());
-    m.entry(state).or_insert(best);
+fn add_cache(cache: &mut HashMap<u64, u64>, k: u64, best: u64) {
+    cache.insert(k, best);
 }
 
 fn best(
-    cache: &mut HashMap<i32, HashMap<u64, i32>>,
+    cache: &mut HashMap<u64, u64>,
     blueprint: &Blueprint,
-    state: State,
-    left: i32,
-) -> i32 {
+    nb_ore: u64,
+    nb_clay: u64,
+    nb_obsidian: u64,
+    nb_geode: u64,
+    nb_ore_robot: u64,
+    nb_clay_robot: u64,
+    nb_obsidian_robot: u64,
+    nb_geode_robot: u64,
+    left: u64,
+) -> u64 {
     if left == 0 {
-        return state.nb_geode;
+        return nb_geode;
     }
 
-    let mut h = DefaultHasher::new();
-    state.hash(&mut h);
-    let hk = h.finish();
-    let (v, exists) = get_cache(cache, left, h.finish());
-    if exists {
+    let k: u64 = nb_geode_robot
+        | nb_obsidian_robot << 8
+        | nb_clay_robot << 16
+        | nb_ore_robot << 24
+        | nb_geode << 32
+        | nb_obsidian << 38
+        | nb_clay << 44
+        | nb_ore << 50
+        | left << 56;
+    if let Some(v) = get_cache(cache, k) {
+        return v;
+    }
+
+    if blueprint.geode_ore_cost <= nb_ore && blueprint.geode_obsidian_cost <= nb_obsidian {
+        let v = best(
+            cache,
+            blueprint,
+            nb_ore - blueprint.geode_ore_cost + nb_ore_robot,
+            nb_clay + nb_clay_robot,
+            nb_obsidian - blueprint.geode_obsidian_cost + nb_obsidian_robot,
+            nb_geode + nb_geode_robot,
+            nb_ore_robot,
+            nb_clay_robot,
+            nb_obsidian_robot,
+            nb_geode_robot + 1,
+            left - 1,
+        );
+        add_cache(cache, k, v);
         return v;
     }
 
     let mut v = 0;
 
-    if let Some(new_state) = new_geode_robot(blueprint, &state) {
-        let s = new_state.combine_geode();
-        let v = best(cache, blueprint, s, left - 1);
-        add_cache(cache, left, hk, v);
-        return v;
-    }
-
-    if let Some(new_state) = new_obsidian_robot(blueprint, &state) {
-        let s = new_state.combine_obsidian();
-        v = best(cache, blueprint, s, left - 1);
-
+    if blueprint.obsidian_ore_cost <= nb_ore && blueprint.obsidian_clay_cost <= nb_clay {
+        let v = best(
+            cache,
+            blueprint,
+            nb_ore - blueprint.obsidian_ore_cost + nb_ore_robot,
+            nb_clay - blueprint.obsidian_clay_cost + nb_clay_robot,
+            nb_obsidian + nb_obsidian_robot,
+            nb_geode + nb_geode_robot,
+            nb_ore_robot,
+            nb_clay_robot,
+            nb_obsidian_robot + 1,
+            nb_geode_robot,
+            left - 1,
+        );
         if left >= 5 {
-            add_cache(cache, left, hk, v);
+            add_cache(cache, k, v);
             return v;
         }
     }
 
-    if let Some(new_state) = new_clay_robot(blueprint, &state) {
-        let s = new_state.combine_clay();
-        v = cmp::max(v, best(cache, blueprint, s, left - 1));
+    if blueprint.clay_ore_cost <= nb_ore {
+        v = cmp::max(
+            v,
+            best(
+                cache,
+                blueprint,
+                nb_ore - blueprint.clay_ore_cost + nb_ore_robot,
+                nb_clay + nb_clay_robot,
+                nb_obsidian + nb_obsidian_robot,
+                nb_geode + nb_geode_robot,
+                nb_ore_robot,
+                nb_clay_robot + 1,
+                nb_obsidian_robot,
+                nb_geode_robot,
+                left - 1,
+            ),
+        );
     }
 
-    if let Some(new_state) = new_ore_robot(blueprint, &state) {
-        let s = new_state.combine_ore();
-        v = cmp::max(v, best(cache, blueprint, s, left - 1));
+    if blueprint.ore_ore_cost <= nb_ore {
+        v = cmp::max(
+            v,
+            best(
+                cache,
+                blueprint,
+                nb_ore - blueprint.ore_ore_cost + nb_ore_robot,
+                nb_clay + nb_clay_robot,
+                nb_obsidian + nb_obsidian_robot,
+                nb_geode + nb_geode_robot,
+                nb_ore_robot + 1,
+                nb_clay_robot,
+                nb_obsidian_robot,
+                nb_geode_robot,
+                left - 1,
+            ),
+        );
     }
 
-    let s = state.combine();
-    v = cmp::max(v, best(cache, blueprint, s, left - 1));
-    add_cache(cache, left, h.finish(), v);
+    v = cmp::max(
+        v,
+        best(
+            cache,
+            blueprint,
+            nb_ore + nb_ore_robot,
+            nb_clay + nb_clay_robot,
+            nb_obsidian + nb_obsidian_robot,
+            nb_geode + nb_geode_robot,
+            nb_ore_robot,
+            nb_clay_robot,
+            nb_obsidian_robot,
+            nb_geode_robot,
+            left - 1,
+        ),
+    );
+    add_cache(cache, k, v);
 
     v
 }
 
-fn new_ore_robot(blueprint: &Blueprint, state: &State) -> Option<State> {
-    if blueprint.ore_ore_cost <= state.nb_ore {
-        let mut s = state.clone();
-        s.nb_ore -= blueprint.ore_ore_cost;
-        s.nb_ore_robot += 1;
-        return Some(s);
-    }
-    return None;
-}
-
-fn new_clay_robot(blueprint: &Blueprint, state: &State) -> Option<State> {
-    if blueprint.clay_ore_cost <= state.nb_ore {
-        let mut s = state.clone();
-        s.nb_ore -= blueprint.clay_ore_cost;
-        s.nb_clay_robot += 1;
-        return Some(s);
-    }
-    return None;
-}
-
-fn new_obsidian_robot(blueprint: &Blueprint, state: &State) -> Option<State> {
-    if blueprint.obsidian_ore_cost <= state.nb_ore && blueprint.obsidian_clay_cost <= state.nb_clay
-    {
-        let mut s = state.clone();
-        s.nb_ore -= blueprint.obsidian_ore_cost;
-        s.nb_clay -= blueprint.obsidian_clay_cost;
-        s.nb_obsidian_robot += 1;
-        return Some(s);
-    }
-    return None;
-}
-
-fn new_geode_robot(blueprint: &Blueprint, state: &State) -> Option<State> {
-    if blueprint.geode_ore_cost <= state.nb_ore
-        && blueprint.geode_obsidian_cost <= state.nb_obsidian
-    {
-        let mut s = state.clone();
-        s.nb_ore -= blueprint.geode_ore_cost;
-        s.nb_obsidian -= blueprint.geode_obsidian_cost;
-        s.nb_geode_robot += 1;
-        return Some(s);
-    }
-    return None;
-}
-
 #[derive(PartialEq, Eq, Hash, Copy, Clone)]
-struct State {
+struct CacheEntry {
     nb_ore: i32,
     nb_clay: i32,
     nb_obsidian: i32,
@@ -162,93 +175,26 @@ struct State {
     nb_geode_robot: i32,
 }
 
-impl State {
-    fn combine(&self) -> State {
-        State {
-            nb_ore: self.nb_ore + self.nb_ore_robot,
-            nb_clay: self.nb_clay + self.nb_clay_robot,
-            nb_obsidian: self.nb_obsidian + self.nb_obsidian_robot,
-            nb_geode: self.nb_geode + self.nb_geode_robot,
-            nb_ore_robot: self.nb_ore_robot,
-            nb_clay_robot: self.nb_clay_robot,
-            nb_obsidian_robot: self.nb_obsidian_robot,
-            nb_geode_robot: self.nb_geode_robot,
-        }
-    }
-
-    fn combine_ore(&self) -> State {
-        State {
-            nb_ore: self.nb_ore + self.nb_ore_robot - 1,
-            nb_clay: self.nb_clay + self.nb_clay_robot,
-            nb_obsidian: self.nb_obsidian + self.nb_obsidian_robot,
-            nb_geode: self.nb_geode + self.nb_geode_robot,
-            nb_ore_robot: self.nb_ore_robot,
-            nb_clay_robot: self.nb_clay_robot,
-            nb_obsidian_robot: self.nb_obsidian_robot,
-            nb_geode_robot: self.nb_geode_robot,
-        }
-    }
-
-    fn combine_clay(&self) -> State {
-        State {
-            nb_ore: self.nb_ore + self.nb_ore_robot,
-            nb_clay: self.nb_clay + self.nb_clay_robot - 1,
-            nb_obsidian: self.nb_obsidian + self.nb_obsidian_robot,
-            nb_geode: self.nb_geode + self.nb_geode_robot,
-            nb_ore_robot: self.nb_ore_robot,
-            nb_clay_robot: self.nb_clay_robot,
-            nb_obsidian_robot: self.nb_obsidian_robot,
-            nb_geode_robot: self.nb_geode_robot,
-        }
-    }
-
-    fn combine_obsidian(&self) -> State {
-        State {
-            nb_ore: self.nb_ore + self.nb_ore_robot,
-            nb_clay: self.nb_clay + self.nb_clay_robot,
-            nb_obsidian: self.nb_obsidian + self.nb_obsidian_robot - 1,
-            nb_geode: self.nb_geode + self.nb_geode_robot,
-            nb_ore_robot: self.nb_ore_robot,
-            nb_clay_robot: self.nb_clay_robot,
-            nb_obsidian_robot: self.nb_obsidian_robot,
-            nb_geode_robot: self.nb_geode_robot,
-        }
-    }
-
-    fn combine_geode(&self) -> State {
-        State {
-            nb_ore: self.nb_ore + self.nb_ore_robot,
-            nb_clay: self.nb_clay + self.nb_clay_robot,
-            nb_obsidian: self.nb_obsidian + self.nb_obsidian_robot,
-            nb_geode: self.nb_geode + self.nb_geode_robot - 1,
-            nb_ore_robot: self.nb_ore_robot,
-            nb_clay_robot: self.nb_clay_robot,
-            nb_obsidian_robot: self.nb_obsidian_robot,
-            nb_geode_robot: self.nb_geode_robot,
-        }
-    }
-}
-
 #[derive(Debug)]
 struct Blueprint {
-    id: i32,
-    ore_ore_cost: i32,
-    clay_ore_cost: i32,
-    obsidian_ore_cost: i32,
-    obsidian_clay_cost: i32,
-    geode_ore_cost: i32,
-    geode_obsidian_cost: i32,
+    id: u64,
+    ore_ore_cost: u64,
+    clay_ore_cost: u64,
+    obsidian_ore_cost: u64,
+    obsidian_clay_cost: u64,
+    geode_ore_cost: u64,
+    geode_obsidian_cost: u64,
 }
 
 fn to_blueprints(s: &str) -> Blueprint {
     let start = 10;
     let end = s.find(":").unwrap();
-    let id = s[start..end].parse::<i32>().unwrap();
+    let id = s[start..end].parse::<u64>().unwrap();
 
     let start = s.find("Each geode robot costs ").unwrap();
     let start = s[start..].find("ore and ").unwrap() + start + "ore and ".len();
     let end = s[start..].find(" ").unwrap();
-    let geode_obsidian_cost = s[start..start + end].parse::<i32>().unwrap();
+    let geode_obsidian_cost = s[start..start + end].parse::<u64>().unwrap();
 
     Blueprint {
         id,
@@ -261,11 +207,11 @@ fn to_blueprints(s: &str) -> Blueprint {
     }
 }
 
-fn get_cost(s: &str, sep: &str) -> i32 {
+fn get_cost(s: &str, sep: &str) -> u64 {
     let start = s.find(sep).unwrap();
     let end = s[(start + sep.len())..].find(" ").unwrap();
     s[(start + sep.len()..(end + start + sep.len()))]
-        .parse::<i32>()
+        .parse::<u64>()
         .unwrap()
 }
 
