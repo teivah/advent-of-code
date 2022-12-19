@@ -48,44 +48,63 @@ func addCache(left int, state State, best int) {
 	v[state] = best
 }
 
+type key struct {
+	nbOre           int
+	nbClay          int
+	nbObsidian      int
+	nbOreRobot      int
+	nbClayRobot     int
+	nbObsidianRobot int
+	nbGeodeRobot    int
+}
+
+func toKey(s State) key {
+	return key{
+		nbOre:           s.nbOre,
+		nbClay:          s.nbClay,
+		nbObsidian:      s.nbObsidian,
+		nbOreRobot:      s.nbOreRobot,
+		nbClayRobot:     s.nbClayRobot,
+		nbObsidianRobot: s.nbObsidianRobot,
+		nbGeodeRobot:    s.nbGeodeRobot,
+	}
+}
+
 func best(blueprint *Blueprint, state State, left int) int {
 	if left == 0 {
 		return state.nbGeode
 	}
 
-	stateCollect := collect(state)
-	v := build(blueprint, state, stateCollect, left)
-	return v
-}
-
-func build(blueprint *Blueprint, state, stateCollect State, left int) int {
 	if v, exists := getCache(left, state); exists {
 		return v
 	}
+
+	stateCollect := collect(state)
 
 	v := 0
 
 	newState, canBuild := newOreRobot(blueprint, state)
 	if canBuild {
-		v = max(v, build(blueprint, newState, stateCollect, left))
+		v = max(v, best(blueprint, newState.combine(stateCollect), left-1))
 	}
 
 	newState, canBuild = newClayRobot(blueprint, state)
 	if canBuild {
-		v = max(v, build(blueprint, newState, stateCollect, left))
+		v = max(v, best(blueprint, newState.combine(stateCollect), left-1))
 	}
 
 	newState, canBuild = newObsidianRobot(blueprint, state)
 	if canBuild {
-		v = max(v, build(blueprint, newState, stateCollect, left))
+		v = max(v, best(blueprint, newState.combine(stateCollect), left-1))
 	}
 
 	newState, canBuild = newGeodeRobot(blueprint, state)
 	if canBuild {
-		v = max(v, build(blueprint, newState, stateCollect, left))
+		v = max(v, best(blueprint, newState.combine(stateCollect), left-1))
 	}
 
 	v = max(v, best(blueprint, state.combine(stateCollect), left-1))
+
 	addCache(left, state, v)
 	return v
 }
