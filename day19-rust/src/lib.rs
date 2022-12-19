@@ -1,8 +1,9 @@
 extern crate core;
 
 use std::cmp;
-use std::collections::hash_map::Entry;
+use std::collections::hash_map::{DefaultHasher, Entry};
 use std::collections::HashMap;
+use std::hash::{Hash, Hasher};
 use std::ops::Index;
 
 pub fn fn1(input: &str, minute: i32) -> i32 {
@@ -12,7 +13,7 @@ pub fn fn1(input: &str, minute: i32) -> i32 {
     for line in lines.iter() {
         let blueprint = to_blueprints(line);
 
-        let mut cache: HashMap<i32, HashMap<State, i32>> = HashMap::new();
+        let mut cache: HashMap<i32, HashMap<u64, i32>> = HashMap::new();
         let v = best(
             &mut cache,
             &blueprint,
@@ -35,11 +36,7 @@ pub fn fn1(input: &str, minute: i32) -> i32 {
     sum
 }
 
-fn get_cache(
-    cache: &mut HashMap<i32, HashMap<State, i32>>,
-    left: i32,
-    state: State,
-) -> (i32, bool) {
+fn get_cache(cache: &mut HashMap<i32, HashMap<u64, i32>>, left: i32, state: u64) -> (i32, bool) {
     if let Entry::Occupied(v) = cache.entry(left) {
         let m = v.into_mut();
         if let Entry::Occupied(v) = m.entry(state) {
@@ -51,13 +48,13 @@ fn get_cache(
     (0, false)
 }
 
-fn add_cache(cache: &mut HashMap<i32, HashMap<State, i32>>, left: i32, state: State, best: i32) {
+fn add_cache(cache: &mut HashMap<i32, HashMap<u64, i32>>, left: i32, state: u64, best: i32) {
     let m = cache.entry(left).or_insert(HashMap::new());
     m.entry(state).or_insert(best);
 }
 
 fn best(
-    cache: &mut HashMap<i32, HashMap<State, i32>>,
+    cache: &mut HashMap<i32, HashMap<u64, i32>>,
     blueprint: &Blueprint,
     state: State,
     left: i32,
@@ -66,7 +63,10 @@ fn best(
         return state.nb_geode;
     }
 
-    let (v, exists) = get_cache(cache, left, state);
+    let mut h = DefaultHasher::new();
+    state.hash(&mut h);
+    let hk = h.finish();
+    let (v, exists) = get_cache(cache, left, h.finish());
     if exists {
         return v;
     }
@@ -76,7 +76,7 @@ fn best(
     if let Some(new_state) = new_geode_robot(blueprint, &state) {
         let s = new_state.combine_geode();
         let v = best(cache, blueprint, s, left - 1);
-        add_cache(cache, left, state, v);
+        add_cache(cache, left, hk, v);
         return v;
     }
 
@@ -85,7 +85,7 @@ fn best(
         v = best(cache, blueprint, s, left - 1);
 
         if left >= 5 {
-            add_cache(cache, left, state, v);
+            add_cache(cache, left, hk, v);
             return v;
         }
     }
@@ -102,7 +102,7 @@ fn best(
 
     let s = state.combine();
     v = cmp::max(v, best(cache, blueprint, s, left - 1));
-    add_cache(cache, left, state, v);
+    add_cache(cache, left, h.finish(), v);
 
     v
 }
