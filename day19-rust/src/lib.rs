@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::ops::Index;
 
-pub fn fn1(input: &str, minute: u64) -> u64 {
+pub fn fn1(input: &str, minute: i32) -> i32 {
     let lines: Vec<_> = input.lines().collect();
 
     let mut sum = 0;
@@ -22,45 +22,52 @@ pub fn fn1(input: &str, minute: u64) -> u64 {
     sum
 }
 
-fn get_cache(cache: &HashMap<u64, u64>, k: u64) -> Option<u64> {
-    if let Some(v) = cache.get(&k) {
-        return Some(*v);
+fn get_cache(cache: &HashMap<i32, HashMap<u64, i32>>, left: i32, state: u64) -> Option<i32> {
+    if let Some(v) = cache.get(&left) {
+        if let Some(v2) = v.get(&state) {
+            return Some(*v2);
+        }
     }
 
     None
 }
 
-fn add_cache(cache: &mut HashMap<u64, u64>, k: u64, best: u64) {
-    cache.insert(k, best);
+fn add_cache(cache: &mut HashMap<i32, HashMap<u64, i32>>, left: i32, state: u64, best: i32) {
+    let m = cache.entry(left).or_insert(HashMap::new());
+    m.entry(state).or_insert(best);
 }
 
 fn best(
-    cache: &mut HashMap<u64, u64>,
+    cache: &mut HashMap<i32, HashMap<u64, i32>>,
     blueprint: &Blueprint,
-    nb_ore: u64,
-    nb_clay: u64,
-    nb_obsidian: u64,
-    nb_geode: u64,
-    nb_ore_robot: u64,
-    nb_clay_robot: u64,
-    nb_obsidian_robot: u64,
-    nb_geode_robot: u64,
-    left: u64,
-) -> u64 {
+    nb_ore: i32,
+    nb_clay: i32,
+    nb_obsidian: i32,
+    nb_geode: i32,
+    nb_ore_robot: i32,
+    nb_clay_robot: i32,
+    nb_obsidian_robot: i32,
+    nb_geode_robot: i32,
+    left: i32,
+) -> i32 {
     if left == 0 {
         return nb_geode;
     }
 
-    let k: u64 = nb_geode_robot
-        | nb_obsidian_robot << 8
-        | nb_clay_robot << 16
-        | nb_ore_robot << 24
-        | nb_geode << 32
-        | nb_obsidian << 38
-        | nb_clay << 44
-        | nb_ore << 50
-        | left << 56;
-    if let Some(v) = get_cache(cache, k) {
+    let mut h = DefaultHasher::new();
+    CacheEntry {
+        nb_ore,
+        nb_clay,
+        nb_obsidian,
+        nb_geode,
+        nb_ore_robot,
+        nb_clay_robot,
+        nb_obsidian_robot,
+        nb_geode_robot,
+    }
+    .hash(&mut h);
+    let k = h.finish();
+    if let Some(v) = get_cache(cache, left, k) {
         return v;
     }
 
@@ -78,7 +85,7 @@ fn best(
             nb_geode_robot + 1,
             left - 1,
         );
-        add_cache(cache, k, v);
+        add_cache(cache, left, k, v);
         return v;
     }
 
@@ -99,7 +106,7 @@ fn best(
             left - 1,
         );
         if left >= 5 {
-            add_cache(cache, k, v);
+            add_cache(cache, left, k, v);
             return v;
         }
     }
@@ -158,7 +165,7 @@ fn best(
             left - 1,
         ),
     );
-    add_cache(cache, k, v);
+    add_cache(cache, left, k, v);
 
     v
 }
@@ -177,24 +184,24 @@ struct CacheEntry {
 
 #[derive(Debug)]
 struct Blueprint {
-    id: u64,
-    ore_ore_cost: u64,
-    clay_ore_cost: u64,
-    obsidian_ore_cost: u64,
-    obsidian_clay_cost: u64,
-    geode_ore_cost: u64,
-    geode_obsidian_cost: u64,
+    id: i32,
+    ore_ore_cost: i32,
+    clay_ore_cost: i32,
+    obsidian_ore_cost: i32,
+    obsidian_clay_cost: i32,
+    geode_ore_cost: i32,
+    geode_obsidian_cost: i32,
 }
 
 fn to_blueprints(s: &str) -> Blueprint {
     let start = 10;
     let end = s.find(":").unwrap();
-    let id = s[start..end].parse::<u64>().unwrap();
+    let id = s[start..end].parse::<i32>().unwrap();
 
     let start = s.find("Each geode robot costs ").unwrap();
     let start = s[start..].find("ore and ").unwrap() + start + "ore and ".len();
     let end = s[start..].find(" ").unwrap();
-    let geode_obsidian_cost = s[start..start + end].parse::<u64>().unwrap();
+    let geode_obsidian_cost = s[start..start + end].parse::<i32>().unwrap();
 
     Blueprint {
         id,
@@ -207,15 +214,15 @@ fn to_blueprints(s: &str) -> Blueprint {
     }
 }
 
-fn get_cost(s: &str, sep: &str) -> u64 {
+fn get_cost(s: &str, sep: &str) -> i32 {
     let start = s.find(sep).unwrap();
     let end = s[(start + sep.len())..].find(" ").unwrap();
     s[(start + sep.len()..(end + start + sep.len()))]
-        .parse::<u64>()
+        .parse::<i32>()
         .unwrap()
 }
 
-pub fn fn2(input: &str, minute: u64, mut remaining: u64) -> u64 {
+pub fn fn2(input: &str, minute: i32, mut remaining: u64) -> i32 {
     let lines: Vec<_> = input.lines().collect();
 
     let mut sum = 1;
