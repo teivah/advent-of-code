@@ -72,7 +72,7 @@ func best(blueprint *Blueprint, state *State, left int) int {
 	newState, canBuild := newGeodeRobot(blueprint, state)
 	if canBuild {
 		s := newState.combineGeode()
-		v = max(v, best(blueprint, &s, left-1))
+		v = best(blueprint, &s, left-1)
 		addCache(left, state, v)
 		return v
 	}
@@ -81,6 +81,11 @@ func best(blueprint *Blueprint, state *State, left int) int {
 	if canBuild {
 		s := newState.combineObsidian()
 		v = max(v, best(blueprint, &s, left-1))
+
+		if left >= 5 {
+			addCache(left, state, v)
+			return v
+		}
 	}
 
 	newState, canBuild = newClayRobot(blueprint, state)
@@ -287,6 +292,7 @@ func fs2(input io.Reader, minute int, remaining int) (int, error) {
 		if remaining == 0 {
 			return sum, nil
 		}
+		remaining--
 		line := scanner.Text()
 		blueprint, err := toBlueprints(line)
 		if err != nil {

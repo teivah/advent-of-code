@@ -37,7 +37,7 @@ func TestFs2Test(t *testing.T) {
 	require.NoError(t, err)
 	v, err := fs2(f, 32, 3)
 	require.NoError(t, err)
-	assert.Equal(t, 24933642, v)
+	assert.Equal(t, 3472, v)
 }
 
 func TestFs2Input(t *testing.T) {
@@ -45,5 +45,5 @@ func TestFs2Input(t *testing.T) {
 	require.NoError(t, err)
 	v, err := fs2(f, 32, 3)
 	require.NoError(t, err)
-	assert.Equal(t, 4370655, v)
+	assert.Equal(t, 3080, v)
 }
