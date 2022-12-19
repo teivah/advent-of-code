@@ -67,12 +67,19 @@ func best(blueprint *Blueprint, state *State, left int) int {
 		return v
 	}
 
-	s := state.combine()
-	v := best(blueprint, &s, left-1)
+	v := 0
 
-	newState, canBuild := newOreRobot(blueprint, state)
+	newState, canBuild := newGeodeRobot(blueprint, state)
 	if canBuild {
-		s := newState.combineOre()
+		s := newState.combineGeode()
+		v = max(v, best(blueprint, &s, left-1))
+		addCache(left, state, v)
+		return v
+	}
+
+	newState, canBuild = newObsidianRobot(blueprint, state)
+	if canBuild {
+		s := newState.combineObsidian()
 		v = max(v, best(blueprint, &s, left-1))
 	}
 
@@ -82,18 +89,14 @@ func best(blueprint *Blueprint, state *State, left int) int {
 		v = max(v, best(blueprint, &s, left-1))
 	}
 
-	newState, canBuild = newObsidianRobot(blueprint, state)
+	newState, canBuild = newOreRobot(blueprint, state)
 	if canBuild {
-		s := newState.combineObsidian()
+		s := newState.combineOre()
 		v = max(v, best(blueprint, &s, left-1))
 	}
 
-	newState, canBuild = newGeodeRobot(blueprint, state)
-	if canBuild {
-		s := newState.combineGeode()
-		v = max(v, best(blueprint, &s, left-1))
-	}
-
+	s := state.combine()
+	v = max(v, best(blueprint, &s, left-1))
 	addCache(left, state, v)
 	return v
 }
