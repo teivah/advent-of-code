@@ -58,28 +58,6 @@ func addCache(left int, state State, best int) {
 	v[state] = best
 }
 
-type key struct {
-	nbOre           int
-	nbClay          int
-	nbObsidian      int
-	nbOreRobot      int
-	nbClayRobot     int
-	nbObsidianRobot int
-	nbGeodeRobot    int
-}
-
-func toKey(s State) key {
-	return key{
-		nbOre:           s.nbOre,
-		nbClay:          s.nbClay,
-		nbObsidian:      s.nbObsidian,
-		nbOreRobot:      s.nbOreRobot,
-		nbClayRobot:     s.nbClayRobot,
-		nbObsidianRobot: s.nbObsidianRobot,
-		nbGeodeRobot:    s.nbGeodeRobot,
-	}
-}
-
 func best(blueprint *Blueprint, state State, left int) int {
 	if left == 0 {
 		return state.nbGeode
