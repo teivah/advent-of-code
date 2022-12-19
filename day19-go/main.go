@@ -24,13 +24,41 @@ func fs1(input io.Reader, minute int) (int, error) {
 	return sum, nil
 }
 
+var cache = make(map[int]map[State]int)
+
+func getCache(left int, state State) (int, bool) {
+	v, exists := cache[left]
+	if !exists {
+		return 0, false
+	}
+
+	v2, exists := v[state]
+	return v2, exists
+}
+
+func addCache(left int, state State, best int) {
+	v, exists := cache[left]
+	if !exists {
+		v = make(map[State]int)
+		cache[left] = v
+	}
+
+	v[state] = best
+}
+
 func best(blueprint *Blueprint, state State, left int) int {
 	if left == 0 {
 		return state.nbObsidian
 	}
 
+	if v, exists := getCache(left, state); exists {
+		return v
+	}
+
 	stateCollect := collect(state)
-	return build(blueprint, state, stateCollect, left)
+	v := build(blueprint, state, stateCollect, left)
+	addCache(left, state, v)
+	return v
 }
 
 func build(blueprint *Blueprint, state, stateCollect State, left int) int {
