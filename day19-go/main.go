@@ -21,7 +21,7 @@ func fs1(input io.Reader, minute int) (int, error) {
 
 		cache = make(map[int]map[State]int, minute)
 		d := duration()
-		v := best(&blueprint, State{nbOreRobot: 1}, minute)
+		v := best(&blueprint, &State{nbOreRobot: 1}, minute)
 		fmt.Println(blueprint.id, v, d())
 		sum += blueprint.id * v
 	}
@@ -38,27 +38,27 @@ func duration() func() time.Duration {
 
 var cache map[int]map[State]int
 
-func getCache(left int, state State) (int, bool) {
+func getCache(left int, state *State) (int, bool) {
 	v, exists := cache[left]
 	if !exists {
 		return 0, false
 	}
 
-	v2, exists := v[state]
+	v2, exists := v[*state]
 	return v2, exists
 }
 
-func addCache(left int, state State, best int) {
+func addCache(left int, state *State, best int) {
 	v, exists := cache[left]
 	if !exists {
 		v = make(map[State]int)
 		cache[left] = v
 	}
 
-	v[state] = best
+	v[*state] = best
 }
 
-func best(blueprint *Blueprint, state State, left int) int {
+func best(blueprint *Blueprint, state *State, left int) int {
 	if left == 0 {
 		return state.nbGeode
 	}
@@ -67,26 +67,31 @@ func best(blueprint *Blueprint, state State, left int) int {
 		return v
 	}
 
-	v := best(blueprint, state.combine(), left-1)
+	s := state.combine()
+	v := best(blueprint, &s, left-1)
 
 	newState, canBuild := newOreRobot(blueprint, state)
 	if canBuild {
-		v = max(v, best(blueprint, newState.combineOre(), left-1))
+		s := newState.combineOre()
+		v = max(v, best(blueprint, &s, left-1))
 	}
 
 	newState, canBuild = newClayRobot(blueprint, state)
 	if canBuild {
-		v = max(v, best(blueprint, newState.combineClay(), left-1))
+		s := newState.combineClay()
+		v = max(v, best(blueprint, &s, left-1))
 	}
 
 	newState, canBuild = newObsidianRobot(blueprint, state)
 	if canBuild {
-		v = max(v, best(blueprint, newState.combineObsidian(), left-1))
+		s := newState.combineObsidian()
+		v = max(v, best(blueprint, &s, left-1))
 	}
 
 	newState, canBuild = newGeodeRobot(blueprint, state)
 	if canBuild {
-		v = max(v, best(blueprint, newState.combineGeode(), left-1))
+		s := newState.combineGeode()
+		v = max(v, best(blueprint, &s, left-1))
 	}
 
 	addCache(left, state, v)
@@ -100,42 +105,46 @@ func max(a, b int) int {
 	return b
 }
 
-func newOreRobot(blueprint *Blueprint, state State) (State, bool) {
+func newOreRobot(blueprint *Blueprint, state *State) (State, bool) {
 	if blueprint.oreOreCost <= state.nbOre {
-		state.nbOre -= blueprint.oreOreCost
-		state.nbOreRobot++
-		return state, true
+		s := *state
+		s.nbOre -= blueprint.oreOreCost
+		s.nbOreRobot++
+		return s, true
 	}
 	return State{}, false
 }
 
-func newClayRobot(blueprint *Blueprint, state State) (State, bool) {
+func newClayRobot(blueprint *Blueprint, state *State) (State, bool) {
 	if blueprint.clayOreCost <= state.nbOre {
-		state.nbOre -= blueprint.clayOreCost
-		state.nbClayRobot++
-		return state, true
+		s := *state
+		s.nbOre -= blueprint.clayOreCost
+		s.nbClayRobot++
+		return s, true
 	}
 	return State{}, false
 }
 
-func newObsidianRobot(blueprint *Blueprint, state State) (State, bool) {
+func newObsidianRobot(blueprint *Blueprint, state *State) (State, bool) {
 	if blueprint.obsidianOreCost <= state.nbOre &&
 		blueprint.obsidianClayCost <= state.nbClay {
-		state.nbOre -= blueprint.obsidianOreCost
-		state.nbClay -= blueprint.obsidianClayCost
-		state.nbObsidianRobot++
-		return state, true
+		s := *state
+		s.nbOre -= blueprint.obsidianOreCost
+		s.nbClay -= blueprint.obsidianClayCost
+		s.nbObsidianRobot++
+		return s, true
 	}
 	return State{}, false
 }
 
-func newGeodeRobot(blueprint *Blueprint, state State) (State, bool) {
+func newGeodeRobot(blueprint *Blueprint, state *State) (State, bool) {
 	if blueprint.geodeOreCost <= state.nbOre &&
 		blueprint.geodeObsidianCost <= state.nbObsidian {
-		state.nbOre -= blueprint.geodeOreCost
-		state.nbObsidian -= blueprint.geodeObsidianCost
-		state.nbGeodeRobot++
-		return state, true
+		s := *state
+		s.nbOre -= blueprint.geodeOreCost
+		s.nbObsidian -= blueprint.geodeObsidianCost
+		s.nbGeodeRobot++
+		return s, true
 	}
 	return State{}, false
 }
@@ -283,7 +292,7 @@ func fs2(input io.Reader, minute int, remaining int) (int, error) {
 
 		cache = make(map[int]map[State]int, minute)
 		d := duration()
-		v := best(&blueprint, State{nbOreRobot: 1}, minute)
+		v := best(&blueprint, &State{nbOreRobot: 1}, minute)
 		fmt.Println(blueprint.id, v, d())
 		sum *= v
 	}
