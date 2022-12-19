@@ -8,6 +8,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestFs1Unit(t *testing.T) {
+	f, err := os.Open("test.txt")
+	require.NoError(t, err)
+	v, err := fs1(f, 22)
+	require.NoError(t, err)
+	assert.Equal(t, 17, v)
+}
+
 func TestFs1Test(t *testing.T) {
 	f, err := os.Open("test.txt")
 	require.NoError(t, err)

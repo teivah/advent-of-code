@@ -19,7 +19,7 @@ func fs1(input io.Reader, minute int) (int, error) {
 			return 0, err
 		}
 
-		cache = make(map[int]map[State]int, 24)
+		cache = make(map[int]map[State]int, minute)
 		d := duration()
 		v := best(&blueprint, State{nbOreRobot: 1}, minute)
 		fmt.Println(blueprint.id, v, d())
@@ -67,31 +67,27 @@ func best(blueprint *Blueprint, state State, left int) int {
 		return v
 	}
 
-	stateCollect := collect(state)
-
-	v := 0
+	v := best(blueprint, state.combine(), left-1)
 
 	newState, canBuild := newOreRobot(blueprint, state)
 	if canBuild {
-		v = max(v, best(blueprint, newState.combine(stateCollect), left-1))
+		v = max(v, best(blueprint, newState.combineOre(), left-1))
 	}
 
 	newState, canBuild = newClayRobot(blueprint, state)
 	if canBuild {
-		v = max(v, best(blueprint, newState.combine(stateCollect), left-1))
+		v = max(v, best(blueprint, newState.combineClay(), left-1))
 	}
 
 	newState, canBuild = newObsidianRobot(blueprint, state)
 	if canBuild {
-		v = max(v, best(blueprint, newState.combine(stateCollect), left-1))
+		v = max(v, best(blueprint, newState.combineObsidian(), left-1))
 	}
 
 	newState, canBuild = newGeodeRobot(blueprint, state)
 	if canBuild {
-		v = max(v, best(blueprint, newState.combine(stateCollect), left-1))
+		v = max(v, best(blueprint, newState.combineGeode(), left-1))
 	}
-
-	v = max(v, best(blueprint, state.combine(stateCollect), left-1))
 
 	addCache(left, state, v)
 	return v
@@ -164,11 +160,43 @@ type State struct {
 	nbGeodeRobot    int
 }
 
-func (s State) combine(s2 State) State {
-	s.nbOre += s2.nbOre
-	s.nbClay += s2.nbClay
-	s.nbObsidian += s2.nbObsidian
-	s.nbGeode += s2.nbGeode
+func (s State) combine() State {
+	s.nbOre += s.nbOreRobot
+	s.nbClay += s.nbClayRobot
+	s.nbObsidian += s.nbObsidianRobot
+	s.nbGeode += s.nbGeodeRobot
+	return s
+}
+
+func (s State) combineOre() State {
+	s.nbOre += s.nbOreRobot - 1
+	s.nbClay += s.nbClayRobot
+	s.nbObsidian += s.nbObsidianRobot
+	s.nbGeode += s.nbGeodeRobot
+	return s
+}
+
+func (s State) combineClay() State {
+	s.nbOre += s.nbOreRobot
+	s.nbClay += s.nbClayRobot - 1
+	s.nbObsidian += s.nbObsidianRobot
+	s.nbGeode += s.nbGeodeRobot
+	return s
+}
+
+func (s State) combineObsidian() State {
+	s.nbOre += s.nbOreRobot
+	s.nbClay += s.nbClayRobot
+	s.nbObsidian += s.nbObsidianRobot - 1
+	s.nbGeode += s.nbGeodeRobot
+	return s
+}
+
+func (s State) combineGeode() State {
+	s.nbOre += s.nbOreRobot
+	s.nbClay += s.nbClayRobot
+	s.nbObsidian += s.nbObsidianRobot
+	s.nbGeode += s.nbGeodeRobot - 1
 	return s
 }
 
@@ -253,7 +281,7 @@ func fs2(input io.Reader, minute int, remaining int) (int, error) {
 			return 0, err
 		}
 
-		cache = make(map[int]map[State]int, 24)
+		cache = make(map[int]map[State]int, minute)
 		d := duration()
 		v := best(&blueprint, State{nbOreRobot: 1}, minute)
 		fmt.Println(blueprint.id, v, d())
