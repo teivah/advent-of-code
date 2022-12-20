@@ -51,6 +51,10 @@ func (r *Ring) move(i int) {
 		to = to % (r.len - 1)
 	}
 
+	if to < -r.len {
+		to = to % (r.len - 1)
+	}
+
 	nodeB := nodeA
 	if to > 0 {
 		for i := 0; i < to; i++ {
@@ -148,7 +152,6 @@ func (r *Ring) getI(v int) int {
 		if cur.value == 0 {
 			break
 		}
-		//fmt.Println(cur.value)
 		cur = cur.next
 	}
 	for i := 0; i < v; i++ {

@@ -60,5 +60,5 @@ func TestFs2Input(t *testing.T) {
 	require.NoError(t, err)
 	v, err := fs2(f, []int{1000, 2000, 3000}, 811589153, 10)
 	require.NoError(t, err)
-	assert.Equal(t, 42, v)
+	assert.Equal(t, 4265712588168, v)
 }
