@@ -22,6 +22,7 @@ func TestRing(t *testing.T) {
 	testMove(t, []int{1, -8, 2, 3}, 1, []int{1, 2, -8, 3})
 	testMove(t, []int{1, 8, 2, 3}, 1, []int{8, 1, 2, 3})
 	testMove(t, []int{1, 10, 2, 3}, 1, []int{1, 2, 10, 3})
+	testMove(t, []int{1, 13, 2, 3}, 1, []int{1, 2, 13, 3})
 }
 
 func testMove(t *testing.T, from []int, move int, to []int) {
@@ -43,21 +44,21 @@ func TestFs1Input(t *testing.T) {
 	require.NoError(t, err)
 	v, err := fs1(f, []int{1000, 2000, 3000})
 	require.NoError(t, err)
-	assert.Equal(t, 42, v)
+	assert.Equal(t, 3346, v)
 }
 
 func TestFs2Test(t *testing.T) {
 	f, err := os.Open("test.txt")
 	require.NoError(t, err)
-	v, err := fs2(f)
+	v, err := fs2(f, []int{1000, 2000, 3000}, 811589153, 10)
 	require.NoError(t, err)
-	assert.Equal(t, 42, v)
+	assert.Equal(t, 1623178306, v)
 }
 
 func TestFs2Input(t *testing.T) {
 	f, err := os.Open("input.txt")
 	require.NoError(t, err)
-	v, err := fs2(f)
+	v, err := fs2(f, []int{1000, 2000, 3000}, 811589153, 10)
 	require.NoError(t, err)
 	assert.Equal(t, 42, v)
 }

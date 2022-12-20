@@ -47,6 +47,10 @@ func (r *Ring) move(i int) {
 		return
 	}
 
+	if to > r.len {
+		to = to % (r.len - 1)
+	}
+
 	nodeB := nodeA
 	if to > 0 {
 		for i := 0; i < to; i++ {
@@ -174,12 +178,8 @@ func fs1(input io.Reader, res []int) (int, error) {
 	r := NewRing(data)
 
 	for i := 0; i < r.len; i++ {
-		//fmt.Printf("%v/%v\n", i+1, r.len)
 		r.move(i)
 	}
-
-	//r.print()
-	//r.write()
 
 	get := r.get(res)
 	fmt.Println(get)
@@ -191,12 +191,33 @@ func fs1(input io.Reader, res []int) (int, error) {
 	return sum, nil
 }
 
-func fs2(input io.Reader) (int, error) {
+func fs2(input io.Reader, res []int, decryptionKey int, mix int) (int, error) {
 	scanner := bufio.NewScanner(input)
+	var data []int
 	for scanner.Scan() {
 		line := scanner.Text()
-		_ = line
+		i, err := strconv.Atoi(line)
+		if err != nil {
+			return 0, err
+		}
+		data = append(data, i*decryptionKey)
 	}
 
-	return 0, nil
+	r := NewRing(data)
+
+	for j := 0; j < mix; j++ {
+		for i := 0; i < r.len; i++ {
+			r.move(i)
+		}
+		fmt.Println(j)
+	}
+
+	get := r.get(res)
+	fmt.Println(get)
+	sum := 0
+	for _, v := range get {
+		sum += v
+	}
+
+	return sum, nil
 }
