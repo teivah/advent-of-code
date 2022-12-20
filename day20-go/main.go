@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"os"
 	"strconv"
 )
 
@@ -119,25 +118,6 @@ func (r *Ring) print() {
 	fmt.Println()
 }
 
-func (r *Ring) write() {
-	f, err := os.CreateTemp("/tmp", "v")
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-
-	cur := r.head
-	f.WriteString(fmt.Sprintf("%d\n", cur.value))
-	cur = cur.next
-	i := 0
-	for cur != r.head {
-		f.WriteString(fmt.Sprintf("%d\n", cur.value))
-		cur = cur.next
-		fmt.Println(i)
-	}
-	fmt.Println(f.Name())
-}
-
 func (r *Ring) get(s []int) []int {
 	res := make([]int, len(s))
 	for i, v := range s {
@@ -212,7 +192,6 @@ func fs2(input io.Reader, res []int, decryptionKey int, mix int) (int, error) {
 		for i := 0; i < r.len; i++ {
 			r.move(i)
 		}
-		fmt.Println(j)
 	}
 
 	get := r.get(res)
