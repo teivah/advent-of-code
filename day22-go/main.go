@@ -50,6 +50,15 @@ type Board struct {
 	curRow       int
 	curCol       int
 	curDirection *Direction
+	hints        func(cubeSize int, faces map[int]Face, cube [][][]*Position, board [][]Position)
+	faces        map[int]Face
+	cubeSize     int
+	cube         [][][]*Position
+
+	x        int
+	y        int
+	z        int
+	cubeType int
 }
 
 type Direction struct {
@@ -227,6 +236,336 @@ func (b *Board) move() bool {
 	}
 }
 
+// Return whether is blocked
+func (b *Board) move2() bool {
+	switch b.curDirection.direction {
+	case Left:
+		switch b.cubeType {
+		case 1:
+			if isWall, exists := b.exists(-1, 0, 0); exists {
+				if isWall {
+					return true
+				}
+				b.shift(-1, 0, 0)
+				return false
+			}
+		case 2:
+			if isWall, exists := b.exists(1, 0, 0); exists {
+				if isWall {
+					return true
+				}
+				b.shift(1, 0, 0)
+				return false
+			}
+		case 3:
+			if isWall, exists := b.exists(0, 0, 1); exists {
+				if isWall {
+					return true
+				}
+				b.shift(0, 0, 1)
+				return false
+			}
+		case 4:
+			if isWall, exists := b.exists(-1, 0, 0); exists {
+				if isWall {
+					return true
+				}
+				b.shift(-1, 0, 0)
+				return false
+			}
+		case 5:
+			if isWall, exists := b.exists(-1, 0, 0); exists {
+				if isWall {
+					return true
+				}
+				b.shift(-1, 0, 0)
+				return false
+			}
+		case 6:
+			if isWall, exists := b.exists(0, 0, -1); exists {
+				if isWall {
+					return true
+				}
+				b.shift(0, 0, -1)
+				return false
+			}
+		}
+	case Right:
+		switch b.cubeType {
+		case 1:
+			if isWall, exists := b.exists(1, 0, 0); exists {
+				if isWall {
+					return true
+				}
+				b.shift(1, 0, 0)
+				return false
+			}
+		case 2:
+			if isWall, exists := b.exists(-1, 0, 0); exists {
+				if isWall {
+					return true
+				}
+				b.shift(-1, 0, 0)
+				return false
+			}
+		case 3:
+			if isWall, exists := b.exists(0, 0, -1); exists {
+				if isWall {
+					return true
+				}
+				b.shift(0, 0, -1)
+				return false
+			}
+		case 4:
+			if isWall, exists := b.exists(1, 0, 0); exists {
+				if isWall {
+					return true
+				}
+				b.shift(1, 0, 0)
+				return false
+			}
+		case 5:
+			if isWall, exists := b.exists(1, 0, 0); exists {
+				if isWall {
+					return true
+				}
+				b.shift(1, 0, 0)
+				return false
+			}
+		case 6:
+			if isWall, exists := b.exists(0, 0, 1); exists {
+				if isWall {
+					return true
+				}
+				b.shift(0, 0, 1)
+				return false
+			}
+		}
+	case Up:
+		switch b.cubeType {
+		case 1:
+			if isWall, exists := b.exists(0, 0, 1); exists {
+				if isWall {
+					return true
+				}
+				b.shift(0, 0, 1)
+				return false
+			}
+		case 2:
+			if isWall, exists := b.exists(0, -1, 0); exists {
+				if isWall {
+					return true
+				}
+				b.shift(0, -1, 0)
+				return false
+			}
+		case 3:
+			if isWall, exists := b.exists(0, -1, 0); exists {
+				if isWall {
+					return true
+				}
+				b.shift(0, -1, 0)
+				return false
+			}
+		case 4:
+			if isWall, exists := b.exists(0, -1, 0); exists {
+				if isWall {
+					return true
+				}
+				b.shift(0, -1, 0)
+				return false
+			}
+		case 5:
+			if isWall, exists := b.exists(0, 0, -1); exists {
+				if isWall {
+					return true
+				}
+				b.shift(0, 0, -1)
+				return false
+			}
+		case 6:
+			if isWall, exists := b.exists(0, -1, 0); exists {
+				if isWall {
+					return true
+				}
+				b.shift(0, -1, 0)
+				return false
+			}
+		}
+	case Down:
+		switch b.cubeType {
+		case 1:
+			if isWall, exists := b.exists(0, 0, -1); exists {
+				if isWall {
+					return true
+				}
+				b.shift(0, 0, -1)
+				return false
+			}
+		case 2:
+			if isWall, exists := b.exists(0, 1, 0); exists {
+				if isWall {
+					return true
+				}
+				b.shift(0, 1, 0)
+				return false
+			}
+		case 3:
+			if isWall, exists := b.exists(0, 1, 0); exists {
+				if isWall {
+					return true
+				}
+				b.shift(0, 1, 0)
+				return false
+			}
+		case 4:
+			if isWall, exists := b.exists(0, 1, 0); exists {
+				if isWall {
+					return true
+				}
+				b.shift(0, 1, 0)
+				return false
+			}
+		case 5:
+			if isWall, exists := b.exists(0, 0, 1); exists {
+				if isWall {
+					return true
+				}
+				b.shift(0, 0, 1)
+				return false
+			}
+		case 6:
+			if isWall, exists := b.exists(0, 1, 0); exists {
+				if isWall {
+					return true
+				}
+				b.shift(0, 1, 0)
+				return false
+			}
+		}
+	}
+
+	return b.moveFace()
+}
+
+func (b *Board) moveFace() bool {
+	x, y, z, direction, next := b.getCoordNextFace()
+
+	if isWall, _ := b.isExist(x, y, z); isWall {
+		return true
+	}
+
+	b.x = x
+	b.y = y
+	b.z = z
+	b.curDirection.direction = direction
+	b.cubeType = next
+	return false
+}
+
+func (b *Board) getCoordNextFace() (int, int, int, DirectionType, int) {
+	x := b.x
+	y := b.y
+	z := b.z
+	end := b.cubeSize + 1
+	switch b.cubeType {
+	case 1:
+		switch b.curDirection.direction {
+		case Left:
+			return 0, 1, z, Down, 3
+		case Right:
+			return end, 1, z, Down, 6
+		case Up:
+			return x, 1, end, Down, 2
+		case Down:
+			return x, 1, 0, Down, 4
+		}
+	case 2:
+		switch b.curDirection.direction {
+		case Left:
+			return end, y, end - 1, Left, 6
+		case Right:
+			return 0, y, end - 1, Right, 3
+		case Up:
+			return x, 0, end - 1, Down, 1
+		case Down:
+			return x, end, end - 1, Up, 5
+		}
+	case 3:
+		switch b.curDirection.direction {
+		case Left:
+			return 1, y, end, Left, 2
+		case Right:
+			return 1, y, 0, Right, 4
+		case Up:
+			return 1, 0, z, Right, 1
+		case Down:
+			return 1, end, z, Right, 5
+		}
+	case 4:
+		switch b.curDirection.direction {
+		case Left:
+			return 0, y, 1, Left, 3
+		case Right:
+			return end, y, 1, Right, 6
+		case Up:
+			return x, 0, 1, Up, 1
+		case Down:
+			return x, end, 1, Down, 5
+		}
+	case 5:
+		switch b.curDirection.direction {
+		case Left:
+			return 0, end - 1, z, Up, 3
+		case Right:
+			return end, end - 1, z, Up, 6
+		case Up:
+			return x, end - 1, 0, Up, 4
+		case Down:
+			return x, end - 1, end, Up, 2
+		}
+	case 6:
+		switch b.curDirection.direction {
+		case Left:
+			return end - 1, y, 0, Left, 4
+		case Right:
+			return end - 1, y, end, Right, 2
+		case Up:
+			return end - 1, 0, z, Left, 1
+		case Down:
+			return end - 1, end, z, Left, 5
+		}
+	}
+
+	panic("unhandled")
+}
+
+func (b *Board) shift(shiftX, shiftY, shiftZ int) {
+	b.x += shiftX
+	b.y += shiftY
+	b.z += shiftZ
+}
+
+func (b *Board) exists(shiftX, shiftY, shiftZ int) (bool, bool) {
+	x := b.x + shiftX
+	y := b.y + shiftY
+	z := b.z + shiftZ
+
+	return b.isExist(x, y, z)
+}
+
+func (b *Board) isExist(x, y, z int) (bool, bool) {
+	if x < 0 || x > b.cubeSize+1 || y < 0 || y > b.cubeSize+1 || z < 0 || z > b.cubeSize+1 {
+		return false, false
+	}
+
+	if b.cube[x][y][z] == nil {
+		return false, false
+	}
+
+	return b.cube[x][y][z].posType == Wall, true
+}
+
 func (b *Board) print() {
 	fmt.Println("----------Board----------")
 	for row := 0; row < b.maxRow; row++ {
@@ -271,6 +610,138 @@ func (b *Board) printFaces() {
 		}
 		fmt.Println()
 	}
+}
+
+func (b *Board) printCube() {
+	fmt.Println("----------Face1----------")
+	for z := b.cubeSize; z >= 1; z-- {
+		for x := 1; x <= b.cubeSize; x++ {
+			fmt.Printf("%c", b.getUnit(x, 0, z))
+		}
+		fmt.Println()
+	}
+	fmt.Println("----------Face2----------")
+	z := b.cubeSize + 1
+	for y := 1; y <= b.cubeSize; y++ {
+		for x := b.cubeSize; x >= 1; x-- {
+			fmt.Printf("%c", b.getUnit(x, y, z))
+		}
+		fmt.Println()
+	}
+	fmt.Println("----------Face3----------")
+	x := 0
+	for y := 1; y <= b.cubeSize; y++ {
+		for z := b.cubeSize; z >= 1; z-- {
+			fmt.Printf("%c", b.getUnit(x, y, z))
+		}
+		fmt.Println()
+	}
+	fmt.Println("----------Face4----------")
+	z = 0
+	for y := 1; y <= b.cubeSize; y++ {
+		for x := 1; x <= b.cubeSize; x++ {
+			fmt.Printf("%c", b.getUnit(x, y, z))
+		}
+		fmt.Println()
+	}
+	fmt.Println("----------Face5----------")
+	y := b.cubeSize + 1
+	for z := 1; z <= b.cubeSize; z++ {
+		for x := 1; x <= b.cubeSize; x++ {
+			fmt.Printf("%c", b.getUnit(x, y, z))
+		}
+		fmt.Println()
+	}
+	fmt.Println("----------Face6----------")
+	x = b.cubeSize + 1
+	for z := 1; z <= b.cubeSize; z++ {
+		for y := b.cubeSize; y >= 1; y-- {
+			fmt.Printf("%c", b.getUnit(x, y, z))
+		}
+		fmt.Println()
+	}
+}
+
+func (b *Board) printCubeFace() {
+	if b.cubeType == 1 {
+		fmt.Println("----------Face1----------")
+		for z := b.cubeSize; z >= 1; z-- {
+			for x := 1; x <= b.cubeSize; x++ {
+				fmt.Printf("%c", b.getUnit(x, 0, z))
+			}
+			fmt.Println()
+		}
+	} else if b.cubeType == 2 {
+		fmt.Println("----------Face2----------")
+		z := b.cubeSize + 1
+		for y := 1; y <= b.cubeSize; y++ {
+			for x := b.cubeSize; x >= 1; x-- {
+				fmt.Printf("%c", b.getUnit(x, y, z))
+			}
+			fmt.Println()
+		}
+	} else if b.cubeType == 3 {
+		fmt.Println("----------Face3----------")
+		x := 0
+		for y := 1; y <= b.cubeSize; y++ {
+			for z := b.cubeSize; z >= 1; z-- {
+				fmt.Printf("%c", b.getUnit(x, y, z))
+			}
+			fmt.Println()
+		}
+	} else if b.cubeType == 4 {
+		fmt.Println("----------Face4----------")
+		z := 0
+		for y := 1; y <= b.cubeSize; y++ {
+			for x := 1; x <= b.cubeSize; x++ {
+				fmt.Printf("%c", b.getUnit(x, y, z))
+			}
+			fmt.Println()
+		}
+	} else if b.cubeType == 5 {
+		fmt.Println("----------Face5----------")
+		y := b.cubeSize + 1
+		for z := 1; z <= b.cubeSize; z++ {
+			for x := 1; x <= b.cubeSize; x++ {
+				fmt.Printf("%c", b.getUnit(x, y, z))
+			}
+			fmt.Println()
+		}
+	} else if b.cubeType == 6 {
+		fmt.Println("----------Face6----------")
+		x := b.cubeSize + 1
+		for z := 1; z <= b.cubeSize; z++ {
+			for y := b.cubeSize; y >= 1; y-- {
+				fmt.Printf("%c", b.getUnit(x, y, z))
+			}
+			fmt.Println()
+		}
+	}
+}
+
+func (b *Board) getUnit(x, y, z int) rune {
+	if x == b.x && y == b.y && z == b.z {
+		switch b.curDirection.direction {
+		case Up:
+			return 'U'
+		case Down:
+			return 'D'
+		case Left:
+			return 'L'
+		case Right:
+			return 'R'
+		}
+	}
+
+	switch b.cube[x][y][z].posType {
+	case Empty:
+		return ' '
+	case Open:
+		return '.'
+	case Wall:
+		return '#'
+	}
+	panic("get unit")
 }
 
 func toBoard(lines []string) Board {
@@ -365,7 +836,7 @@ func toBoard(lines []string) Board {
 	}
 }
 
-func toBoard2(lines []string, cubeSize int, hints map[int]FaceHint) Board {
+func toBoard2(lines []string, cubeSize int, hints func(cubeSize int, faces map[int]Face, cube [][][]*Position, board [][]Position)) Board {
 	maxRow := len(lines)
 	maxCol := 0
 	for _, line := range lines {
@@ -409,7 +880,7 @@ func toBoard2(lines []string, cubeSize int, hints map[int]FaceHint) Board {
 	}
 
 	face := 1
-	var faces []Face
+	faces := make(map[int]Face)
 	for row := 0; row < maxRow; row++ {
 		for col := 0; col < maxCol; col++ {
 			if visited[row][col] {
@@ -417,8 +888,7 @@ func toBoard2(lines []string, cubeSize int, hints map[int]FaceHint) Board {
 			}
 
 			if board[row][col].posType != Empty {
-				//faces[face] = Face{row: row, col: col, value: face}
-				faces = append(faces, Face{row: row, col: col, value: face})
+				faces[face] = Face{row: row, col: col, value: face}
 				for i := 0; i < cubeSize; i++ {
 					for j := 0; j < cubeSize; j++ {
 						board[row+i][col+j].face = face
@@ -439,99 +909,48 @@ func toBoard2(lines []string, cubeSize int, hints map[int]FaceHint) Board {
 		curDirection: &Direction{
 			direction: Right,
 		},
+		hints:    hints,
+		faces:    faces,
+		cubeSize: cubeSize,
+		cubeType: 1,
+		x:        1,
+		y:        0,
+		z:        cubeSize,
 	}
-
-	//for faceID, hint := range hints {
-	//	face := faces[faceID]
-	//
-	//	nextFace := faces[hint.left.face]
-	//	if hint.left.direction == Left {
-	//		if !hint.left.opposite {
-	//			for row := 0; row < cubeSize; row++ {
-	//				board[face.row+row][face.col].left = &board[nextFace.row+row][nextFace.col]
-	//			}
-	//		} else {
-	//			opp := cubeSize
-	//			for row := 0; row < cubeSize; row++ {
-	//				opp--
-	//				board[face.row+row][face.col].left = &board[nextFace.row+opp][nextFace.col]
-	//			}
-	//		}
-	//	} else if hint.left.direction == Right {
-	//		if !hint.left.opposite {
-	//			for row := 0; row < cubeSize; row++ {
-	//				board[face.row+row][face.col].left = &board[nextFace.row+row][nextFace.col+cubeSize-1]
-	//			}
-	//		} else {
-	//			opp := cubeSize
-	//			for row := 0; row < cubeSize; row++ {
-	//				opp--
-	//				board[face.row+row][face.col].left = &board[nextFace.row+opp][nextFace.col+cubeSize-1]
-	//			}
-	//		}
-	//	} else if hint.left.direction == Down {
-	//		if !hint.left.opposite {
-	//			for row := 0; row < cubeSize; row++ {
-	//				board[face.row+row][face.col].left = &board[nextFace.row][nextFace.col+row]
-	//			}
-	//		} else {
-	//			opp := cubeSize
-	//			for row := 0; row < cubeSize; row++ {
-	//				opp--
-	//				board[face.row+row][face.col].left = &board[nextFace.row+opp][nextFace.col+opp]
-	//			}
-	//		}
-	//	} else {
-	//		if !hint.left.opposite {
-	//			for row := 0; row < cubeSize; row++ {
-	//				board[face.row+row][face.col].left = &board[nextFace.row][nextFace.col+row]
-	//			}
-	//		} else {
-	//			opp := cubeSize
-	//			for row := 0; row < cubeSize; row++ {
-	//				opp--
-	//				board[face.row+row][face.col].left = &board[nextFace.row+opp][nextFace.col+opp]
-	//			}
-	//		}
-	//	}
-	//
-	//}
 
 	for i, face := range faces {
 		if v := b.getLeftFace(face.row, face.col-1); v != 0 {
-			faces[i].left = v
+			face.left = v
+			faces[i] = face
 		}
 		if v := b.getRightFace(face.row, face.col+cubeSize); v != 0 {
-			faces[i].right = v
+			face.right = v
+			faces[i] = face
 		}
 		if v := b.getUpFace(face.row-1, face.col); v != 0 {
-			faces[i].up = v
+			face.up = v
+			faces[i] = face
 		}
 		if v := b.getDownFace(face.row+cubeSize, face.col); v != 0 {
-			faces[i].down = v
+			face.down = v
+			faces[i] = face
 		}
 	}
 
-	//for i := 1; i < len(faces); i++ {
-	//	face := faces[i]
-	//}
-
 	fmt.Printf("%#v\n", faces)
 
+	cube := make([][][]*Position, cubeSize+2)
+	for i := 0; i < cubeSize+2; i++ {
+		cube[i] = make([][]*Position, cubeSize+2)
+		for j := 0; j < cubeSize+2; j++ {
+			cube[i][j] = make([]*Position, cubeSize+2)
+		}
+	}
+
+	hints(cubeSize, faces, cube, board)
+	b.cube = cube
+
 	return b
-}
-
-type FaceHint struct {
-	left  Hint
-	right Hint
-	up    Hint
-	down  Hint
-}
-
-type Hint struct {
-	face      int
-	direction DirectionType
-	opposite  bool
 }
 
 type Face struct {
@@ -555,6 +974,11 @@ type Position struct {
 	up      *Position
 	down    *Position
 	face    int
+
+	fromLeft  DirectionType
+	fromRight DirectionType
+	fromUp    DirectionType
+	fromDown  DirectionType
 }
 
 type Type int
@@ -607,7 +1031,7 @@ func toDigit(r rune) int {
 	return i
 }
 
-func fs2(input io.Reader, cubeSize int, hints map[int]FaceHint) (int, error) {
+func fs2(input io.Reader, cubeSize int, hints func(cubeSize int, faces map[int]Face, cube [][][]*Position, board [][]Position)) (int, error) {
 	scanner := bufio.NewScanner(input)
 	var lines []string
 	for scanner.Scan() {
@@ -616,29 +1040,32 @@ func fs2(input io.Reader, cubeSize int, hints map[int]FaceHint) (int, error) {
 	}
 
 	board := toBoard2(lines[:len(lines)-2], cubeSize, hints)
-	board.printFaces()
+	//board.printFaces()
+	//board.printCube()
+	//board.print()
 
-	//steps := toSteps(lines[len(lines)-1])
+	steps := toSteps(lines[len(lines)-1])
+	for _, step := range steps {
+		if step.isMove {
+			for i := 0; i < step.move; i++ {
+				isBlocked := board.move2()
+				if isBlocked {
+					break
+				}
+				//board.printCubeFace()
+			}
+		} else {
+			if step.turn == Left {
+				board.left()
+			} else {
+				board.right()
+			}
+			//board.printCubeFace()
+		}
+	}
 
-	//for _, step := range steps {
-	//	if step.isMove {
-	//		for i := 0; i < step.move; i++ {
-	//			isBlocked := board.move()
-	//			if isBlocked {
-	//				break
-	//			}
-	//			//board.print()
-	//		}
-	//	} else {
-	//		if step.turn == Left {
-	//			board.left()
-	//		} else {
-	//			board.right()
-	//		}
-	//		//board.print()
-	//	}
-	//}
+	pos := board.cube[board.x][board.y][board.z]
 
-	res := (board.curRow+1)*1000 + (board.curCol+1)*4 + board.getDirectionValue()
+	res := (pos.row+1)*1000 + (pos.col+1)*4 + board.getDirectionValue()
 	return res, nil
 }
