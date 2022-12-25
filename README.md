@@ -24,3 +24,4 @@
 * [Day 22](https://adventofcode.com/2022/day/22): [Go](day22-go/main.go)
 * [Day 23](https://adventofcode.com/2022/day/23): [Go](day23-go/main.go)
 * [Day 24](https://adventofcode.com/2022/day/24): [Go](day24-go/main.go)
+* [Day 25](https://adventofcode.com/2022/day/25): [Go](day25-go/main.go)
