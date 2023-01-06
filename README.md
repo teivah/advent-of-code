@@ -31,3 +31,4 @@
 * [Day 1](https://adventofcode.com/2015/day/1): [Rust](2015/day1-rust/src/lib.rs)
 * [Day 2](https://adventofcode.com/2015/day/2): [Rust](2015/day2-rust/src/lib.rs)
 * [Day 3](https://adventofcode.com/2015/day/3): [Rust](2015/day3-rust/src/lib.rs)
+* [Day 4](https://adventofcode.com/2015/day/4): [Rust](2015/day4-rust/src/lib.rs)
