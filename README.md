@@ -25,3 +25,7 @@
 * [Day 23](https://adventofcode.com/2022/day/23): [Go](2022/day23-go/main.go)
 * [Day 24](https://adventofcode.com/2022/day/24): [Go](2022/day24-go/main.go)
 * [Day 25](https://adventofcode.com/2022/day/25): [Go](2022/day25-go/main.go)
+
+## 2015
+
+* [Day 1](https://adventofcode.com/2015/day/1): [Rust](2015/day1-rust/src/lib.rs)
