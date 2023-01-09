@@ -19,6 +19,8 @@ func TestFs1Input(t *testing.T) {
 	assert.Equal(t, 1002, v)
 }
 
+// poison
+// magic missile
 func TestUnit(t *testing.T) {
 	v := fs1(10, 250, 13, 8, map[string]Spell{
 		"missile":  {cost: 53, last: 0, damage: 4},
@@ -29,6 +31,15 @@ func TestUnit(t *testing.T) {
 	})
 	assert.Equal(t, 226, v)
 }
+
+// 10 250
+// 14
+
+// recharge
+// shield
+// drain
+// poison
+// missile
 
 func TestUnit2(t *testing.T) {
 	v := fs1(10, 250, 14, 8, map[string]Spell{
