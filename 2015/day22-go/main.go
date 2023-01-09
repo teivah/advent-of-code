@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bufio"
-	"io"
 	"math"
 )
 
@@ -21,15 +19,9 @@ func fs1(playerHitPoints, playerMana, bossHitPoints, bossDamage int, abilities m
 		damage:    bossDamage,
 	}
 
-	return game(player, boss, abilities, make(map[string]Spell), 0)
-}
+	cache = make(map[Player]map[Boss]map[int]struct{})
 
-func copySpells(s []Spell) []Spell {
-	res := make([]Spell, len(s), len(s)+1)
-	for i, s := range s {
-		res[i] = s
-	}
-	return res
+	return game1(player, boss, abilities, nil, 0)
 }
 
 func newSpell(spells []Spell, spell Spell) []Spell {
@@ -84,7 +76,7 @@ func (p Player) castable(spell Spell) bool {
 
 func (p Player) apply(passive bool, spell Spell) Player {
 	p.hitPoints += spell.heal
-	p.armor = spell.armorIncreased
+	p.armor += spell.armorIncreased
 	p.mana += spell.manaRecharge
 	if !passive {
 		p.mana -= spell.cost
@@ -96,21 +88,83 @@ func (p Player) isDead() bool {
 	return p.hitPoints <= 0
 }
 
-func passiveSpells(player Player, boss Boss, spells map[string]Spell) (Player, Boss, map[string]Spell) {
-	res := make(map[string]Spell)
-	for k, spell := range spells {
+func passiveSpells(player Player, boss Boss, spells []Spell) (Player, Boss, []Spell) {
+	res := make([]Spell, 0, len(spells))
+	for _, spell := range spells {
 		player = player.apply(true, spell)
 		boss = boss.apply(spell)
 		spell.last--
 		if spell.last > 0 {
-			res[k] = spell
+			res = append(res, spell)
 		}
 	}
+	player.hitPoints--
 	return player, boss, res
 }
 
-func game(player Player, boss Boss, abilities map[string]Spell, spells map[string]Spell, manaSpent int) int {
+func addSpell(spells []Spell, spell Spell) []Spell {
+	res := make([]Spell, len(spells), len(spells)+1)
+	for i, s := range spells {
+		res[i] = s
+	}
+	res = append(res, spell)
+	return res
+}
+
+func copySpells(spells []Spell) []Spell {
+	res := make([]Spell, len(spells))
+	for i, s := range spells {
+		res[i] = s
+	}
+	return res
+}
+
+func deleteSpell(spells []Spell) []Spell {
+	return spells[:len(spells)-1]
+}
+
+var cache map[Player]map[Boss]map[int]struct{}
+
+func addCache(player Player, boss Boss, manaSpent int) {
+	v, exists := cache[player]
+	if !exists {
+		v = make(map[Boss]map[int]struct{})
+		cache[player] = v
+	}
+
+	v2, exists := v[boss]
+	if !exists {
+		v2 = make(map[int]struct{})
+		v[boss] = v2
+	}
+
+	v2[manaSpent] = struct{}{}
+}
+
+func containsCache(player Player, boss Boss, manaSpent int) bool {
+	v, exists := cache[player]
+	if !exists {
+		return false
+	}
+
+	v2, exists := v[boss]
+	if !exists {
+		return false
+	}
+
+	_, exists = v2[manaSpent]
+	return exists
+}
+
+func game1(player Player, boss Boss, abilities map[string]Spell, spells []Spell, manaSpent int) int {
+	if containsCache(player, boss, manaSpent) {
+		return math.MaxInt
+	}
+
+	addCache(player, boss, manaSpent)
+
 	// Player turn
+	player.armor = 0
 
 	// Passive
 	player, boss, spells = passiveSpells(player, boss, spells)
@@ -121,10 +175,12 @@ func game(player Player, boss Boss, abilities map[string]Spell, spells map[strin
 	// Cast
 	minMana := math.MaxInt
 	for k, spell := range abilities {
+		spells := copySpells(spells)
 		player := player
 		boss := boss
+		_ = k
 
-		if _, exists := spells[k]; exists {
+		if spell.exists(spells) {
 			continue
 		}
 
@@ -147,7 +203,7 @@ func game(player Player, boss Boss, abilities map[string]Spell, spells map[strin
 				continue
 			}
 			player.mana -= spell.cost
-			spells[k] = spell
+			spells = append(spells, spell)
 		}
 
 		// Boss turn
@@ -164,11 +220,9 @@ func game(player Player, boss Boss, abilities map[string]Spell, spells map[strin
 			continue
 		}
 
-		if v := game(player, boss, abilities, spells, manaSpent); v < minMana {
+		if v := game1(player, boss, abilities, spells, manaSpent); v < minMana {
 			minMana = v
 		}
-
-		delete(spells, k)
 	}
 
 	return minMana
@@ -360,16 +414,108 @@ type Spell struct {
 	manaRecharge   int
 }
 
+func (s Spell) exists(spells []Spell) bool {
+	for _, spell := range spells {
+		if s.cost == spell.cost {
+			return true
+		}
+	}
+	return false
+}
+
 func (s Spell) active() bool {
 	return s.last == 0
 }
 
-func fs2(input io.Reader) (int, error) {
-	scanner := bufio.NewScanner(input)
-	for scanner.Scan() {
-		line := scanner.Text()
-		_ = line
+func fs2(playerHitPoints, playerMana, bossHitPoints, bossDamage int, abilities map[string]Spell) int {
+	player := Player{
+		hitPoints: playerHitPoints,
+		mana:      playerMana,
+	}
+	boss := Boss{
+		hitPoints: bossHitPoints,
+		damage:    bossDamage,
 	}
 
-	return 0, nil
+	cache = make(map[Player]map[Boss]map[int]struct{})
+
+	return game2(player, boss, abilities, nil, 0)
+}
+
+func game2(player Player, boss Boss, abilities map[string]Spell, spells []Spell, manaSpent int) int {
+	if containsCache(player, boss, manaSpent) {
+		return math.MaxInt
+	}
+
+	addCache(player, boss, manaSpent)
+
+	// Player turn
+	player.armor = 0
+
+	// Passive
+	player, boss, spells = passiveSpells(player, boss, spells)
+	if boss.isDead() {
+		return manaSpent
+	}
+	if player.isDead() {
+		return math.MaxInt
+	}
+
+	// Cast
+	minMana := math.MaxInt
+	for k, spell := range abilities {
+		spells := copySpells(spells)
+		player := player
+		boss := boss
+		_ = k
+
+		if spell.exists(spells) {
+			continue
+		}
+
+		manaSpent := manaSpent
+		manaSpent += spell.cost
+
+		if spell.active() {
+			if !player.castable(spell) {
+				continue
+			}
+			player = player.apply(false, spell)
+			boss = boss.apply(spell)
+			if boss.isDead() {
+				if manaSpent < minMana {
+					minMana = manaSpent
+				}
+			}
+		} else {
+			if !player.castable(spell) {
+				continue
+			}
+			player.mana -= spell.cost
+			spells = append(spells, spell)
+		}
+
+		// Boss turn
+
+		// Passive
+		player, boss, spells = passiveSpells(player, boss, spells)
+		if boss.isDead() {
+			minMana = manaSpent
+		}
+		if player.isDead() {
+			return math.MaxInt
+		}
+
+		// Attack
+		player = boss.attack(player)
+		if player.isDead() {
+			continue
+		}
+
+		if v := game1(player, boss, abilities, spells, manaSpent); v < minMana {
+			minMana = v
+		}
+	}
+
+	return minMana
 }

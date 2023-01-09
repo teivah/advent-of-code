@@ -47,3 +47,6 @@
 * [Day 17](https://adventofcode.com/2015/day/17): [Go](2015/day17-go/main.go)
 * [Day 18](https://adventofcode.com/2015/day/18): [Go](2015/day18-go/main.go)
 * [Day 19](https://adventofcode.com/2015/day/19): [Go](2015/day19-go/main.go)
+* [Day 20](https://adventofcode.com/2015/day/20): [Go](2015/day20-go/main.go)
+* [Day 21](https://adventofcode.com/2015/day/21): [Go](2015/day21-go/main.go)
+* [Day 22](https://adventofcode.com/2015/day/22): [Go](2015/day22-go/main.go)
