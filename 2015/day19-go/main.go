@@ -75,6 +75,10 @@ func best(start, target string, replacements map[string][]string) int {
 		return 0
 	}
 
+	if len(start) >= len(target) {
+		return math.MaxInt
+	}
+
 	if v, exists := cache[start]; exists {
 		if v == math.MaxInt {
 			return v
@@ -82,14 +86,16 @@ func best(start, target string, replacements map[string][]string) int {
 		return v + 1
 	}
 
-	if len(start) >= len(target) {
-		return math.MaxInt
-	}
+	// To avoid cycles
+	cache[start] = math.MaxInt
 
 	minScore := math.MaxInt
 	for i := 0; i < len(start); i++ {
-		s := start[i : i+1]
-		if options, exists := replacements[s]; exists {
+		if i > 0 && start[i-1] != target[i-1] {
+			break
+		}
+
+		if options, exists := replacements[start[i:i+1]]; exists {
 			for _, v := range options {
 				res := start[:i] + v + start[i+1:]
 				score := best(res, target, replacements)
@@ -101,8 +107,7 @@ func best(start, target string, replacements map[string][]string) int {
 		}
 
 		if i != len(start)-1 {
-			s = start[i : i+2]
-			if options, exists := replacements[s]; exists {
+			if options, exists := replacements[start[i:i+2]]; exists {
 				for _, v := range options {
 					res := start[:i] + v + start[i+2:]
 					score := best(res, target, replacements)
