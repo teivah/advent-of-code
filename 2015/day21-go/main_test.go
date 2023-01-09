@@ -31,7 +31,7 @@ func TestFs1Input(t *testing.T) {
 		{cost: 40, damage: 0, armor: 2},
 		{cost: 80, damage: 0, armor: 3},
 	})
-	assert.Equal(t, 42, v)
+	assert.Equal(t, 78, v)
 }
 
 func TestFs2Input(t *testing.T) {

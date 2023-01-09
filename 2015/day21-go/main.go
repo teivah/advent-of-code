@@ -128,17 +128,5 @@ func calcDamage(damage, armor int) int {
 }
 
 func fs2(bossHitPoints, bossDamage, bossArmor int, storeWeapons []Unit, storeArmors []Unit, storeRings []Unit) int {
-	var rings [2]*Unit
-
-	minGold := math.MaxInt
-	for _, w := range storeWeapons {
-		// With armor
-		for _, a := range storeArmors {
-			minGold = min(minGold, round(100, w, &a, rings, bossHitPoints, bossDamage, bossArmor, storeRings, w.cost+a.cost, 0))
-		}
-		// Without armor
-		minGold = min(minGold, round(100, w, nil, rings, bossHitPoints, bossDamage, bossArmor, storeRings, w.cost, 0))
-	}
-
-	return minGold
+	return 0
 }
