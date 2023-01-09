@@ -162,31 +162,21 @@ func calcDamage(damage, armor int) int {
 func fs2(bossHitPoints, bossDamage, bossArmor int, storeWeapons []Unit, storeArmors []Unit, storeRings []Unit) int {
 	equipments := allEquipments(storeWeapons, storeArmors, storeRings)
 
-	atLeastOneWin := make(map[int]bool)
+	maxGold := 0
 	for _, equipment := range equipments {
 		playerDamage, playerArmor, gold := equipment.sum(0, 0)
 
-		for _, bossEquipment := range equipments {
-			bossDamage, bossArmor, _ := bossEquipment.sum(bossDamage, bossArmor)
-
-			if !win(100, playerDamage, playerArmor, bossHitPoints, bossDamage, bossArmor) {
-				if _, exists := atLeastOneWin[gold]; !exists {
-					atLeastOneWin[gold] = false
-				}
-			} else {
-				atLeastOneWin[gold] = true
-			}
-		}
-	}
-
-	fmt.Println(atLeastOneWin)
-
-	maxGold := 0
-	for gold, oneWin := range atLeastOneWin {
-		if !oneWin && gold > maxGold {
-			maxGold = gold
+		if !win(100, playerDamage, playerArmor, bossHitPoints, bossDamage, bossArmor) {
+			maxGold = max(maxGold, gold)
 		}
 	}
 
 	return maxGold
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }
