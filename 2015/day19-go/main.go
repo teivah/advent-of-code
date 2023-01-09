@@ -49,6 +49,7 @@ func fs1(input io.Reader) (int, error) {
 func fs2(input io.Reader) (int, error) {
 	scanner := bufio.NewScanner(input)
 	m := make(map[string][]string)
+	reverse := make(map[string]string)
 	target := ""
 	for scanner.Scan() {
 		s := scanner.Text()
@@ -58,75 +59,34 @@ func fs2(input io.Reader) (int, error) {
 			break
 		}
 		idx := indexAll(s, " ")
-		m[s[:idx[0]]] = append(m[s[:idx[0]]], s[idx[1]+1:])
+		from := s[:idx[0]]
+		to := s[idx[1]+1:]
+		m[from] = append(m[from], to)
+		reverse[to] = from
 	}
 
 	start := "e"
 
-	cache = make(map[string]int)
-
-	return best(start, target, m), nil
+	return best(target, start, reverse), nil
 }
 
-var cache map[string]int
-
-func best(start, target string, replacements map[string][]string) int {
+func best(start, target string, reverse map[string]string) int {
 	if start == target {
 		return 0
 	}
 
-	if len(start) >= len(target) {
-		return math.MaxInt
-	}
-
-	if v, exists := cache[start]; exists {
-		if v == math.MaxInt {
-			return v
-		}
-		return v + 1
-	}
-
-	// To avoid cycles
-	cache[start] = math.MaxInt
-
-	minScore := math.MaxInt
-	for i := 0; i < len(start); i++ {
-		if i > 0 && start[i-1] != target[i-1] {
-			break
-		}
-
-		if options, exists := replacements[start[i:i+1]]; exists {
-			for _, v := range options {
-				res := start[:i] + v + start[i+1:]
-				score := best(res, target, replacements)
-				if score == math.MaxInt {
-					continue
-				}
-				minScore = min(minScore, score)
-			}
-		}
-
-		if i != len(start)-1 {
-			if options, exists := replacements[start[i:i+2]]; exists {
-				for _, v := range options {
-					res := start[:i] + v + start[i+2:]
-					score := best(res, target, replacements)
-					if score == math.MaxInt {
-						continue
-					}
-					minScore = min(minScore, score)
-				}
+	for to, from := range reverse {
+		all := indexAll(start, to)
+		for _, idx := range all {
+			s := start[:idx] + from + start[idx+len(to):]
+			v := best(s, target, reverse)
+			if v != math.MaxInt {
+				return v + 1
 			}
 		}
 	}
 
-	cache[start] = minScore
-
-	if minScore == math.MaxInt {
-		return math.MaxInt
-	}
-
-	return minScore + 1
+	return math.MaxInt
 }
 
 func min(a, b int) int {
