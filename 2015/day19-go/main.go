@@ -65,18 +65,21 @@ func fs2(input io.Reader) (int, error) {
 
 	cache = make(map[string]int)
 
-	return best(start, target, m, 0), nil
+	return best(start, target, m), nil
 }
 
 var cache map[string]int
 
-func best(start, target string, replacements map[string][]string, cur int) int {
+func best(start, target string, replacements map[string][]string) int {
 	if start == target {
-		return cur
+		return 0
 	}
 
 	if v, exists := cache[start]; exists {
-		return v
+		if v == math.MaxInt {
+			return v
+		}
+		return v + 1
 	}
 
 	if len(start) >= len(target) {
@@ -89,7 +92,11 @@ func best(start, target string, replacements map[string][]string, cur int) int {
 		if options, exists := replacements[s]; exists {
 			for _, v := range options {
 				res := start[:i] + v + start[i+1:]
-				minScore = min(minScore, best(res, target, replacements, cur+1))
+				score := best(res, target, replacements)
+				if score == math.MaxInt {
+					continue
+				}
+				minScore = min(minScore, score)
 			}
 		}
 
@@ -98,7 +105,11 @@ func best(start, target string, replacements map[string][]string, cur int) int {
 			if options, exists := replacements[s]; exists {
 				for _, v := range options {
 					res := start[:i] + v + start[i+2:]
-					minScore = min(minScore, best(res, target, replacements, cur+1))
+					score := best(res, target, replacements)
+					if score == math.MaxInt {
+						continue
+					}
+					minScore = min(minScore, score)
 				}
 			}
 		}
@@ -106,7 +117,11 @@ func best(start, target string, replacements map[string][]string, cur int) int {
 
 	cache[start] = minScore
 
-	return minScore
+	if minScore == math.MaxInt {
+		return math.MaxInt
+	}
+
+	return minScore + 1
 }
 
 func min(a, b int) int {
