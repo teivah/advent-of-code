@@ -26,6 +26,13 @@
 * [Day 24](https://adventofcode.com/2022/day/24): [Go](2022/day24-go/main.go)
 * [Day 25](https://adventofcode.com/2022/day/25): [Go](2022/day25-go/main.go)
 
+## 2016
+
+* [Day 1](https://adventofcode.com/2016/day/1): [Rust](2016/day1-rust/src/lib.rs)
+* [Day 2](https://adventofcode.com/2015/day/2): [Go](2016/day2-go/main.go)
+* [Day 3](https://adventofcode.com/2015/day/3): [Go](2016/day3-go/main.go)
+* [Day 4](https://adventofcode.com/2015/day/4): [Go](2016/day4-go/main.go)
+
 ## 2015
 
 * [Day 1](https://adventofcode.com/2015/day/1): [Rust](2015/day1-rust/src/lib.rs)
