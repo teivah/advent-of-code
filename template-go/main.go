@@ -12,7 +12,7 @@ func fs1(input io.Reader) (int, error) {
 		_ = line
 	}
 
-	return 0, nil
+	return 42, nil
 }
 
 func fs2(input io.Reader) (int, error) {
@@ -22,5 +22,5 @@ func fs2(input io.Reader) (int, error) {
 		_ = line
 	}
 
-	return 0, nil
+	return 42, nil
 }
