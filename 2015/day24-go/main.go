@@ -2,10 +2,12 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"math"
 	"sort"
 	"strconv"
+	"strings"
 )
 
 func fs1(input io.Reader) (int, error) {
@@ -22,7 +24,11 @@ func fs1(input io.Reader) (int, error) {
 		sum += i
 	}
 
-	f := best(0, packages, 0, 0, 0, 0, 1, sum)
+	f := best(0, packages, 0, 0, 0, 0, 1, sum/3)
+
+	for k := range cache {
+		fmt.Println(k)
+	}
 
 	return f.qe, nil
 }
@@ -32,48 +38,31 @@ type Found struct {
 	qe         int
 }
 
-// idx, weight1, weight2, weight3
-var cache map[int]map[int]map[int]map[int]struct{}
+var cache map[string]struct{}
 
-func addCache(idx, w1, w2, w3 int) {
+func formatKey(a ...any) string {
+	sb := strings.Builder{}
+	for _, s := range a {
+		sb.WriteString(fmt.Sprintf("%v,", s))
+	}
+	return sb.String()
+}
+
+func addCache(a ...any) {
+	key := formatKey(a...)
 	if cache == nil {
-		cache = make(map[int]map[int]map[int]map[int]struct{})
+		cache = make(map[string]struct{})
 	}
-
-	v, exists := cache[idx]
-	if !exists {
-		v = make(map[int]map[int]map[int]struct{})
-		cache[idx] = v
-	}
-
-	v2, exists := v[w1]
-	if !exists {
-		v2 = make(map[int]map[int]struct{})
-		v[w1] = v2
-	}
-
-	v3, exists := v2[w2]
-	if !exists {
-		v3 = make(map[int]struct{})
-		v2[w2] = v3
-	}
-
-	v3[w3] = struct{}{}
+	cache[key] = struct{}{}
 }
 
-func containsCache(idx, w1, w2, w3 int) bool {
-	if v, exists := cache[idx]; exists {
-		if v2, exists := v[w1]; exists {
-			if v3, exists := v2[w2]; exists {
-				_, exists := v3[w3]
-				return exists
-			}
-		}
-	}
-	return false
+func containsCache(a ...any) bool {
+	key := formatKey(a...)
+	_, exists := cache[key]
+	return exists
 }
 
-func best(idx int, packages []int, w1, w2, w3, nbPackages1, qe, remaining int) Found {
+func best(idx int, packages []int, w1, w2, w3, nbPackages1, qe, target int) Found {
 	if idx == len(packages) {
 		if w1 != w2 || w1 != w3 {
 			return Found{math.MaxInt, math.MaxInt}
@@ -81,27 +70,20 @@ func best(idx int, packages []int, w1, w2, w3, nbPackages1, qe, remaining int) F
 		return Found{nbPackages1, qe}
 	}
 
-	if 2*w1 > w2+w3+remaining {
+	if w1 > target || w2 > target || w3 > target {
 		return Found{math.MaxInt, math.MaxInt}
 	}
-
-	if containsCache(idx, w1, w2, w3) || containsCache(idx, w1, w3, w2) {
-		return Found{math.MaxInt, math.MaxInt}
-	}
-
-	addCache(idx, w1, w2, w3)
 
 	weight := packages[idx]
-	remaining -= weight
 
 	var found1 Found
 	if multiplyWillOverflow(qe, weight) {
 		found1 = Found{math.MaxInt, math.MaxInt}
 	} else {
-		found1 = best(idx+1, packages, w1+weight, w2, w3, nbPackages1+1, qe*weight, remaining)
+		found1 = best(idx+1, packages, w1+weight, w2, w3, nbPackages1+1, qe*weight, target)
 	}
-	found2 := best(idx+1, packages, w1, w2+weight, w3, nbPackages1, qe, remaining)
-	found3 := best(idx+1, packages, w1, w2, w3+weight, nbPackages1, qe, remaining)
+	found2 := best(idx+1, packages, w1, w2+weight, w3, nbPackages1, qe, target)
+	found3 := best(idx+1, packages, w1, w2, w3+weight, nbPackages1, qe, target)
 
 	s := []Found{found1, found2, found3}
 	sort.Slice(s, func(i, j int) bool {
@@ -111,7 +93,7 @@ func best(idx int, packages []int, w1, w2, w3, nbPackages1, qe, remaining int) F
 		if a.nbPackages < b.nbPackages {
 			return true
 		}
-		if b.nbPackages < b.nbPackages {
+		if b.nbPackages < a.nbPackages {
 			return false
 		}
 		return a.qe < b.qe
