@@ -51,6 +51,7 @@ pub fn fn2(s: &str, zeroes: usize) -> String {
                 let mut chars = res.chars().collect::<Vec<char>>();
                 chars[v as usize] = c;
                 res = chars.into_iter().collect::<String>();
+                println!("{}", res);
                 if set.len() == 8 {
                     return res;
                 }
@@ -83,6 +84,6 @@ mod tests {
 
     #[test]
     fn test_fn2_input() {
-        assert_eq!(fn2("abc", 5), "18f47a30");
+        assert_eq!(fn2("cxdnnyjw", 5), "999828ec");
     }
 }
