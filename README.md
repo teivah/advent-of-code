@@ -51,3 +51,5 @@
 * [Day 21](https://adventofcode.com/2015/day/21): [Go](2015/day21-go/main.go)
 * [Day 22](https://adventofcode.com/2015/day/22): [Go](2015/day22-go/main.go)
 * [Day 23](https://adventofcode.com/2015/day/23): [Go](2015/day23-go/main.go)
+* [Day 24](https://adventofcode.com/2015/day/24): [Go](2015/day24-go/main.go)
+* [Day 25](https://adventofcode.com/2015/day/25): [Go](2015/day25-go/main.go)
