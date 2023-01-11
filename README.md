@@ -33,6 +33,7 @@
 * [Day 3](https://adventofcode.com/2015/day/3): [Go](2016/day3-go/main.go)
 * [Day 4](https://adventofcode.com/2015/day/4): [Go](2016/day4-go/main.go)
 * [Day 5](https://adventofcode.com/2016/day/5): [Rust](2016/day5-rust/src/lib.rs)
+* [Day 6](https://adventofcode.com/2016/day/6): [Rust](2016/day6-rust/src/lib.rs)
 
 ## 2015
 
