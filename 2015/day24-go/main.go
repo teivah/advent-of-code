@@ -24,11 +24,7 @@ func fs1(input io.Reader) (int, error) {
 		sum += i
 	}
 
-	f := best(0, packages, 0, 0, 0, 0, 1, sum/3)
-
-	for k := range cache {
-		fmt.Println(k)
-	}
+	f := best(0, packages, 0, 0, 0, 0, 1, sum/3, nil, nil, nil)
 
 	return f.qe, nil
 }
@@ -62,12 +58,17 @@ func containsCache(a ...any) bool {
 	return exists
 }
 
-func best(idx int, packages []int, w1, w2, w3, nbPackages1, qe, target int) Found {
+func best(idx int, packages []int, w1, w2, w3, nbPackages1, qe, target int, s1, s2, s3 []int) Found {
 	if idx == len(packages) {
 		if w1 != w2 || w1 != w3 {
 			return Found{math.MaxInt, math.MaxInt}
 		}
+		fmt.Println(qe, s1, s2, s3)
 		return Found{nbPackages1, qe}
+	}
+
+	if containsCache(s1) {
+		return Found{math.MaxInt, math.MaxInt}
 	}
 
 	if w1 > target || w2 > target || w3 > target {
@@ -80,10 +81,10 @@ func best(idx int, packages []int, w1, w2, w3, nbPackages1, qe, target int) Foun
 	if multiplyWillOverflow(qe, weight) {
 		found1 = Found{math.MaxInt, math.MaxInt}
 	} else {
-		found1 = best(idx+1, packages, w1+weight, w2, w3, nbPackages1+1, qe*weight, target)
+		found1 = best(idx+1, packages, w1+weight, w2, w3, nbPackages1+1, qe*weight, target, append(s1, weight), s2, s3)
 	}
-	found2 := best(idx+1, packages, w1, w2+weight, w3, nbPackages1, qe, target)
-	found3 := best(idx+1, packages, w1, w2, w3+weight, nbPackages1, qe, target)
+	found2 := best(idx+1, packages, w1, w2+weight, w3, nbPackages1, qe, target, s1, append(s2, weight), s3)
+	found3 := best(idx+1, packages, w1, w2, w3+weight, nbPackages1, qe, target, s1, s2, append(s3, weight))
 
 	s := []Found{found1, found2, found3}
 	sort.Slice(s, func(i, j int) bool {
@@ -98,6 +99,8 @@ func best(idx int, packages []int, w1, w2, w3, nbPackages1, qe, target int) Foun
 		}
 		return a.qe < b.qe
 	})
+
+	addCache(s1)
 
 	return s[0]
 }
