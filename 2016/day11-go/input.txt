@@ -1,0 +1,4 @@
+polonium-generator,thulium-generator,thulium-microchip,promethium-generator,ruthenium-generator,ruthenium-microchip,cobalt-generator,cobalt-microchip
+polonium-microchip,promethium-microchip
+-
+-
