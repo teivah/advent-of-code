@@ -22,8 +22,6 @@ func fs1(input io.Reader) (int, error) {
 	scanner := bufio.NewScanner(input)
 	var items []Item
 	level := -1
-	ids = make(map[string]int)
-	i := 0
 	for scanner.Scan() {
 		level++
 		s := scanner.Text()
@@ -46,10 +44,6 @@ func fs1(input io.Reader) (int, error) {
 						name:      name,
 						generator: false,
 					})
-				}
-				if _, exists := ids[name]; !exists {
-					ids[name] = i
-					i++
 				}
 			}
 		}
@@ -86,8 +80,6 @@ func formatKey(elevator int, items []Item) (int, int) {
 
 // Generator, chip
 var cache map[int]map[int]int
-
-var ids map[string]int
 
 func addCache(elevator int, items []Item, cur int) {
 	a, b := formatKey(elevator, items)
@@ -193,8 +185,6 @@ F1 .  .  .  .  .
 */
 
 func best(elevator int, items []Item, cur int, actions []string) int {
-	fmt.Println(items)
-
 	if elevator < 0 || elevator == 4 {
 		return math.MaxInt
 	}
@@ -233,10 +223,8 @@ func best(elevator int, items []Item, cur int, actions []string) int {
 		}
 
 		// Move
-		tmp := copyItems(elevator+1, items)
-		min = getmin(min, best(elevator+1, tmp, cur+1, append(actions, "+1")))
-		tmp = copyItems(elevator-1, items)
-		min = getmin(min, best(elevator-1, tmp, cur+1, append(actions, "-1")))
+		min = getmin(min, best(elevator+1, copyItems(elevator+1, items), cur+1, append(actions, "+1")))
+		min = getmin(min, best(elevator-1, copyItems(elevator-1, items), cur+1, append(actions, "-1")))
 
 		return min
 	}
@@ -274,10 +262,8 @@ func best(elevator int, items []Item, cur int, actions []string) int {
 		}
 	}
 	// Move
-	tmp := copyItems(elevator+1, items)
-	min = getmin(min, best(elevator+1, tmp, cur+1, append(actions, "+1")))
-	tmp = copyItems(elevator-1, items)
-	min = getmin(min, best(elevator-1, tmp, cur+1, append(actions, "-1")))
+	min = getmin(min, best(elevator+1, copyItems(elevator+1, items), cur+1, append(actions, "+1")))
+	min = getmin(min, best(elevator-1, copyItems(elevator-1, items), cur+1, append(actions, "-1")))
 
 	return min
 }
