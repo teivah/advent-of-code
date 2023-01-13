@@ -49,16 +49,20 @@ func fs1(input io.Reader) (int, error) {
 		}
 	}
 
-	cache = make(map[int]int)
+	cache = make(map[int]map[int]int)
 
-	defer func() { fmt.Println(len(cache)) }()
+	defer func() { fmt.Println(nbcases) }()
 
 	return best(0, items, 0, 0), nil
 }
 
-func formatKey(elevator int, items []Item) int {
+var nbcases = 0
+
+func formatKey(elevator int, items []Item) (int, int) {
 	a := 0
+	b := 0
 	ia := 0
+	ib := 0
 	for _, item := range items {
 		if item.generator {
 			a += item.level << ia
@@ -67,32 +71,41 @@ func formatKey(elevator int, items []Item) int {
 			}
 			ia += 3
 		} else {
-			a += item.level << (ia + 32)
+			b += item.level << ib
 			if item.elevator {
-				a += 1 << (ia + 2 + 32)
+				b += 1 << (ib + 2)
 			}
-			ia += 3
+			ib += 3
 		}
 	}
 
-	return a + elevator<<62
+	return a, b + elevator<<60
 }
 
 // Generator, chip
-var cache map[int]int
+var cache map[int]map[int]int
 
 func addCache(elevator int, items []Item, cur int) {
-	a := formatKey(elevator, items)
-	cache[a] = cur
+	a, b := formatKey(elevator, items)
+	v, exists := cache[a]
+	if !exists {
+		v = make(map[int]int)
+		cache[a] = v
+	}
+	v[b] = cur
 }
 
 func containsCache(elevator int, items []Item, cur int) bool {
-	a := formatKey(elevator, items)
+	a, b := formatKey(elevator, items)
 	v, exists := cache[a]
 	if !exists {
 		return false
 	}
-	return cur >= v
+	v2, exists := v[b]
+	if !exists {
+		return false
+	}
+	return cur >= v2
 }
 
 func best(elevator int, items []Item, cur int, elevatorMoves int) int {
@@ -119,6 +132,8 @@ func best(elevator int, items []Item, cur int, elevatorMoves int) int {
 		return math.MaxInt
 	}
 	addCache(elevator, items, cur)
+
+	nbcases++
 
 	min := math.MaxInt
 	elevatorLen := lenElevator(items)
