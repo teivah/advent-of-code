@@ -22,6 +22,8 @@ func fs1(input io.Reader) (int, error) {
 	scanner := bufio.NewScanner(input)
 	var items []Item
 	level := -1
+	ids = make(map[string]int)
+	i := 0
 	for scanner.Scan() {
 		level++
 		s := scanner.Text()
@@ -45,37 +47,89 @@ func fs1(input io.Reader) (int, error) {
 						generator: false,
 					})
 				}
+				if _, exists := ids[name]; !exists {
+					ids[name] = i
+					i++
+				}
 			}
 		}
 	}
 
-	cache = make(map[string]int)
+	cache = make(map[int]map[int]int)
 
 	return best(0, items, 0), nil
 }
 
-func formatKey(v ...any) string {
-	sb := strings.Builder{}
-	for _, x := range v {
-		sb.WriteString(fmt.Sprintf("%v,", x))
+func formatKey(elevator int, items []Item) (int, int) {
+	a := 0
+	b := 0
+	ia := 0
+	ib := 0
+	for _, item := range items {
+		if item.generator {
+			if item.elevator {
+				a += elevator << ia
+			} else {
+				a += item.level << (ia + 2)
+			}
+			ia += 4
+		} else {
+			if item.elevator {
+				b += elevator << ib
+			} else {
+				b += item.level << (ib + 2)
+			}
+			ib += 4
+		}
 	}
-	return sb.String()
+
+	return a, b + elevator<<60
 }
 
-var cache map[string]int
+// Generator, chip
+var cache map[int]map[int]int
+
+var ids map[string]int
 
 func addCache(elevator int, items []Item, cur int) {
-	key := formatKey(elevator, items)
-	cache[key] = cur
+	a, b := formatKey(elevator, items)
+	v, exists := cache[a]
+	if !exists {
+		v = make(map[int]int)
+		cache[a] = v
+	}
+	v[b] = cur
 }
 
 func containsCache(elevator int, items []Item, cur int) bool {
-	key := formatKey(elevator, items)
-	v, exists := cache[key]
+	a, b := formatKey(elevator, items)
+	v, exists := cache[a]
 	if !exists {
 		return false
 	}
-	return cur >= v
+	v2, exists := v[b]
+	if !exists {
+		return false
+	}
+	return cur >= v2
+}
+
+func print(items []Item) {
+	for i := 3; i >= 0; i-- {
+		fmt.Printf("%d: ", i)
+		for _, item := range items {
+			if item.level == i {
+				fmt.Printf("%v", item.name)
+				if item.generator {
+					fmt.Print("-g,")
+				} else {
+					fmt.Print("-c,")
+				}
+			}
+		}
+		fmt.Println()
+	}
+	fmt.Println()
 }
 
 func best(elevator int, items []Item, cur int) int {
@@ -90,14 +144,13 @@ func best(elevator int, items []Item, cur int) int {
 	}
 
 	if friedLevel(items, elevator) {
+		//print(items)
 		return math.MaxInt
 	}
 
 	if containsCache(elevator, items, cur) {
 		return math.MaxInt
 	}
-
-	addCache(elevator, items, cur)
 
 	min := math.MaxInt
 	elevatorLen := lenElevator(items)
@@ -115,8 +168,14 @@ func best(elevator int, items []Item, cur int) int {
 		}
 	}
 
+	addCache(elevator, items, cur)
+
 	// Empty elevator
 	if elevatorLen > 0 {
+		// Move elevator
+		min = getmin(min, best(elevator+1, items, cur+1))
+		min = getmin(min, best(elevator-1, items, cur+1))
+
 		for i := 0; i < len(items); i++ {
 			if !items[i].elevator {
 				continue
@@ -128,10 +187,6 @@ func best(elevator int, items []Item, cur int) int {
 			items[i].elevator = true
 		}
 	}
-
-	// Move elevator
-	min = getmin(min, best(elevator+1, items, cur+1))
-	min = getmin(min, best(elevator-1, items, cur+1))
 
 	return min
 }
