@@ -95,86 +95,6 @@ func containsCache(elevator int, items []Item, cur int) bool {
 	return cur >= v
 }
 
-func print(items []Item) {
-	for i := 3; i >= 0; i-- {
-		fmt.Printf("%d: ", i)
-		for _, item := range items {
-			if item.level == i {
-				fmt.Printf("%v", item.name)
-				if item.generator {
-					fmt.Print("-g,")
-				} else {
-					fmt.Print("-c,")
-				}
-			}
-		}
-		fmt.Println()
-	}
-	fmt.Println()
-}
-
-/*
-Step 0
-F4 .  .  .  .  .
-F3 .  .  .  LG .
-F2 .  HG .  .  .
-F1 E  .  HM .  LM (+HM +LM)
-
-Step 1
-F4 .  .  .  .  .
-F3 .  .  .  LG .
-F2 E  HG HM .  LM (-HM, -LM, +HG, +HM)
-F1 .  .  .  .  .
-
-Step 2
-F4 .  .  .  .  .
-F3 E  HG HM LG .  (-HM, -HG, +HM, +LG, -HM, +HG) => LG, HG
-F2 .  .  .  .  LM
-F1 .  .  .  .  .
-
-Step 3
-F4 E  HG . LG  .  +HG
-F3 .  .  HM .  .
-F2 .  .  .  .  LM
-F1 .  .  .  .  .
-
-Step 4
-F4 .  .  . LG  .
-F3 E  HG HM .  . +HM +HG
-F2 .  .  .  .  LM
-F1 .  .  .  .  .
-
-Step 5
-F4 E  HG HM LG .
-F3 .  .  .  .  .
-F2 .  .  .  .  LM
-F1 .  .  .  .  .
-
-Step 6
-F4 .  HG HM .  .
-F3 E  .  .  LG .
-F2 .  .  .  .  LM
-F1 .  .  .  .  .
-
-Step 7
-F4 .  HG HM .  .
-F3 .  .  .  .  .
-F2 E  .  .  LG LM
-F1 .  .  .  .  .
-
-Step 8
-F4 .  HG HM .  .
-F3 E  .  .  LG LM
-F2 .  .  .  .  .
-F1 .  .  .  .  .
-
-Step 9
-F4 E  HG HM LG LM
-F3 .  .  .  .  .
-F2 .  .  .  .  .
-F1 .  .  .  .  .
-*/
-
 func best(elevator int, items []Item, cur int, elevatorMoves int) int {
 	if elevator < 0 || elevator == 4 {
 		return math.MaxInt
@@ -183,6 +103,7 @@ func best(elevator int, items []Item, cur int, elevatorMoves int) int {
 	updateElevatorLevel(elevator, items)
 
 	if allLastLevel(items) {
+		//fmt.Println(cur)
 		return cur
 	}
 
@@ -223,7 +144,7 @@ func best(elevator int, items []Item, cur int, elevatorMoves int) int {
 
 	if elevatorLen == 0 {
 		// Fill
-		if elevatorMoves < 4 {
+		if elevatorMoves < 3 {
 			for i, item := range items {
 				if item.level == elevator {
 					items[i].elevator = true
@@ -393,29 +314,6 @@ func friedLevel(items []Item, elevator int) bool {
 	return atLeastOneMicrochip && atLeastOneGenerator
 }
 
-//func friedLevel(items []Item, elevator int) bool {
-//	level := make([]Item, 0, len(items))
-//	for _, item := range items {
-//		if item.level == elevator {
-//			level = append(level, item)
-//		}
-//	}
-//
-//	if len(level) == 0 || len(level) == 1 {
-//		return false
-//	}
-//
-//	m := make(map[string]struct{})
-//	for _, item := range level {
-//		if _, exists := m[item.name]; exists {
-//			delete(m, item.name)
-//		} else {
-//			m[item.name] = struct{}{}
-//		}
-//	}
-//	return len(m) == 0
-//}
-
 type Item struct {
 	level     int
 	elevator  bool
@@ -423,23 +321,9 @@ type Item struct {
 	generator bool
 }
 
-func action(action string, i Item) string {
-	return fmt.Sprintf("%v-%s", action, i)
-}
-
 func (i Item) String() string {
 	if i.generator {
 		return i.name + "-g" + fmt.Sprintf("-%d", i.level)
 	}
 	return i.name + "-m" + fmt.Sprintf("-%d", i.level)
-}
-
-func fs2(input io.Reader) (int, error) {
-	scanner := bufio.NewScanner(input)
-	for scanner.Scan() {
-		line := scanner.Text()
-		_ = line
-	}
-
-	return 42, nil
 }
