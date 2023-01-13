@@ -201,64 +201,6 @@ func best(elevator int, items []Item, cur int, elevatorMoves int) int {
 	panic(false)
 }
 
-//func bestx(elevator int, items []Item, cur int) int {
-//	fmt.Println(elevator, items)
-//
-//	if elevator == -1 || elevator == 4 {
-//		return math.MaxInt
-//	}
-//
-//	if allLastLevel(items) {
-//		return cur
-//	}
-//
-//	if friedLevel(items, elevator) {
-//		//print(items)
-//		return math.MaxInt
-//	}
-//
-//	if containsCache(elevator, items, cur) {
-//		return math.MaxInt
-//	}
-//
-//	min := math.MaxInt
-//	elevatorLen := lenElevator(items)
-//
-//	// Fill elevator
-//	if elevatorLen < 2 {
-//		for i := 0; i < len(items); i++ {
-//			item := items[i]
-//			if item.level != elevator || item.elevator {
-//				continue
-//			}
-//			level := items[i].level
-//			items[i].elevator = true
-//			min = getmin(min, best(elevator, copyItems(elevator, items), cur))
-//			items[i].level = level
-//		}
-//	}
-//
-//	addCache(elevator, items, cur)
-//
-//	if elevatorLen > 0 {
-//		// Move elevator
-//		min = getmin(min, best(elevator+1, copyItems(elevator+1, items), cur+1))
-//		min = getmin(min, best(elevator-1, copyItems(elevator-1, items), cur+1))
-//
-//		// Empty elevator
-//		for i := 0; i < len(items); i++ {
-//			if !items[i].elevator {
-//				continue
-//			}
-//			items[i].elevator = false
-//			min = getmin(min, best(elevator, copyItems(elevator, items), cur))
-//			items[i].elevator = true
-//		}
-//	}
-//
-//	return min
-//}
-
 func updateElevatorLevel(elevator int, items []Item) {
 	for i, item := range items {
 		if item.elevator {
