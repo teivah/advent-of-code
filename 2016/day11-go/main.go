@@ -100,9 +100,9 @@ func best(elevator int, items []Item, cur int) int {
 	addCache(elevator, items, cur)
 
 	min := math.MaxInt
+	elevatorLen := lenElevator(items)
 
 	// Fill elevator
-	elevatorLen := lenElevator(items)
 	if elevatorLen < 2 {
 		for i := 0; i < len(items); i++ {
 			item := items[i]
@@ -118,12 +118,12 @@ func best(elevator int, items []Item, cur int) int {
 	// Empty elevator
 	if elevatorLen > 0 {
 		for i := 0; i < len(items); i++ {
-			item := items[i]
-			if !item.elevator {
+			if !items[i].elevator {
 				continue
 			}
 			items[i].elevator = false
 			items[i].level = elevator
+
 			min = getmin(min, best(elevator, items, cur))
 			items[i].elevator = true
 		}
