@@ -133,6 +133,8 @@ func print(items []Item) {
 }
 
 func best(elevator int, items []Item, cur int) int {
+	fmt.Println(elevator, items)
+
 	if elevator == -1 || elevator == 4 {
 		return math.MaxInt
 	}
@@ -163,7 +165,6 @@ func best(elevator int, items []Item, cur int) int {
 			level := items[i].level
 			items[i].elevator = true
 			min = getmin(min, best(elevator, copyItems(elevator, items), cur))
-			items[i].elevator = false
 			items[i].level = level
 		}
 	}
@@ -172,8 +173,8 @@ func best(elevator int, items []Item, cur int) int {
 
 	if elevatorLen > 0 {
 		// Move elevator
-		min = getmin(min, best(elevator+1, copyItems(elevator, items), cur+1))
-		min = getmin(min, best(elevator-1, copyItems(elevator, items), cur+1))
+		min = getmin(min, best(elevator+1, copyItems(elevator+1, items), cur+1))
+		min = getmin(min, best(elevator-1, copyItems(elevator-1, items), cur+1))
 
 		// Empty elevator
 		for i := 0; i < len(items); i++ {
@@ -181,7 +182,6 @@ func best(elevator int, items []Item, cur int) int {
 				continue
 			}
 			items[i].elevator = false
-			items[i].level = elevator
 			min = getmin(min, best(elevator, copyItems(elevator, items), cur))
 			items[i].elevator = true
 		}
