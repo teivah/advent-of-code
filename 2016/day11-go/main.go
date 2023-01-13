@@ -218,6 +218,10 @@ func best(elevator int, items []Item, cur int, elevatorMoves int) int {
 	}
 
 	if elevatorLen == 2 {
+		// Move
+		min = getmin(min, best(elevator+1, items, cur+1, 0))
+		updateElevatorLevel(elevator, items)
+
 		// Empty
 		if elevatorMoves < 3 {
 			for i, item := range items {
@@ -228,12 +232,6 @@ func best(elevator int, items []Item, cur int, elevatorMoves int) int {
 				}
 			}
 		}
-
-		// Move
-		min = getmin(min, best(elevator+1, items, cur+1, 0))
-		updateElevatorLevel(elevator, items)
-		//min = getmin(min, best(elevator-1, items, cur+1, 0))
-		//updateElevatorLevel(elevator, items)
 
 		return min
 	}
@@ -253,32 +251,36 @@ func best(elevator int, items []Item, cur int, elevatorMoves int) int {
 		return min
 	}
 
-	// One element
-	if elevatorMoves < 3 {
-		// Empty
-		for i, item := range items {
-			if item.elevator {
-				items[i].elevator = false
-				min = getmin(min, best(elevator, items, cur, elevatorMoves+1))
-				items[i].elevator = true
+	if elevatorLen == 1 {
+		// One element
+		if elevatorMoves < 3 {
+			// Empty
+			for i, item := range items {
+				if item.elevator {
+					items[i].elevator = false
+					min = getmin(min, best(elevator, items, cur, elevatorMoves+1))
+					items[i].elevator = true
+				}
+			}
+			// Fill
+			for i, item := range items {
+				if !item.elevator && item.level == elevator {
+					items[i].elevator = true
+					min = getmin(min, best(elevator, items, cur, elevatorMoves+1))
+					items[i].elevator = false
+				}
 			}
 		}
-		// Fill
-		for i, item := range items {
-			if !item.elevator && item.level == elevator {
-				items[i].elevator = true
-				min = getmin(min, best(elevator, items, cur, elevatorMoves+1))
-				items[i].elevator = false
-			}
-		}
-	}
-	// Move
-	min = getmin(min, best(elevator+1, items, cur+1, 0))
-	updateElevatorLevel(elevator, items)
-	min = getmin(min, best(elevator-1, items, cur+1, 0))
-	updateElevatorLevel(elevator, items)
+		// Move
+		min = getmin(min, best(elevator+1, items, cur+1, 0))
+		updateElevatorLevel(elevator, items)
+		min = getmin(min, best(elevator-1, items, cur+1, 0))
+		updateElevatorLevel(elevator, items)
 
-	return min
+		return min
+	}
+
+	panic(false)
 }
 
 //func bestx(elevator int, items []Item, cur int) int {
