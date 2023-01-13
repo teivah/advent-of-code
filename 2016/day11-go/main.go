@@ -252,7 +252,6 @@ func best(elevator int, items []Item, cur int, elevatorMoves int) int {
 	}
 
 	if elevatorLen == 1 {
-		// One element
 		if elevatorMoves < 3 {
 			// Empty
 			for i, item := range items {
