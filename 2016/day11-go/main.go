@@ -67,19 +67,17 @@ func formatKey(elevator int, items []Item) (int, int) {
 	ib := 0
 	for _, item := range items {
 		if item.generator {
+			a += item.level << ia
 			if item.elevator {
-				a += elevator << ia
-			} else {
-				a += item.level << (ia + 2)
+				a += 1 << (ia + 2)
 			}
-			ia += 4
+			ia += 3
 		} else {
+			b += item.level << ib
 			if item.elevator {
-				b += elevator << ib
-			} else {
-				b += item.level << (ib + 2)
+				b += 1 << (ia + 2)
 			}
-			ib += 4
+			ib += 3
 		}
 	}
 
@@ -132,7 +130,103 @@ func print(items []Item) {
 	fmt.Println()
 }
 
+var i int
+
 func best(elevator int, items []Item, cur int) int {
+	if elevator < 0 || elevator == 4 {
+		return math.MaxInt
+	}
+
+	i++
+	if i == 100 {
+		//panic(false)
+	}
+
+	if allLastLevel(items) {
+		return cur
+	}
+
+	min := math.MaxInt
+	elevatorLen := lenElevator(items)
+
+	if elevatorLen == 2 {
+		addCache(elevator, items, cur)
+		// Empty
+		for i, item := range items {
+			if item.elevator {
+				items[i].elevator = false
+				if !containsCache(elevator, items, cur) {
+					min = getmin(min, best(elevator, copyItems(elevator, items), cur))
+				}
+				items[i].elevator = true
+			}
+		}
+
+		// Move
+		tmp := copyItems(elevator+1, items)
+		if !containsCache(elevator+1, tmp, cur+1) {
+			min = getmin(min, best(elevator+1, tmp, cur+1))
+		}
+		tmp = copyItems(elevator-1, items)
+		if !containsCache(elevator-1, tmp, cur+1) {
+			min = getmin(min, best(elevator-1, tmp, cur+1))
+		}
+
+		return min
+	}
+
+	if elevatorLen == 0 {
+		addCache(elevator, items, cur)
+		// Fill
+		for i, item := range items {
+			if item.level == elevator {
+				items[i].elevator = true
+				if !containsCache(elevator, items, cur) {
+					min = getmin(min, best(elevator, copyItems(elevator, items), cur))
+				}
+				items[i].elevator = false
+			}
+		}
+
+		return min
+	}
+
+	// One element
+	// Empty
+	addCache(elevator, items, cur)
+	for i, item := range items {
+		if item.elevator {
+			items[i].elevator = false
+			if !containsCache(elevator, items, cur) {
+				min = getmin(min, best(elevator, copyItems(elevator, items), cur))
+			}
+			items[i].elevator = true
+		}
+	}
+	// Fill
+	for i, item := range items {
+		if !item.elevator && item.level == elevator {
+			items[i].elevator = true
+			if !containsCache(elevator, items, cur) {
+				min = getmin(min, best(elevator, copyItems(elevator, items), cur))
+			}
+			items[i].elevator = false
+		}
+	}
+	// Move
+	tmp := copyItems(elevator+1, items)
+	if !containsCache(elevator+1, tmp, cur+1) {
+		min = getmin(min, best(elevator+1, tmp, cur+1))
+	}
+	tmp = copyItems(elevator-1, items)
+	if !containsCache(elevator-1, tmp, cur+1) {
+		min = getmin(min, best(elevator-1, tmp, cur+1))
+	}
+
+	return min
+}
+
+func bestx(elevator int, items []Item, cur int) int {
 	fmt.Println(elevator, items)
 
 	if elevator == -1 || elevator == 4 {
