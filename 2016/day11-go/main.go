@@ -189,6 +189,8 @@ func best(elevator int, items []Item, cur int, elevatorMoves int) int {
 		return math.MaxInt
 	}
 
+	updateElevatorLevel(elevator, items)
+
 	if allLastLevel(items) {
 		return cur
 	}
@@ -200,6 +202,7 @@ func best(elevator int, items []Item, cur int, elevatorMoves int) int {
 	if containsCache(elevator, items, cur) {
 		return math.MaxInt
 	}
+	addCache(elevator, items, cur)
 
 	min := math.MaxInt
 	elevatorLen := lenElevator(items)
@@ -209,33 +212,33 @@ func best(elevator int, items []Item, cur int, elevatorMoves int) int {
 	}
 
 	if elevatorLen == 2 {
-		addCache(elevator, items, cur)
 		// Empty
 		if elevatorMoves < 4 {
 			for i, item := range items {
 				if item.elevator {
 					items[i].elevator = false
-					min = getmin(min, best(elevator, copyItems(elevator, items), cur, elevatorMoves+1))
+					min = getmin(min, best(elevator, items, cur, elevatorMoves+1))
 					items[i].elevator = true
 				}
 			}
 		}
 
 		// Move
-		min = getmin(min, best(elevator+1, copyItems(elevator+1, items), cur+1, 0))
-		min = getmin(min, best(elevator-1, copyItems(elevator-1, items), cur+1, 0))
+		min = getmin(min, best(elevator+1, items, cur+1, 0))
+		updateElevatorLevel(elevator, items)
+		min = getmin(min, best(elevator-1, items, cur+1, 0))
+		updateElevatorLevel(elevator, items)
 
 		return min
 	}
 
 	if elevatorLen == 0 {
-		addCache(elevator, items, cur)
 		// Fill
 		if elevatorMoves < 4 {
 			for i, item := range items {
 				if item.level == elevator {
 					items[i].elevator = true
-					min = getmin(min, best(elevator, copyItems(elevator, items), cur, elevatorMoves+1))
+					min = getmin(min, best(elevator, items, cur, elevatorMoves+1))
 					items[i].elevator = false
 				}
 			}
@@ -245,13 +248,12 @@ func best(elevator int, items []Item, cur int, elevatorMoves int) int {
 	}
 
 	// One element
-	addCache(elevator, items, cur)
 	if elevatorMoves < 4 {
 		// Empty
 		for i, item := range items {
 			if item.elevator {
 				items[i].elevator = false
-				min = getmin(min, best(elevator, copyItems(elevator, items), cur, elevatorMoves+1))
+				min = getmin(min, best(elevator, items, cur, elevatorMoves+1))
 				items[i].elevator = true
 			}
 		}
@@ -259,14 +261,16 @@ func best(elevator int, items []Item, cur int, elevatorMoves int) int {
 		for i, item := range items {
 			if !item.elevator && item.level == elevator {
 				items[i].elevator = true
-				min = getmin(min, best(elevator, copyItems(elevator, items), cur, elevatorMoves+1))
+				min = getmin(min, best(elevator, items, cur, elevatorMoves+1))
 				items[i].elevator = false
 			}
 		}
 	}
 	// Move
-	min = getmin(min, best(elevator+1, copyItems(elevator+1, items), cur+1, 0))
-	min = getmin(min, best(elevator-1, copyItems(elevator-1, items), cur+1, 0))
+	min = getmin(min, best(elevator+1, items, cur+1, 0))
+	updateElevatorLevel(elevator, items)
+	min = getmin(min, best(elevator-1, items, cur+1, 0))
+	updateElevatorLevel(elevator, items)
 
 	return min
 }
@@ -329,6 +333,14 @@ func best(elevator int, items []Item, cur int, elevatorMoves int) int {
 //	return min
 //}
 
+func updateElevatorLevel(elevator int, items []Item) {
+	for i, item := range items {
+		if item.elevator {
+			items[i].level = elevator
+		}
+	}
+}
+
 func allLastLevel(items []Item) bool {
 	for _, item := range items {
 		if item.level != 3 {
@@ -336,17 +348,6 @@ func allLastLevel(items []Item) bool {
 		}
 	}
 	return true
-}
-
-func copyItems(elevator int, items []Item) []Item {
-	res := make([]Item, len(items))
-	for i, item := range items {
-		res[i] = item
-		if item.elevator {
-			res[i].level = elevator
-		}
-	}
-	return res
 }
 
 func lenElevator(items []Item) int {
