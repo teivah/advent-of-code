@@ -20,9 +20,10 @@ elevator: at most 2 stuff, at least 1
 */
 func fs1(input io.Reader) (int, error) {
 	scanner := bufio.NewScanner(input)
-	var levels [][]Item
+	var items []Item
+	level := -1
 	for scanner.Scan() {
-		var items []Item
+		level++
 		s := scanner.Text()
 		if s != "-" {
 			words := strings.Split(s, ",")
@@ -30,18 +31,27 @@ func fs1(input io.Reader) (int, error) {
 				del := strings.Index(word, "-")
 				name := word[:del]
 				if word[del+1] == 'g' {
-					items = append(items, Item{name, true})
+					items = append(items, Item{
+						level:     level,
+						elevator:  false,
+						name:      name,
+						generator: true,
+					})
 				} else {
-					items = append(items, Item{name, false})
+					items = append(items, Item{
+						level:     level,
+						elevator:  false,
+						name:      name,
+						generator: false,
+					})
 				}
 			}
 		}
-		levels = append(levels, items)
 	}
 
 	cache = make(map[string]int)
 
-	return best(0, nil, levels, 0), nil
+	return best(0, items, 0), nil
 }
 
 func formatKey(v ...any) string {
@@ -54,101 +64,103 @@ func formatKey(v ...any) string {
 
 var cache map[string]int
 
-func addCache(elevator int, levels [][]Item, cur int) {
-	key := formatKey(elevator, levels)
+func addCache(elevator int, items []Item, cur int) {
+	key := formatKey(elevator, items)
 	cache[key] = cur
 }
 
-func containsCache(elevator int, levels [][]Item, cur int) bool {
-	key := formatKey(elevator, levels)
+func containsCache(elevator int, items []Item, cur int) bool {
+	key := formatKey(elevator, items)
 	v, exists := cache[key]
 	if !exists {
 		return false
 	}
-	return v <= cur
+	return cur >= v
 }
 
-func best(elevator int, elevators []Item, levels [][]Item, cur int) int {
-	if len(elevators)+len(levels[0])+len(levels[1])+len(levels[2])+len(levels[3]) > 4 {
-		panic(elevators)
-	}
-
-	//fmt.Println(elevator, elevators, levels, cur)
-	if cur == 1000 {
-		fmt.Println(cache)
-		panic("")
-	}
-
+func best(elevator int, items []Item, cur int) int {
 	if elevator == -1 || elevator == 4 {
 		return math.MaxInt
 	}
 
-	if len(levels[0]) == 0 && len(levels[1]) == 0 && len(levels[2]) == 0 {
+	updateLevelElevatorItems(elevator, items)
+
+	if allLastLevel(items) {
 		return cur
 	}
 
-	if fried(levels[0]) || fried(levels[1]) || fried(levels[2]) || fried(levels[3]) {
+	if friedLevel(items, elevator) {
 		return math.MaxInt
 	}
 
-	if containsCache(elevator, levels, cur) {
+	if containsCache(elevator, items, cur) {
 		return math.MaxInt
 	}
-	addCache(elevator, levels, cur)
+
+	addCache(elevator, items, cur)
 
 	min := math.MaxInt
 
-	// Move elevator
-	min = getmin(min, best(elevator+1, elevators, levels, cur+1))
-	min = getmin(min, best(elevator-1, elevators, levels, cur+1))
-
 	// Fill elevator
-	if len(elevators) < 2 {
-		level := levels[elevator]
-		for i := 0; i < len(level); i++ {
-			min = getmin(min, best(elevator, addElevator(elevators, levels[elevator][i]), removeItem(levels, elevator, i), cur))
+	elevatorLen := lenElevator(items)
+	if elevatorLen < 2 {
+		for i := 0; i < len(items); i++ {
+			item := items[i]
+			if item.level != elevator || item.elevator {
+				continue
+			}
+			items[i].elevator = true
+			min = getmin(min, best(elevator, items, cur))
+			items[i].elevator = false
 		}
 	}
 
 	// Empty elevator
-	if len(elevators) > 0 {
-		levels[elevator] = append(levels[elevator], elevators...)
-		min = getmin(min, best(elevator, nil, levels, cur))
+	if elevatorLen > 0 {
+		for i := 0; i < len(items); i++ {
+			item := items[i]
+			if !item.elevator {
+				continue
+			}
+			items[i].elevator = false
+			items[i].level = elevator
+			min = getmin(min, best(elevator, items, cur))
+			items[i].elevator = true
+		}
 	}
+
+	// Move elevator
+	min = getmin(min, best(elevator+1, items, cur+1))
+	min = getmin(min, best(elevator-1, items, cur+1))
 
 	return min
 }
 
-func addElevator(elevators []Item, item Item) []Item {
-	res := make([]Item, 0, len(elevators)+1)
-	for _, elevator := range elevators {
-		res = append(res, elevator)
-	}
-	return append(res, item)
-}
-
-func removeItem(levels [][]Item, id int, item int) [][]Item {
-	res := make([][]Item, len(levels))
-
-	for level := 0; level < len(levels); level++ {
-		if level == id {
-			v := make([]Item, 0, len(levels[level])-1)
-			for i := 0; i < len(levels[level]); i++ {
-				if i == item {
-					continue
-				}
-				v = append(v, levels[level][i])
-			}
-			res[level] = v
-		} else {
-			v := make([]Item, len(levels[level]))
-			for i := 0; i < len(levels[level]); i++ {
-				v[i] = levels[level][i]
-			}
-			res[level] = v
+func allLastLevel(items []Item) bool {
+	for _, item := range items {
+		if item.level != 3 {
+			return false
 		}
 	}
-	return res
+	return true
+}
+
+func updateLevelElevatorItems(elevator int, items []Item) {
+	for i := 0; i < len(items); i++ {
+		if items[i].elevator {
+			items[i].level = elevator
+		}
+	}
+}
+
+func lenElevator(items []Item) int {
+	sum := 0
+	for _, item := range items {
+		if item.elevator {
+			sum++
+		}
+	}
+	return sum
 }
 
 func getmin(a, b int) int {
@@ -158,9 +170,17 @@ func getmin(a, b int) int {
 	return b
 }
 
-func fried(level []Item) bool {
+func fried(level int, items []Item) bool {
+	return friedLevel(items, level)
+}
+
+func friedLevel(items []Item, level int) bool {
 	m := make(map[string]bool)
-	for _, item := range level {
+	for _, item := range items {
+		if item.level != level {
+			continue
+		}
+
 		_, exists := m[item.name]
 		if exists {
 			delete(m, item.name)
@@ -183,22 +203,10 @@ func fried(level []Item) bool {
 }
 
 type Item struct {
+	level     int
+	elevator  bool
 	name      string
 	generator bool
-}
-
-func indexAll(s string, search string) []int {
-	i := 0
-	var res []int
-	for i < len(s) {
-		index := strings.Index(s[i:], search)
-		if index == -1 {
-			return res
-		}
-		res = append(res, index+i)
-		i += index + len(search)
-	}
-	return res
 }
 
 func fs2(input io.Reader) (int, error) {

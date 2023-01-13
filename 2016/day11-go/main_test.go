@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
@@ -39,12 +38,4 @@ func TestFs2Input(t *testing.T) {
 	v, err := fs2(f)
 	require.NoError(t, err)
 	assert.Equal(t, 42, v)
-}
-
-func Test_removeItem(t *testing.T) {
-	v := [][]Item{
-		{{"a", true}, {"b", true}, {"c", true}},
-		{{"d", true}},
-	}
-	fmt.Println(removeItem(v, 1, 0))
 }
