@@ -51,7 +51,7 @@ func fs1(input io.Reader) (int, error) {
 
 	cache = make(map[int]map[int]int)
 
-	return best(0, items, 0, nil), nil
+	return best(0, items, 0, 0), nil
 }
 
 func formatKey(elevator int, items []Item) (int, int) {
@@ -184,15 +184,12 @@ F2 .  .  .  .  .
 F1 .  .  .  .  .
 */
 
-func best(elevator int, items []Item, cur int, actions []string) int {
+func best(elevator int, items []Item, cur int, elevatorMoves int) int {
 	if elevator < 0 || elevator == 4 {
 		return math.MaxInt
 	}
 
 	if allLastLevel(items) {
-		if cur == 11 {
-			fmt.Println(actions)
-		}
 		return cur
 	}
 
@@ -214,17 +211,19 @@ func best(elevator int, items []Item, cur int, actions []string) int {
 	if elevatorLen == 2 {
 		addCache(elevator, items, cur)
 		// Empty
-		for i, item := range items {
-			if item.elevator {
-				items[i].elevator = false
-				min = getmin(min, best(elevator, copyItems(elevator, items), cur, append(actions, action("empty", item))))
-				items[i].elevator = true
+		if elevatorMoves < 4 {
+			for i, item := range items {
+				if item.elevator {
+					items[i].elevator = false
+					min = getmin(min, best(elevator, copyItems(elevator, items), cur, elevatorMoves+1))
+					items[i].elevator = true
+				}
 			}
 		}
 
 		// Move
-		min = getmin(min, best(elevator+1, copyItems(elevator+1, items), cur+1, append(actions, "+1")))
-		min = getmin(min, best(elevator-1, copyItems(elevator-1, items), cur+1, append(actions, "-1")))
+		min = getmin(min, best(elevator+1, copyItems(elevator+1, items), cur+1, 0))
+		min = getmin(min, best(elevator-1, copyItems(elevator-1, items), cur+1, 0))
 
 		return min
 	}
@@ -232,11 +231,13 @@ func best(elevator int, items []Item, cur int, actions []string) int {
 	if elevatorLen == 0 {
 		addCache(elevator, items, cur)
 		// Fill
-		for i, item := range items {
-			if item.level == elevator {
-				items[i].elevator = true
-				min = getmin(min, best(elevator, copyItems(elevator, items), cur, append(actions, action("fill", item))))
-				items[i].elevator = false
+		if elevatorMoves < 4 {
+			for i, item := range items {
+				if item.level == elevator {
+					items[i].elevator = true
+					min = getmin(min, best(elevator, copyItems(elevator, items), cur, elevatorMoves+1))
+					items[i].elevator = false
+				}
 			}
 		}
 
@@ -244,26 +245,28 @@ func best(elevator int, items []Item, cur int, actions []string) int {
 	}
 
 	// One element
-	// Empty
 	addCache(elevator, items, cur)
-	for i, item := range items {
-		if item.elevator {
-			items[i].elevator = false
-			min = getmin(min, best(elevator, copyItems(elevator, items), cur, append(actions, action("empty", item))))
-			items[i].elevator = true
+	if elevatorMoves < 4 {
+		// Empty
+		for i, item := range items {
+			if item.elevator {
+				items[i].elevator = false
+				min = getmin(min, best(elevator, copyItems(elevator, items), cur, elevatorMoves+1))
+				items[i].elevator = true
+			}
 		}
-	}
-	// Fill
-	for i, item := range items {
-		if !item.elevator && item.level == elevator {
-			items[i].elevator = true
-			min = getmin(min, best(elevator, copyItems(elevator, items), cur, append(actions, action("fill", item))))
-			items[i].elevator = false
+		// Fill
+		for i, item := range items {
+			if !item.elevator && item.level == elevator {
+				items[i].elevator = true
+				min = getmin(min, best(elevator, copyItems(elevator, items), cur, elevatorMoves+1))
+				items[i].elevator = false
+			}
 		}
 	}
 	// Move
-	min = getmin(min, best(elevator+1, copyItems(elevator+1, items), cur+1, append(actions, "+1")))
-	min = getmin(min, best(elevator-1, copyItems(elevator-1, items), cur+1, append(actions, "-1")))
+	min = getmin(min, best(elevator+1, copyItems(elevator+1, items), cur+1, 0))
+	min = getmin(min, best(elevator-1, copyItems(elevator-1, items), cur+1, 0))
 
 	return min
 }
