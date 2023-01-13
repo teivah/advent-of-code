@@ -103,11 +103,15 @@ func best(elevator int, items []Item, cur int, elevatorMoves int) int {
 	updateElevatorLevel(elevator, items)
 
 	if allLastLevel(items) {
-		//fmt.Println(cur)
+		fmt.Println(cur)
 		return cur
 	}
 
 	if friedLevel(items, elevator) {
+		return math.MaxInt
+	}
+
+	if elevatorMoves >= 3 {
 		return math.MaxInt
 	}
 
@@ -129,13 +133,11 @@ func best(elevator int, items []Item, cur int, elevatorMoves int) int {
 		updateElevatorLevel(elevator, items)
 
 		// Empty
-		if elevatorMoves < 3 {
-			for i, item := range items {
-				if item.elevator {
-					items[i].elevator = false
-					min = getmin(min, best(elevator, items, cur, elevatorMoves+1))
-					items[i].elevator = true
-				}
+		for i, item := range items {
+			if item.elevator {
+				items[i].elevator = false
+				min = getmin(min, best(elevator, items, cur, elevatorMoves+1))
+				items[i].elevator = true
 			}
 		}
 
@@ -144,13 +146,11 @@ func best(elevator int, items []Item, cur int, elevatorMoves int) int {
 
 	if elevatorLen == 0 {
 		// Fill
-		if elevatorMoves < 3 {
-			for i, item := range items {
-				if item.level == elevator {
-					items[i].elevator = true
-					min = getmin(min, best(elevator, items, cur, elevatorMoves+1))
-					items[i].elevator = false
-				}
+		for i, item := range items {
+			if item.level == elevator {
+				items[i].elevator = true
+				min = getmin(min, best(elevator, items, cur, elevatorMoves+1))
+				items[i].elevator = false
 			}
 		}
 
@@ -158,22 +158,20 @@ func best(elevator int, items []Item, cur int, elevatorMoves int) int {
 	}
 
 	if elevatorLen == 1 {
-		if elevatorMoves < 3 {
-			// Empty
-			for i, item := range items {
-				if item.elevator {
-					items[i].elevator = false
-					min = getmin(min, best(elevator, items, cur, elevatorMoves+1))
-					items[i].elevator = true
-				}
+		// Empty
+		for i, item := range items {
+			if item.elevator {
+				items[i].elevator = false
+				min = getmin(min, best(elevator, items, cur, elevatorMoves+1))
+				items[i].elevator = true
 			}
-			// Fill
-			for i, item := range items {
-				if !item.elevator && item.level == elevator {
-					items[i].elevator = true
-					min = getmin(min, best(elevator, items, cur, elevatorMoves+1))
-					items[i].elevator = false
-				}
+		}
+		// Fill
+		for i, item := range items {
+			if !item.elevator && item.level == elevator {
+				items[i].elevator = true
+				min = getmin(min, best(elevator, items, cur, elevatorMoves+1))
+				items[i].elevator = false
 			}
 		}
 		// Move
