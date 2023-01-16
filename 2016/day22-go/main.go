@@ -245,7 +245,11 @@ func printGrid(g Grid) {
 	fmt.Println("Steps:", g.steps)
 	for row := 0; row < len(g.grid); row++ {
 		for col := 0; col < len(g.grid[0]); col++ {
-			fmt.Printf("%v/%v\t\t", g.grid[row][col].used, g.grid[row][col].available)
+			if row == g.posY && col == g.posX {
+				fmt.Printf("G\t")
+			} else {
+				fmt.Printf(".\t")
+			}
 		}
 		fmt.Println()
 	}
@@ -283,45 +287,90 @@ func bfs(start [][]Node, fromX, fromY, targetX, targetY int) int {
 			continue
 		}
 		visited[k] = struct{}{}
+		if len(visited) > 1000 {
+			for k := range visited {
+				delete(visited, k)
+				break
+			}
+		}
 
 		if g.posX == targetX && g.posY == targetY {
 			return g.steps
 		}
 
+		row := g.posY
+		col := g.posX
+		toStop := false
+		current := g.grid[g.posY][g.posX]
+		// Top
+		if row > 0 {
+			if enoughSpace(current, node(g, current, 0, -1)) {
+				toStop = true
+				q = append(q, move(g, current.x, current.y, 0, -1))
+			}
+		}
+		// Bottom
+		if row < len(start)-1 {
+			if enoughSpace(current, node(g, current, 0, 1)) {
+				q = append(q, move(g, current.x, current.y, 0, 1))
+			}
+		}
+		// Left
+		if col > 0 {
+			if enoughSpace(current, node(g, current, -1, 0)) {
+				toStop = true
+				q = append(q, move(g, current.x, current.y, -1, 0))
+			}
+		}
+		// Right
+		if col < len(start[0])-1 {
+			if enoughSpace(current, node(g, current, 1, 0)) {
+				q = append(q, move(g, current.x, current.y, 1, 0))
+			}
+		}
+
+		if toStop {
+			continue
+		}
+
 		for row := 0; row < len(start); row++ {
 			for col := 0; col < len(start[0]); col++ {
 				current := g.grid[row][col]
-
-				// Top
-				if row > 0 {
-					if enoughSpace(current, node(g, current, 0, -1)) {
-						q = append(q, move(g, current.x, current.y, 0, -1))
-					}
-				}
-				// Bottom
-				if row < len(start)-1 {
-					if enoughSpace(current, node(g, current, 0, 1)) {
-						v := move(g, current.x, current.y, 0, 1)
-						q = append(q, v)
-					}
-				}
-				// Left
-				if col > 0 {
-					if enoughSpace(current, node(g, current, -1, 0)) {
-						q = append(q, move(g, current.x, current.y, -1, 0))
-					}
-				}
-				// Right
-				if col < len(start[0])-1 {
-					if enoughSpace(current, node(g, current, 1, 0)) {
-						q = append(q, move(g, current.x, current.y, 1, 0))
-					}
-				}
+				q = append(q, addOptions(current, row, col, g, len(start[0]), len(start))...)
 			}
 		}
 	}
 
 	return -1
+}
+
+func addOptions(current Node, row, col int, g Grid, maxX, maxY int) []Grid {
+	var res []Grid
+	// Top
+	if row > 0 {
+		if enoughSpace(current, node(g, current, 0, -1)) {
+			res = append(res, move(g, current.x, current.y, 0, -1))
+		}
+	}
+	// Bottom
+	if row < maxY-1 {
+		if enoughSpace(current, node(g, current, 0, 1)) {
+			res = append(res, move(g, current.x, current.y, 0, 1))
+		}
+	}
+	// Left
+	if col > 0 {
+		if enoughSpace(current, node(g, current, -1, 0)) {
+			res = append(res, move(g, current.x, current.y, -1, 0))
+		}
+	}
+	// Right
+	if col < maxX-1 {
+		if enoughSpace(current, node(g, current, 1, 0)) {
+			res = append(res, move(g, current.x, current.y, 1, 0))
+		}
+	}
+	return res
 }
 
 func node(g Grid, node Node, deltaX, deltaY int) Node {
