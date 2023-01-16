@@ -2,6 +2,8 @@ package main
 
 import (
 	"bufio"
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"strconv"
@@ -119,6 +121,7 @@ type Node struct {
 func fs2(input io.Reader) (int, error) {
 	scanner := bufio.NewScanner(input)
 	scanner.Scan()
+	scanner.Scan()
 	var nodes []Node
 	maxX := 0
 	maxY := 0
@@ -181,7 +184,7 @@ func fs2(input io.Reader) (int, error) {
 		})
 
 		maxX = max(maxX, x)
-		maxY = max(maxY, x)
+		maxY = max(maxY, y)
 	}
 
 	grid := make([][]Node, maxY+1)
@@ -217,7 +220,7 @@ func newGrid(nodes [][]Node, x int, y int, steps int) Grid {
 		}
 	}
 
-	return Grid{grid: nodes, posX: x, posY: y, steps: steps}
+	return Grid{grid: res, posX: x, posY: y, steps: steps}
 }
 
 func move(grid Grid, fromX, fromY, deltaX, deltaY int) Grid {
@@ -239,7 +242,7 @@ func move(grid Grid, fromX, fromY, deltaX, deltaY int) Grid {
 }
 
 func printGrid(g Grid) {
-	fmt.Println(g.steps)
+	fmt.Println("Steps:", g.steps)
 	for row := 0; row < len(g.grid); row++ {
 		for col := 0; col < len(g.grid[0]); col++ {
 			fmt.Printf("%v/%v\t\t", g.grid[row][col].used, g.grid[row][col].available)
@@ -253,21 +256,33 @@ func key(g Grid) string {
 	sb := strings.Builder{}
 	for _, rows := range g.grid {
 		for _, n := range rows {
-			sb.WriteString(strconv.Itoa(n.used) + ".")
+			sb.WriteString(strconv.Itoa(n.used))
+			sb.WriteRune('.')
 		}
 	}
-	return sb.String()
+	return hash(sb.String())
+}
+
+func hash(text string) string {
+	h := md5.Sum([]byte(text))
+	return hex.EncodeToString(h[:])
 }
 
 func bfs(start [][]Node, fromX, fromY, targetX, targetY int) int {
 	var q []Grid
 	q = append(q, newGrid(start, fromX, fromY, 0))
 
+	visited := make(map[string]struct{})
+
 	for len(q) != 0 {
 		g := q[0]
 		q = q[1:]
 
-		printGrid(g)
+		k := key(g)
+		if _, exists := visited[k]; exists {
+			continue
+		}
+		visited[k] = struct{}{}
 
 		if g.posX == targetX && g.posY == targetY {
 			return g.steps
@@ -286,7 +301,8 @@ func bfs(start [][]Node, fromX, fromY, targetX, targetY int) int {
 				// Bottom
 				if row < len(start)-1 {
 					if enoughSpace(current, node(g, current, 0, 1)) {
-						q = append(q, move(g, current.x, current.y, 0, 1))
+						v := move(g, current.x, current.y, 0, 1)
+						q = append(q, v)
 					}
 				}
 				// Left
