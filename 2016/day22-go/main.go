@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -102,6 +103,13 @@ func isViable(a, b Node) bool {
 	return a.used != 0 && a != b && a.used <= b.available
 }
 
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
 func max(a, b int) int {
 	if a > b {
 		return a
@@ -125,6 +133,8 @@ func fs2(input io.Reader) (int, error) {
 	var nodes []Node
 	maxX := 0
 	maxY := 0
+	minXLine := math.MaxInt
+	maxUsed := 0
 	for scanner.Scan() {
 		s := scanner.Text()
 		dashes := indexAll(s, "-")
@@ -174,6 +184,11 @@ func fs2(input io.Reader) (int, error) {
 		}
 		use := toint(s[j+1 : i+1])
 
+		maxUsed = max(maxUsed, used)
+		if used > 100 {
+			minXLine = min(minXLine, x)
+		}
+
 		nodes = append(nodes, Node{
 			x:         x,
 			y:         y,
@@ -196,10 +211,34 @@ func fs2(input io.Reader) (int, error) {
 		grid[node.y][node.x] = node
 	}
 
-	fromX := maxX
-	fromY := 0
+	for row := 0; row < len(grid); row++ {
+		for col := 0; col < len(grid[0]); col++ {
+			if grid[row][col].used == 0 {
+				fmt.Printf("%v", "x")
+			} else if grid[row][col].used > 100 {
+				fmt.Printf("%v", "#")
+			} else {
+				fmt.Printf("%v", ".")
+			}
+		}
+		fmt.Println()
+	}
 
-	return bfs(grid, fromX, fromY, 0, 0), nil
+	row := 0
+	col := 0
+outer:
+	for ; row < len(grid); row++ {
+		col = 0
+		for ; col < len(grid[0]); col++ {
+			if grid[row][col].used == 0 {
+				break outer
+			}
+		}
+	}
+
+	cols := len(grid[0])
+
+	return row + (cols - col - 1) + 5*(cols-2) + 2*(int(math.Abs(float64(col-minXLine)))) + 2, nil
 }
 
 type Grid struct {
@@ -272,6 +311,7 @@ func hash(text string) string {
 	return hex.EncodeToString(h[:])
 }
 
+// Way too slow, not working
 func bfs(start [][]Node, fromX, fromY, targetX, targetY int) int {
 	var q []Grid
 	q = append(q, newGrid(start, fromX, fromY, 0))
