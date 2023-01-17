@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-func fs1(input io.Reader, reg map[string]int16) (int16, error) {
+func fs1(input io.Reader, reg map[string]int32) (int32, error) {
 	scanner := bufio.NewScanner(input)
 	var instructions []Instruction
 	for scanner.Scan() {
@@ -17,7 +17,7 @@ func fs1(input io.Reader, reg map[string]int16) (int16, error) {
 			s2 := s[idx[1]+1:]
 			s1 := s[idx[0]+1 : idx[1]]
 			i1, err := strconv.Atoi(s1)
-			t1 := int16(i1)
+			t1 := int32(i1)
 			if err != nil {
 				instructions = append(instructions, Cpy{
 					vr1: ValueReg{r: &s1},
@@ -40,7 +40,7 @@ func fs1(input io.Reader, reg map[string]int16) (int16, error) {
 			if err != nil {
 				vr1 = ValueReg{r: &s1}
 			} else {
-				t1 := int16(i1)
+				t1 := int32(i1)
 				vr1 = ValueReg{i: &t1}
 			}
 
@@ -50,7 +50,7 @@ func fs1(input io.Reader, reg map[string]int16) (int16, error) {
 			if err != nil {
 				vr2 = ValueReg{r: &s2}
 			} else {
-				t2 := int16(i2)
+				t2 := int32(i2)
 				vr2 = ValueReg{i: &t2}
 			}
 			instructions = append(instructions, Mult{vr1, vr2, r})
@@ -65,7 +65,7 @@ func fs1(input io.Reader, reg map[string]int16) (int16, error) {
 			if err != nil {
 				jump = ValueReg{r: &s2}
 			} else {
-				t1 := int16(i2)
+				t1 := int32(i2)
 				jump = ValueReg{i: &t1}
 			}
 
@@ -77,7 +77,7 @@ func fs1(input io.Reader, reg map[string]int16) (int16, error) {
 					jump: jump,
 				})
 			} else {
-				t1 := int16(i1)
+				t1 := int32(i1)
 				instructions = append(instructions, Jnz{
 					vr1:  ValueReg{i: &t1},
 					jump: jump,
@@ -91,7 +91,7 @@ func fs1(input io.Reader, reg map[string]int16) (int16, error) {
 	root := make([]Instruction, len(instructions))
 	copy(root, instructions)
 
-	var offset int16
+	var offset int32
 	for int(offset) < len(instructions) {
 		offset += instructions[offset].apply(offset, instructions, reg)
 		//fmt.Printf("%v: a=%v, b=%v, c=%v, d=%v\n", offset, reg["a"], reg["b"], reg["c"], reg["d"])
@@ -101,7 +101,7 @@ func fs1(input io.Reader, reg map[string]int16) (int16, error) {
 }
 
 type Instruction interface {
-	apply(offset int16, instructions []Instruction, reg map[string]int16) int16
+	apply(offset int32, instructions []Instruction, reg map[string]int32) int32
 	toggle() Instruction
 }
 
@@ -110,7 +110,7 @@ type Cpy struct {
 	r2  string
 }
 
-func (c Cpy) apply(offset int16, instructions []Instruction, reg map[string]int16) int16 {
+func (c Cpy) apply(offset int32, instructions []Instruction, reg map[string]int32) int32 {
 	if c.vr1.r != nil {
 		reg[c.r2] = reg[*c.vr1.r]
 	} else {
@@ -130,7 +130,7 @@ type Inc struct {
 	r string
 }
 
-func (i Inc) apply(offset int16, instructions []Instruction, reg map[string]int16) int16 {
+func (i Inc) apply(offset int32, instructions []Instruction, reg map[string]int32) int32 {
 	reg[i.r]++
 	return 1
 }
@@ -145,7 +145,7 @@ type Dec struct {
 	r string
 }
 
-func (d Dec) apply(offset int16, instructions []Instruction, reg map[string]int16) int16 {
+func (d Dec) apply(offset int32, instructions []Instruction, reg map[string]int32) int32 {
 	reg[d.r]--
 	return 1
 }
@@ -162,15 +162,15 @@ type Mult struct {
 	r  string
 }
 
-func (d Mult) apply(offset int16, instructions []Instruction, reg map[string]int16) int16 {
-	var v1 int16
+func (d Mult) apply(offset int32, instructions []Instruction, reg map[string]int32) int32 {
+	var v1 int32
 	if d.r1.r != nil {
 		v1 = reg[*d.r1.r]
 	} else {
 		v1 = *d.r1.i
 	}
 
-	var v2 int16
+	var v2 int32
 	if d.r2.r != nil {
 		v2 = reg[*d.r2.r]
 	} else {
@@ -192,7 +192,7 @@ type Tgl struct {
 	skip bool
 }
 
-func (t *Tgl) apply(offset int16, instructions []Instruction, reg map[string]int16) int16 {
+func (t *Tgl) apply(offset int32, instructions []Instruction, reg map[string]int32) int32 {
 	if t.skip {
 		t.skip = false
 		return 1
@@ -217,8 +217,8 @@ type Jnz struct {
 	jump ValueReg
 }
 
-func (j Jnz) apply(offset int16, instructions []Instruction, reg map[string]int16) int16 {
-	var v int16
+func (j Jnz) apply(offset int32, instructions []Instruction, reg map[string]int32) int32 {
+	var v int32
 	if j.vr1.r != nil {
 		v = reg[*j.vr1.r]
 	} else {
@@ -247,7 +247,7 @@ func (j Jnz) toggle() Instruction {
 
 type Noop struct{}
 
-func (n Noop) apply(offset int16, instructions []Instruction, reg map[string]int16) int16 {
+func (n Noop) apply(offset int32, instructions []Instruction, reg map[string]int32) int32 {
 	return 1
 }
 
@@ -257,7 +257,7 @@ func (n Noop) toggle() Instruction {
 
 type ValueReg struct {
 	r *string
-	i *int16
+	i *int32
 }
 
 func indexAll(s string, search string) []int {
