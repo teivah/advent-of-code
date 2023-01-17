@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"github.com/teivah/advent-of-code/lib"
 	"io"
 	"strings"
 )
@@ -15,8 +14,6 @@ func fs1(input io.Reader) (int, error) {
 			sum++
 		}
 	}
-
-	lib.IndexAll()
 
 	return sum, nil
 }
