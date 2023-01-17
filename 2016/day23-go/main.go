@@ -31,6 +31,29 @@ func fs1(input io.Reader, reg map[string]int16) (int16, error) {
 			}
 		} else if strings.Index(s, "inc") != -1 {
 			instructions = append(instructions, Inc{s[4:]})
+		} else if strings.Index(s, "mul") != -1 {
+			r := s[idx[2]+1:]
+
+			s1 := s[idx[0]+1 : idx[1]]
+			i1, err := strconv.Atoi(s1)
+			var vr1 ValueReg
+			if err != nil {
+				vr1 = ValueReg{r: &s1}
+			} else {
+				t1 := int16(i1)
+				vr1 = ValueReg{i: &t1}
+			}
+
+			s2 := s[idx[1]+1 : idx[2]]
+			i2, err := strconv.Atoi(s2)
+			var vr2 ValueReg
+			if err != nil {
+				vr2 = ValueReg{r: &s2}
+			} else {
+				t2 := int16(i2)
+				vr2 = ValueReg{i: &t2}
+			}
+			instructions = append(instructions, Mult{vr1, vr2, r})
 		} else if strings.Index(s, "dec") != -1 {
 			instructions = append(instructions, Dec{s[4:]})
 		} else if strings.Index(s, "tgl") != -1 {
@@ -71,6 +94,7 @@ func fs1(input io.Reader, reg map[string]int16) (int16, error) {
 	var offset int16
 	for int(offset) < len(instructions) {
 		offset += instructions[offset].apply(offset, instructions, reg)
+		//fmt.Printf("%v: a=%v, b=%v, c=%v, d=%v\n", offset, reg["a"], reg["b"], reg["c"], reg["d"])
 	}
 
 	return reg["a"], nil
@@ -133,11 +157,27 @@ func (d Dec) toggle() Instruction {
 }
 
 type Mult struct {
-	r string
+	r1 ValueReg
+	r2 ValueReg
+	r  string
 }
 
 func (d Mult) apply(offset int16, instructions []Instruction, reg map[string]int16) int16 {
-	reg[d.r] *= 2
+	var v1 int16
+	if d.r1.r != nil {
+		v1 = reg[*d.r1.r]
+	} else {
+		v1 = *d.r1.i
+	}
+
+	var v2 int16
+	if d.r2.r != nil {
+		v2 = reg[*d.r2.r]
+	} else {
+		v2 = *d.r2.i
+	}
+
+	reg[d.r] = v1 * v2
 	return 1
 }
 
@@ -232,73 +272,4 @@ func indexAll(s string, search string) []int {
 		i += index + len(search)
 	}
 	return res
-}
-
-func fs2(input io.Reader, reg map[string]int16) (int16, error) {
-	scanner := bufio.NewScanner(input)
-	var instructions []Instruction
-	for scanner.Scan() {
-		s := scanner.Text()
-		idx := indexAll(s, " ")
-		if strings.Index(s, "cpy") != -1 {
-			s2 := s[idx[1]+1:]
-			s1 := s[idx[0]+1 : idx[1]]
-			i1, err := strconv.Atoi(s1)
-			t1 := int16(i1)
-			if err != nil {
-				instructions = append(instructions, Cpy{
-					vr1: ValueReg{r: &s1},
-					r2:  s2,
-				})
-			} else {
-				instructions = append(instructions, Cpy{
-					vr1: ValueReg{i: &t1},
-					r2:  s2,
-				})
-			}
-		} else if strings.Index(s, "inc") != -1 {
-			instructions = append(instructions, Mult{s[4:]})
-		} else if strings.Index(s, "dec") != -1 {
-			instructions = append(instructions, Dec{s[4:]})
-		} else if strings.Index(s, "tgl") != -1 {
-			instructions = append(instructions, &Tgl{s[4:], false})
-		} else if strings.Index(s, "jnz") != -1 {
-			s2 := s[idx[1]+1:]
-			i2, err := strconv.Atoi(s2)
-			var jump ValueReg
-			if err != nil {
-				jump = ValueReg{r: &s2}
-			} else {
-				t1 := int16(i2)
-				jump = ValueReg{i: &t1}
-			}
-
-			s1 := s[idx[0]+1 : idx[1]]
-			i1, err := strconv.Atoi(s1)
-			if err != nil {
-				instructions = append(instructions, Jnz{
-					vr1:  ValueReg{r: &s1},
-					jump: jump,
-				})
-			} else {
-				t1 := int16(i1)
-				instructions = append(instructions, Jnz{
-					vr1:  ValueReg{i: &t1},
-					jump: jump,
-				})
-			}
-		} else {
-			panic(s)
-		}
-	}
-
-	root := make([]Instruction, len(instructions))
-	copy(root, instructions)
-
-	var offset int16
-	for int(offset) < len(instructions) {
-		offset += instructions[offset].apply(offset, instructions, reg)
-	}
-
-	return reg["a"], nil
 }

@@ -24,11 +24,10 @@ func TestFs1Input(t *testing.T) {
 	assert.Equal(t, int16(10807), v)
 }
 
-func TestFs2Input(t *testing.T) {
-	f, err := os.Open("input.txt")
+func TestFs1Input2(t *testing.T) {
+	f, err := os.Open("input2.txt")
 	require.NoError(t, err)
-
-	v, err := fs2(f, map[string]int16{"a": 12})
+	v, err := fs1(f, map[string]int16{"a": 12})
 	require.NoError(t, err)
-	assert.Equal(t, int16(332), v)
+	assert.Equal(t, int16(10807), v)
 }
