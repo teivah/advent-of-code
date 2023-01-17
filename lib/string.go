@@ -2,7 +2,7 @@ package lib
 
 import "strings"
 
-func indexAll(s string, search string) []int {
+func IndexAll(s string, search string) []int {
 	i := 0
 	var res []int
 	for i < len(s) {
@@ -16,7 +16,7 @@ func indexAll(s string, search string) []int {
 	return res
 }
 
-func stringPermutations(idx int, runes []rune) []string {
+func StringPermutations(idx int, runes []rune) []string {
 	if idx == len(runes) {
 		return []string{string(runes)}
 	}
@@ -24,7 +24,7 @@ func stringPermutations(idx int, runes []rune) []string {
 	var res []string
 	for i := idx; i < len(runes); i++ {
 		runes[i], runes[idx] = runes[idx], runes[i]
-		res = append(res, stringPermutations(idx+1, runes)...)
+		res = append(res, StringPermutations(idx+1, runes)...)
 		runes[i], runes[idx] = runes[idx], runes[i]
 	}
 	return res
