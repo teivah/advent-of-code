@@ -57,5 +57,35 @@ func isValid2(s string) bool {
 }
 
 func isAnagram(a, b string) bool {
+	if len(a) != len(b) {
+		return false
+	}
 
+	lettersA := make(map[rune]int)
+	for i := 0; i < len(a); i++ {
+		r := rune(a[i])
+		lettersA[r]++
+	}
+
+	lettersB := make(map[rune]int)
+	for i := 0; i < len(b); i++ {
+		r := rune(b[i])
+		lettersB[r]++
+	}
+
+	if len(lettersA) != len(lettersB) {
+		return false
+	}
+
+	for k, v := range lettersA {
+		v2, exists := lettersB[k]
+		if !exists {
+			return false
+		}
+		if v != v2 {
+			return false
+		}
+	}
+
+	return true
 }
