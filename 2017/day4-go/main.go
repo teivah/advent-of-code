@@ -16,7 +16,7 @@ func fs1(input io.Reader) (int, error) {
 		}
 	}
 
-	lib.IndexAll("a", "b")
+	lib.IndexAll()
 
 	return sum, nil
 }
