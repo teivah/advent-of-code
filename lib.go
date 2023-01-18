@@ -22,20 +22,32 @@ func ReaderToString(input io.Reader) string {
 	return scanner.Text()
 }
 
-func GetString(s string, del []int, i int) string {
-	if i == 0 {
-		return s[:del[0]]
-	}
-
-	if i == len(del) {
-		return s[del[len(del)-1]+1:]
-	}
-
-	return s[del[i-1]+1 : del[i]]
+type Delimiter struct {
+	Ind []int
+	s   string
 }
 
-func GetInt(s string, del []int, i int) int {
-	return StringToInt(GetString(s, del, i))
+func NewDelimiter(s, del string) Delimiter {
+	return Delimiter{
+		Ind: IndexAll(s, del),
+		s:   s,
+	}
+}
+
+func (d Delimiter) GetString(i int) string {
+	if i == 0 {
+		return d.s[:d.Ind[0]]
+	}
+
+	if i == len(d.Ind) {
+		return d.s[d.Ind[len(d.Ind)-1]+1:]
+	}
+
+	return d.s[d.Ind[i-1]+1 : d.Ind[i]]
+}
+
+func (d Delimiter) GetInt(i int) int {
+	return StringToInt(d.GetString(i))
 }
 
 func IndexAll(s string, search string) []int {
