@@ -84,3 +84,14 @@ func Mod(d, m int) int {
 	}
 	return res
 }
+
+func Abs(a int) int {
+	if a >= 0 {
+		return a
+	}
+	return -a
+}
+
+func ManhattanDistance(row, col int) int {
+	return Abs(row) + Abs(col)
+}

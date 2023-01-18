@@ -1,12 +1,12 @@
-module day10-go
+module day5-go
 
-go 1.19
+go 1.18
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/stretchr/testify v1.8.1 // indirect
-	github.com/teivah/advent-of-code v0.0.0-20230118153418-e8d7f1761878 // indirect
+	github.com/teivah/advent-of-code v0.0.0-20230117173610-c031b71900ce // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
