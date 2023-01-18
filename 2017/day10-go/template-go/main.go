@@ -63,33 +63,43 @@ func fs2(input io.Reader) int {
 
 	directions := strings.Split(s, ",")
 	d := make(map[string]int)
+	max := 0
 	for _, direction := range directions {
 		d[direction]++
+		max = lib.Max(max, distance(d))
 	}
 
+	return max
+}
+
+func distance(d map[string]int) int {
+	res := make(map[string]int, len(d))
+	for k, v := range d {
+		res[k] = v
+	}
 	// Horizontal
-	remove(d, "n", "s")
+	remove(res, "n", "s")
 
 	// Diagonal 1
-	remove(d, "ne", "sw")
+	remove(res, "ne", "sw")
 
 	// Diagonal 2
-	remove(d, "nw", "se")
+	remove(res, "nw", "se")
 
-	clean(d, "ne", "s")
-	clean(d, "ne", "nw")
+	clean(res, "ne", "s")
+	clean(res, "ne", "nw")
 
-	clean(d, "se", "n")
-	clean(d, "se", "sw")
+	clean(res, "se", "n")
+	clean(res, "se", "sw")
 
-	clean(d, "sw", "n")
-	clean(d, "sw", "se")
+	clean(res, "sw", "n")
+	clean(res, "sw", "se")
 
-	clean(d, "nw", "s")
-	clean(d, "nw", "ne")
+	clean(res, "nw", "s")
+	clean(res, "nw", "ne")
 
 	sum := 0
-	for _, v := range d {
+	for _, v := range res {
 		sum += v
 	}
 	return sum
