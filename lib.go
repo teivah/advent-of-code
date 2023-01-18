@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"io"
 	"math"
+	"strconv"
 	"strings"
 )
 
@@ -12,6 +13,30 @@ import (
 2. go get github.com/teivah/advent-of-code@main
 3. Run IntelliJ "Go Mod Tidy"
 */
+
+// ---------- Parsing inputs ----------
+
+func ReaderToString(input io.Reader) string {
+	scanner := bufio.NewScanner(input)
+	scanner.Scan()
+	return scanner.Text()
+}
+
+func GetString(s string, del []int, i int) string {
+	if i == 0 {
+		return s[:del[0]]
+	}
+
+	if i == len(del) {
+		return s[del[len(del)-1]+1:]
+	}
+
+	return s[del[i-1]+1 : del[i]]
+}
+
+func GetInt(s string, del []int, i int) int {
+	return StringToInt(GetString(s, del, i))
+}
 
 func IndexAll(s string, search string) []int {
 	i := 0
@@ -27,6 +52,8 @@ func IndexAll(s string, search string) []int {
 	return res
 }
 
+// ---------- String ----------
+
 func StringPermutations(idx int, runes []rune) []string {
 	if idx == len(runes) {
 		return []string{string(runes)}
@@ -40,6 +67,8 @@ func StringPermutations(idx int, runes []rune) []string {
 	}
 	return res
 }
+
+// ---------- Math ----------
 
 func Min(a, b int) int {
 	if a < b {
@@ -71,12 +100,6 @@ func MinInts(values []int) int {
 	return min
 }
 
-func ReaderToString(input io.Reader) string {
-	scanner := bufio.NewScanner(input)
-	scanner.Scan()
-	return scanner.Text()
-}
-
 func Mod(d, m int) int {
 	res := d % m
 	if (res < 0 && m > 0) || (res > 0 && m < 0) {
@@ -94,4 +117,22 @@ func Abs(a int) int {
 
 func ManhattanDistance(row, col int) int {
 	return Abs(row) + Abs(col)
+}
+
+// ---------- Conversions ----------
+
+func StringToInt(s string) int {
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		panic(err)
+	}
+	return i
+}
+
+func StringsToInts(s []string) []int {
+	res := make([]int, len(s))
+	for i, v := range s {
+		res[i] = StringToInt(v)
+	}
+	return res
 }
