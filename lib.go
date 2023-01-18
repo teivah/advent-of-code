@@ -76,3 +76,11 @@ func ReaderToString(input io.Reader) string {
 	scanner.Scan()
 	return scanner.Text()
 }
+
+func Mod(d, m int) int {
+	res := d % m
+	if (res < 0 && m > 0) || (res > 0 && m < 0) {
+		return res + m
+	}
+	return res
+}
