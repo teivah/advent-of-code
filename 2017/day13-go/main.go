@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	lib "github.com/teivah/advent-of-code"
 	"io"
 )
@@ -28,19 +27,25 @@ func fs1(input io.Reader) int {
 	}
 
 	severity := 0
-	scanners := make([]Scanner, max+1)
 	for round := 0; round <= max; round++ {
 		if layers[round] != 0 {
-			if scanners[round].row == 0 {
+			if getScannerPosition(layers[round], round) == 0 {
 				severity += round * layers[round]
 			}
 		}
-
-		// Move scanners
-		updateScanners(scanners, layers)
 	}
 
 	return severity
+}
+
+func getScannerPosition(layers int, round int) int {
+	delta := round % (layers - 1)
+
+	if round%((layers-1)*2) < layers-1 {
+		return delta
+	}
+
+	return layers - 1 - delta
 }
 
 type Scanner struct {
@@ -90,26 +95,18 @@ func fs2(input io.Reader) int {
 	}
 
 	for delay := 0; ; delay++ {
-		scanners := make([]Scanner, max+1)
 		caught := false
 
-		if delay%1000 == 0 {
-			fmt.Println(delay)
-		}
-
-		for i := 0; i < delay; i++ {
-			updateScanners(scanners, layers)
-		}
-
-		for round := 0; round <= max; round++ {
-			if layers[round] != 0 {
-				if scanners[round].row == 0 {
+		for layer := 0; layer <= max; layer++ {
+			picosecond := delay + layer
+			if layers[layer] != 0 {
+				if getScannerPosition(layers[layer], picosecond) == 0 {
 					caught = true
 					break
 				}
 			}
-			updateScanners(scanners, layers)
 		}
+
 		if !caught {
 			return delay
 		}
