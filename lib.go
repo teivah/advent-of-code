@@ -1,6 +1,9 @@
 package lib
 
-import "strings"
+import (
+	"math"
+	"strings"
+)
 
 func IndexAll(s string, search string) []int {
 	i := 0
@@ -30,3 +33,32 @@ func StringPermutations(idx int, runes []rune) []string {
 	return res
 }
 
+func Min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func Max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func MaxInts(values []int) int {
+	max := math.MinInt
+	for _, v := range values {
+		max = Max(max, v)
+	}
+	return max
+}
+
+func MinInts(values []int) int {
+	min := math.MaxInt
+	for _, v := range values {
+		min = Min(min, v)
+	}
+	return min
+}
