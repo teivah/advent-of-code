@@ -1,9 +1,17 @@
 package lib
 
 import (
+	"bufio"
+	"io"
 	"math"
 	"strings"
 )
+
+/*
+1. Push
+2. go get github.com/teivah/advent-of-code@main
+3. Run IntelliJ "Go Mod Tidy"
+*/
 
 func IndexAll(s string, search string) []int {
 	i := 0
@@ -61,4 +69,10 @@ func MinInts(values []int) int {
 		min = Min(min, v)
 	}
 	return min
+}
+
+func ReaderToString(input io.Reader) string {
+	scanner := bufio.NewScanner(input)
+	scanner.Scan()
+	return scanner.Text()
 }
