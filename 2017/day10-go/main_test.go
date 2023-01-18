@@ -11,7 +11,7 @@ func TestFs1Test(t *testing.T) {
 }
 
 func TestFs1Input(t *testing.T) {
-	assert.Equal(t, 12, fs1(256, []int{76, 1, 88, 148, 166, 217, 130, 0, 128, 254, 16, 2, 130, 71, 255, 229}))
+	assert.Equal(t, 29240, fs1(256, []int{76, 1, 88, 148, 166, 217, 130, 0, 128, 254, 16, 2, 130, 71, 255, 229}))
 }
 
 func TestFs2Test(t *testing.T) {
@@ -22,7 +22,7 @@ func TestFs2Test(t *testing.T) {
 }
 
 func TestFs2Input(t *testing.T) {
-	assert.Equal(t, 42, fs2(256, "76,1,88,148,166,217,130,0,128,254,16,2,130,71,255,229"))
+	assert.Equal(t, "4db3799145278dc9f73dcdbc680bd53d", fs2(256, "76,1,88,148,166,217,130,0,128,254,16,2,130,71,255,229"))
 }
 
 func Test_reverse(t *testing.T) {
