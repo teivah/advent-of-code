@@ -50,6 +50,11 @@ func (d Delimiter) GetInt(i int) int {
 	return StringToInt(d.GetString(i))
 }
 
+func (d Delimiter) IsInt(i int) bool {
+	_, err := strconv.Atoi(d.GetString(i))
+	return err == nil
+}
+
 func IndexAll(s string, search string) []int {
 	i := 0
 	var res []int
