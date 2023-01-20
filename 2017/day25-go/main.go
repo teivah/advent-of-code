@@ -119,13 +119,3 @@ func toState(scanner *bufio.Scanner) (string, State) {
 
 	return state, State{zero, one}
 }
-
-func fs2(input io.Reader) int {
-	scanner := bufio.NewScanner(input)
-	for scanner.Scan() {
-		line := scanner.Text()
-		_ = line
-	}
-
-	return 42
-}
