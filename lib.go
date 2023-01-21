@@ -96,6 +96,46 @@ func StringPermutations(idx int, runes []rune) []string {
 
 // ---------- Math ----------
 
+type Maxer struct {
+	max int
+}
+
+func NewMaxer() *Maxer {
+	return &Maxer{
+		max: math.MinInt,
+	}
+}
+
+func (m *Maxer) Add(values ...int) {
+	for _, v := range values {
+		m.max = Max(m.max, v)
+	}
+}
+
+func (m *Maxer) Get() int {
+	return m.max
+}
+
+type Miner struct {
+	min int
+}
+
+func NewMiner() *Miner {
+	return &Miner{
+		min: math.MaxInt,
+	}
+}
+
+func (m *Miner) Add(values ...int) {
+	for _, v := range values {
+		m.min = Min(m.min, v)
+	}
+}
+
+func (m *Miner) Get() int {
+	return m.min
+}
+
 func Min(a, b int) int {
 	if a < b {
 		return a
