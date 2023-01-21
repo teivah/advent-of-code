@@ -69,6 +69,15 @@ func IndexAll(s string, search string) []int {
 	return res
 }
 
+func ReaderToStrings(input io.Reader) []string {
+	scanner := bufio.NewScanner(input)
+	var strings []string
+	for scanner.Scan() {
+		strings = append(strings, scanner.Text())
+	}
+	return strings
+}
+
 // ---------- String ----------
 
 func StringPermutations(idx int, runes []rune) []string {
