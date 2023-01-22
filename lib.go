@@ -202,3 +202,13 @@ func StringsToInts(s []string) []int {
 	}
 	return res
 }
+
+// Collections
+
+func CopyInts(s []int) []int {
+	res := make([]int, len(s))
+	for i, v := range s {
+		res[i] = v
+	}
+	return res
+}

@@ -5,7 +5,7 @@ if [ "$1" = "go" ]; then
   cd $2/day$3-$1
   go mod init day$3-$1
   go get github.com/stretchr/testify
-  go get github.com/teivah/advent-of-code@v0.0.5
+  go get github.com/teivah/advent-of-code@v0.0.6
   cd ../..
 fi
 idea $2/day$3-$1
