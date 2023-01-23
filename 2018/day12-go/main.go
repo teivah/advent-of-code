@@ -42,11 +42,8 @@ func newState(state string, transformations map[string]string) string {
 	for i := 2; i < len(state)-2; i++ {
 		s := state[i-2 : i+3]
 		if to, exists := transformations[s]; exists {
-			//res = res[:len(res)-2] + ".." + to + ".."
-			//i += 2
 			res += to
 		} else {
-			//res += state[i : i+1]
 			res += "."
 		}
 	}
