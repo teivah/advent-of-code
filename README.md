@@ -36,6 +36,10 @@
 * [Day 6](https://adventofcode.com/2018/day/6): [Go](2018/day6-go/main.go)
 * [Day 7](https://adventofcode.com/2018/day/7): [Go](2018/day7-go/main.go)
 * [Day 8](https://adventofcode.com/2018/day/8): [Go](2018/day8-go/main.go)
+* [Day 9](https://adventofcode.com/2018/day/9): [Go](2018/day9-go/main.go)
+* [Day 10](https://adventofcode.com/2018/day/10): [Go](2018/day10-go/main.go)
+* [Day 12](https://adventofcode.com/2018/day/12): [Go](2018/day12-go/main.go)
+* [Day 13](https://adventofcode.com/2018/day/13): [Go](2018/day13-go/main.go)
 
 ## 2017
 
