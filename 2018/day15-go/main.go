@@ -1,0 +1,519 @@
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"io"
+	"math"
+	"sort"
+
+	lib "github.com/teivah/advent-of-code"
+)
+
+func fs1(input io.Reader) int {
+	lines := lib.ReaderToStrings(input)
+
+	grid := make([][]Cell, len(lines))
+	var goblins []*Unit
+	var elves []*Unit
+	for row, line := range lines {
+		grid[row] = make([]Cell, 0, len(line))
+		for col := 0; col < len(line); col++ {
+			switch line[col] {
+			case '#':
+				grid[row] = append(grid[row], Cell{cellType: wall})
+			case '.':
+				grid[row] = append(grid[row], Cell{cellType: empty})
+			case 'G':
+				g := &Unit{unitType: goblin, power: 3, hitPoints: 200, position: Position{row, col}}
+				goblins = append(goblins, g)
+				grid[row] = append(grid[row], Cell{cellType: empty, unit: g})
+			case 'E':
+				e := &Unit{unitType: elf, power: 3, hitPoints: 200, position: Position{row, col}}
+				elves = append(elves, e)
+				grid[row] = append(grid[row], Cell{cellType: empty, unit: e})
+			}
+		}
+	}
+
+	board := &Board{
+		grid:    grid,
+		goblins: goblins,
+		elves:   elves,
+	}
+
+	//board.print()
+	rounds := 0
+	for {
+		fmt.Println(rounds)
+		if len(board.goblins) == 0 || len(board.elves) == 0 {
+			break
+		}
+
+		board.round()
+		board.print()
+		rounds++
+	}
+
+	sum := 0
+	if len(board.goblins) != 0 {
+		for _, goblin := range board.goblins {
+			sum += goblin.hitPoints
+		}
+	} else {
+		for _, elf := range board.elves {
+			sum += elf.hitPoints
+		}
+	}
+
+	return (rounds - 1) * sum
+}
+
+type Board struct {
+	grid    [][]Cell
+	goblins []*Unit
+	elves   []*Unit
+}
+
+func (b *Board) getUnit(pos Position) *Unit {
+	return b.grid[pos.row][pos.col].unit
+}
+
+func (b *Board) isEmpty(pos Position) bool {
+	cell := b.grid[pos.row][pos.col]
+	if cell.unit != nil {
+		return false
+	}
+	return cell.cellType == empty
+}
+
+func (b *Board) round() {
+	for _, elf := range b.elves {
+		elf.turnOver = false
+	}
+	for _, goblin := range b.goblins {
+		goblin.turnOver = false
+	}
+
+	for row := 0; row < len(b.grid); row++ {
+		for col := 0; col < len(b.grid[0]); col++ {
+			cell := b.grid[row][col]
+			if cell.unit == nil {
+				continue
+			}
+
+			cell.unit.turn(b)
+		}
+	}
+}
+
+func (b *Board) updateIsInRange() {
+	elvesInRange := make(map[*Unit]struct{})
+	goblinsInRange := make(map[*Unit]struct{})
+
+	for elf := range b.elves {
+		for goblin := range b.goblins {
+			if distance(b.elves[elf].position, b.goblins[goblin].position) == 1 {
+				elvesInRange[b.elves[elf]] = struct{}{}
+				goblinsInRange[b.goblins[goblin]] = struct{}{}
+
+				b.elves[elf].isInRange = true
+				b.goblins[goblin].isInRange = true
+			}
+		}
+	}
+
+	for _, goblin := range b.goblins {
+		_, exists := goblinsInRange[goblin]
+		if !exists {
+			goblin.isInRange = false
+		}
+	}
+
+	for _, elf := range b.elves {
+		_, exists := elvesInRange[elf]
+		if !exists {
+			elf.isInRange = false
+		}
+	}
+}
+
+func distance(from, to Position) int {
+	return lib.Abs(from.row-to.row) + lib.Abs(from.col-to.col)
+}
+
+func (b *Board) print() {
+	for row := 0; row < len(b.grid); row++ {
+		for col := 0; col < len(b.grid[0]); col++ {
+			cell := b.grid[row][col]
+			if cell.unit != nil {
+				if cell.unit.unitType == goblin {
+					fmt.Print("G")
+				} else {
+					fmt.Print("E")
+				}
+			} else {
+				if cell.cellType == wall {
+					fmt.Print("#")
+				} else {
+					fmt.Print(".")
+				}
+			}
+		}
+		fmt.Println()
+	}
+	fmt.Println()
+}
+
+type Cell struct {
+	cellType CellType
+	unit     *Unit
+}
+
+type CellType int
+
+const (
+	wall CellType = iota
+	empty
+)
+
+type Unit struct {
+	unitType  UnitType
+	power     int
+	hitPoints int
+	isInRange bool
+	position  Position
+	turnOver  bool
+}
+
+func (u *Unit) turn(board *Board) {
+	if u.turnOver {
+		return
+	}
+
+	defer board.updateIsInRange()
+
+	u.turnOver = true
+
+	if !u.isInRange {
+		// Check moves
+		var targets []*Unit
+		if u.unitType == goblin {
+			targets = board.elves
+		} else {
+			targets = board.goblins
+		}
+
+		options := getPossibleSquares(board, targets)
+		if len(options) == 0 {
+			return
+		}
+
+		// Move
+		to := shortest(board, u.position, options)
+		if to == nil {
+			return
+		}
+
+		oldRow := u.position.row
+		oldCol := u.position.col
+
+		u.position.row = to.row
+		u.position.col = to.col
+
+		board.grid[to.row][to.col].unit = board.grid[oldRow][oldCol].unit
+		board.grid[oldRow][oldCol].unit = nil
+		board.updateIsInRange()
+	}
+
+	// Attack
+	target := u.selectTarget(board)
+	if target == nil {
+		return
+	}
+	t := board.getUnit(*target)
+	t.hitPoints -= u.power
+	if t.hitPoints <= 0 {
+		board.grid[target.row][target.col].unit = nil
+
+		if t.unitType == elf {
+			if len(board.elves) == 1 {
+				board.elves = nil
+			} else {
+				i := 0
+				for ; i < len(board.elves); i++ {
+					elf := board.elves[i]
+					if elf.position == t.position {
+						break
+					}
+				}
+
+				if i == 0 {
+					board.elves = board.elves[1:]
+				} else if i == len(board.elves)-1 {
+					board.elves = board.elves[:len(board.elves)-1]
+				} else {
+					res := make([]*Unit, 0, len(board.elves)-1)
+					for j := 0; j < i; j++ {
+						res = append(res, board.elves[j])
+					}
+					for j := i + 1; j < len(board.elves); j++ {
+						res = append(res, board.elves[j])
+					}
+					board.elves = res
+				}
+			}
+		} else {
+			if len(board.goblins) == 1 {
+				board.goblins = nil
+			} else {
+				i := 0
+				for ; i < len(board.goblins); i++ {
+					goblin := board.goblins[i]
+					if goblin.position == t.position {
+						break
+					}
+				}
+
+				if i == 0 {
+					board.goblins = board.goblins[1:]
+				} else if i == len(board.goblins)-1 {
+					board.goblins = board.goblins[:len(board.goblins)-1]
+				} else {
+					res := make([]*Unit, 0, len(board.goblins)-1)
+					for j := 0; j < i; j++ {
+						res = append(res, board.goblins[j])
+					}
+					for j := i + 1; j < len(board.goblins); j++ {
+						res = append(res, board.goblins[j])
+					}
+					board.goblins = res
+				}
+			}
+		}
+	}
+}
+
+func (u *Unit) selectTarget(board *Board) *Position {
+	var target *Position
+	minHitPoints := math.MaxInt
+
+	top := u.position.delta(-1, 0)
+	cell := board.grid[top.row][top.col]
+	if cell.unit != nil && cell.unit.unitType != u.unitType {
+		target = &top
+		minHitPoints = cell.unit.hitPoints
+	}
+
+	down := u.position.delta(1, 0)
+	cell = board.grid[down.row][down.col]
+	if cell.unit != nil && cell.unit.unitType != u.unitType {
+		if cell.unit.hitPoints < minHitPoints {
+			target = &down
+			minHitPoints = cell.unit.hitPoints
+		} else if cell.unit.hitPoints == minHitPoints {
+			x := *target
+			y := x.min(down)
+			target = &y
+		}
+	}
+
+	left := u.position.delta(0, -1)
+	cell = board.grid[left.row][left.col]
+	if cell.unit != nil && cell.unit.unitType != u.unitType {
+		if cell.unit.hitPoints < minHitPoints {
+			target = &left
+			minHitPoints = cell.unit.hitPoints
+		} else if cell.unit.hitPoints == minHitPoints {
+			x := *target
+			y := x.min(left)
+			target = &y
+		}
+	}
+
+	right := u.position.delta(0, 1)
+	cell = board.grid[right.row][right.col]
+	if cell.unit != nil && cell.unit.unitType != u.unitType {
+		if cell.unit.hitPoints < minHitPoints {
+			target = &right
+			minHitPoints = cell.unit.hitPoints
+		} else if cell.unit.hitPoints == minHitPoints {
+			x := *target
+			y := x.min(right)
+			target = &y
+		}
+	}
+
+	return target
+}
+
+func shortest(board *Board, from Position, options []Position) *Position {
+	var nearests []Position
+	minDst := math.MaxInt
+	for _, option := range options {
+		bfs := Bfs{from: from, to: option, visited: make(map[Position]int), board: board}
+		dst, step := bfs.search(from, 0)
+		if dst == math.MaxInt {
+			continue
+		}
+		if dst < minDst {
+			minDst = dst
+			nearests = []Position{step}
+		} else if dst == minDst {
+			nearests = append(nearests, step)
+		}
+	}
+
+	if len(nearests) == 0 {
+		return nil
+	}
+
+	sort.Slice(nearests, func(i, j int) bool {
+		a := nearests[i]
+		b := nearests[j]
+		if a.row < b.row {
+			return true
+		}
+		if b.row < a.row {
+			return false
+		}
+		return a.col < b.col
+	})
+
+	return &nearests[0]
+}
+
+type Bfs struct {
+	from    Position
+	to      Position
+	visited map[Position]int
+	board   *Board
+}
+
+func (b *Bfs) search(pos Position, cur int) (int, Position) {
+	if pos == b.to {
+		return cur, pos
+	}
+
+	fmt.Println(pos)
+
+	if pos != b.from && !b.board.isEmpty(pos) {
+		return math.MaxInt, Position{}
+	}
+
+	if v, exists := b.visited[pos]; exists {
+		if cur > v {
+			return math.MaxInt, Position{}
+		}
+	}
+	b.visited[pos] = cur
+
+	minDst := math.MaxInt
+	var step Position
+	cur++
+
+	up := pos.delta(-1, 0)
+	dst, _ := b.search(up, cur)
+	if dst < minDst {
+		minDst = dst
+		step = up
+	}
+
+	down := pos.delta(1, 0)
+	dst, _ = b.search(down, cur)
+	if dst < minDst {
+		minDst = dst
+		step = down
+	} else if dst == minDst {
+		step = step.min(down)
+	}
+
+	left := pos.delta(0, -1)
+	dst, _ = b.search(left, cur)
+	if dst < minDst {
+		minDst = dst
+		step = left
+	} else if dst == minDst {
+		step = step.min(left)
+	}
+
+	right := pos.delta(0, 1)
+	dst, _ = b.search(right, cur)
+	if dst < minDst {
+		minDst = dst
+		step = right
+	} else if dst == minDst {
+		step = step.min(right)
+	}
+
+	return minDst, step
+}
+
+func getPossibleSquares(board *Board, targets []*Unit) []Position {
+	var positions []Position
+	for _, target := range targets {
+		pos := target.position
+
+		up := pos.delta(-1, 0)
+		if board.isEmpty(up) {
+			positions = append(positions, up)
+		}
+
+		down := pos.delta(1, 0)
+		if board.isEmpty(down) {
+			positions = append(positions, down)
+		}
+
+		left := pos.delta(0, -1)
+		if board.isEmpty(left) {
+			positions = append(positions, left)
+		}
+
+		right := pos.delta(0, 1)
+		if board.isEmpty(right) {
+			positions = append(positions, right)
+		}
+	}
+	return positions
+}
+
+type Position struct {
+	row int
+	col int
+}
+
+func (p Position) min(p2 Position) Position {
+	if p.row < p2.row {
+		return p
+	}
+	if p2.row < p.row {
+		return p2
+	}
+	if p.col <= p2.col {
+		return p
+	}
+	return p2
+}
+
+func (p Position) delta(row, col int) Position {
+	p.row += row
+	p.col += col
+	return p
+}
+
+type UnitType int
+
+const (
+	goblin UnitType = iota
+	elf
+)
+
+func fs2(input io.Reader) int {
+	scanner := bufio.NewScanner(input)
+	for scanner.Scan() {
+		line := scanner.Text()
+		_ = line
+	}
+
+	return 42
+}
