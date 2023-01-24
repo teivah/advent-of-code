@@ -80,6 +80,44 @@ func (g *Grid) sumWater(row int) int {
 	return sum
 }
 
+func (g *Grid) sumRestWater(row int) int {
+	sum := 0
+	for r := g.maxRow; r >= row; r-- {
+		for c := g.minCol; c <= g.maxCol; c++ {
+			unit := g.unitType(Position{r, c})
+			if unit != nil && *unit == water && g.isInsideBlock(Position{r, c}, make(map[Position]struct{})) {
+				sum++
+			}
+		}
+	}
+	return sum
+}
+
+func (g *Grid) isInsideBlock(pos Position, visited map[Position]struct{}) bool {
+	unit := g.unitType(pos)
+
+	if _, exists := visited[pos]; exists {
+		return true
+	}
+
+	visited[pos] = struct{}{}
+
+	if unit == nil {
+		return false
+	}
+
+	if *unit == clay {
+		return true
+	}
+
+	if *unit == sand {
+		return false
+	}
+
+	// Water
+	return g.isInsideBlock(pos.delta(0, -1), visited) && g.isInsideBlock(pos.delta(0, 1), visited)
+}
+
 func (g *Grid) unitType(current Position) *UnitType {
 	if current.row < g.minRow || current.row > g.maxRow || current.col < g.minCol || current.col > g.maxCol {
 		return nil
@@ -318,10 +356,37 @@ func updateScan(s string, scan *Scan) {
 
 func fs2(input io.Reader) int {
 	scanner := bufio.NewScanner(input)
+	var scans []Scan
 	for scanner.Scan() {
-		line := scanner.Text()
-		_ = line
+		scans = append(scans, toScan(scanner.Text()))
 	}
 
-	return 42
+	const minRow = 0
+	minY := math.MaxInt
+	minCol := math.MaxInt
+	maxCol := math.MinInt
+	maxRow := 0
+	for _, scan := range scans {
+		if scan.rangeCol == nil {
+			minCol = lib.Min(minCol, scan.col)
+			maxCol = lib.Max(maxCol, scan.col)
+		} else {
+			minCol = lib.Min(minCol, scan.rangeCol.from)
+			maxCol = lib.Max(maxCol, scan.rangeCol.to)
+		}
+
+		if scan.rangeRow == nil {
+			minY = lib.Min(minY, scan.row)
+			maxRow = lib.Max(maxRow, scan.row)
+		} else {
+			minY = lib.Min(minY, scan.rangeRow.from)
+			maxRow = lib.Max(maxRow, scan.rangeRow.to)
+		}
+	}
+
+	grid := newGrid(minRow, minCol, maxRow, maxCol, scans)
+
+	grid.dfs(Position{0, 500})
+
+	return grid.sumRestWater(minY)
 }
