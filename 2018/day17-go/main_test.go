@@ -14,6 +14,12 @@ func TestFs1Unit(t *testing.T) {
 	assert.Equal(t, 136, fs1(f))
 }
 
+func TestFs1Unit2(t *testing.T) {
+	f, err := os.Open("unit2.txt")
+	require.NoError(t, err)
+	assert.Equal(t, 136, fs1(f))
+}
+
 func TestFs1Test(t *testing.T) {
 	f, err := os.Open("test.txt")
 	require.NoError(t, err)
