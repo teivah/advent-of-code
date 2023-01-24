@@ -18,6 +18,7 @@ func fs1(input io.Reader) int {
 	}
 
 	const minRow = 0
+	minY := math.MaxInt
 	minCol := math.MaxInt
 	maxCol := math.MinInt
 	maxRow := 0
@@ -31,8 +32,10 @@ func fs1(input io.Reader) int {
 		}
 
 		if scan.rangeRow == nil {
+			minY = lib.Min(minY, scan.row)
 			maxRow = lib.Max(maxRow, scan.row)
 		} else {
+			minY = lib.Min(minY, scan.rangeRow.from)
 			maxRow = lib.Max(maxRow, scan.rangeRow.to)
 		}
 	}
@@ -41,10 +44,7 @@ func fs1(input io.Reader) int {
 
 	grid.dfs(Position{0, 500})
 
-	fmt.Println(grid)
-	//fmt.Println(grid.Visited())
-	//fmt.Println(grid.visited[Position{11, 500}])
-	return grid.sumWater() - 1 // spring
+	return grid.sumWater(minY)
 }
 
 type Grid struct {
@@ -68,10 +68,10 @@ func (p Position) delta(row, col int) Position {
 	return p
 }
 
-func (g *Grid) sumWater() int {
+func (g *Grid) sumWater(row int) int {
 	sum := 0
-	for _, row := range g.board {
-		for _, v := range row {
+	for ; row < len(g.board); row++ {
+		for _, v := range g.board[row] {
 			if v == water {
 				sum++
 			}
@@ -194,21 +194,6 @@ func (g *Grid) String() string {
 	}
 	return s
 }
-
-//func (g *Grid) Visited() string {
-//	s := ""
-//	for r, row := range g.board {
-//		for c := range row {
-//			if g.visited[Position{r + g.minRow, c + g.minCol}] {
-//				s += "X"
-//			} else {
-//				s += "."
-//			}
-//		}
-//		s += "\n"
-//	}
-//	return s
-//}
 
 type UnitType int
 
