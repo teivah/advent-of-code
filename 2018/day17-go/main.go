@@ -1,0 +1,277 @@
+package main
+
+import (
+	"bufio"
+	"fmt"
+	"io"
+	"math"
+	"strings"
+
+	lib "github.com/teivah/advent-of-code"
+)
+
+func fs1(input io.Reader) int {
+	scanner := bufio.NewScanner(input)
+	var scans []Scan
+	for scanner.Scan() {
+		scans = append(scans, toScan(scanner.Text()))
+	}
+
+	const minRow = 0
+	minCol := math.MaxInt
+	maxCol := math.MinInt
+	maxRow := 0
+	for _, scan := range scans {
+		if scan.rangeCol == nil {
+			minCol = lib.Min(minCol, scan.col)
+			maxCol = lib.Max(maxCol, scan.col)
+		} else {
+			minCol = lib.Min(minCol, scan.rangeCol.from)
+			maxCol = lib.Max(maxCol, scan.rangeCol.to)
+		}
+
+		if scan.rangeRow == nil {
+			maxRow = lib.Max(maxRow, scan.col)
+		} else {
+			maxRow = lib.Max(maxRow, scan.rangeRow.to)
+		}
+	}
+
+	grid := newGrid(minRow, minCol, maxRow, maxCol, scans)
+
+	grid.dfs(Position{0, 500})
+
+	fmt.Println(grid)
+	return grid.sumWater() - 1 // spring
+}
+
+type Grid struct {
+	minRow int
+	minCol int
+	maxRow int
+	maxCol int
+	board  [][]UnitType
+	spring Position
+}
+
+type Position struct {
+	row int
+	col int
+}
+
+func (p Position) delta(row, col int) Position {
+	p.row += row
+	p.col += col
+	return p
+}
+
+func (g *Grid) sumWater() int {
+	sum := 0
+	for _, row := range g.board {
+		for _, v := range row {
+			if v == water {
+				sum++
+			}
+		}
+	}
+	return sum
+}
+
+func (g *Grid) unitType(current Position) *UnitType {
+	if current.row < g.minRow || current.row > g.maxRow || current.col < g.minCol || current.col > g.maxCol {
+		return nil
+	}
+
+	return &g.board[g.row(current.row)][g.col(current.col)]
+}
+
+func (g *Grid) dfs(current Position) bool {
+	if current.row >= g.maxRow {
+		g.visit(current)
+		return true
+	}
+
+	currentUnit := g.unitType(current)
+	if currentUnit == nil {
+		return false
+	}
+	if *currentUnit == clay || *currentUnit == water {
+		return false
+	}
+
+	g.visit(current)
+
+	// Down?
+	down := current.delta(1, 0)
+	downUnit := g.unitType(down)
+	if downUnit == nil {
+		return false
+	}
+
+	if *downUnit == clay {
+		left := g.dfs(current.delta(0, -1))
+		right := g.dfs(current.delta(0, 1))
+		return left || right
+	} else { // sand
+		if g.dfs(down) {
+			return true
+		}
+		left := g.dfs(current.delta(0, -1))
+		right := g.dfs(current.delta(0, 1))
+		return left || right
+	}
+}
+
+func (g *Grid) visit(current Position) {
+	g.board[g.row(current.row)][g.col(current.col)] = water
+}
+
+func (g *Grid) String() string {
+	s := ""
+	for _, row := range g.board {
+		for _, t := range row {
+			switch t {
+			case sand:
+				s += "."
+			case clay:
+				s += "#"
+			case spring:
+				s += "+"
+			case water:
+				s += "~"
+			}
+		}
+		s += "\n"
+	}
+	return s
+}
+
+type UnitType int
+
+const (
+	sand UnitType = iota
+	clay
+	spring
+	water
+)
+
+func newGrid(minRow int, minCol int, maxRow int, maxCol int, scans []Scan) *Grid {
+	const buffer = 50
+	minCol -= buffer
+	maxCol += buffer
+
+	board := make([][]UnitType, maxRow-minRow+1)
+	for row := range board {
+		board[row] = make([]UnitType, maxCol-minCol+1)
+	}
+
+	g := &Grid{minRow: minRow,
+		minCol: minCol,
+		maxRow: maxRow,
+		maxCol: maxCol,
+		board:  board,
+	}
+
+	g.board[g.row(0)][g.col(500)] = spring
+	g.spring = Position{g.row(0), g.col(500)}
+
+	for _, scan := range scans {
+		if scan.rangeCol != nil {
+			row := scan.row
+			for col := scan.rangeCol.from; col <= scan.rangeCol.to; col++ {
+				g.board[g.row(row)][g.col(col)] = clay
+			}
+		} else {
+			col := scan.col
+			for row := scan.rangeRow.from; row <= scan.rangeRow.to; row++ {
+				g.board[g.row(row)][g.col(col)] = clay
+			}
+		}
+	}
+
+	return g
+}
+
+func (g *Grid) col(i int) int {
+	return i - g.minCol
+}
+
+func (g *Grid) row(i int) int {
+	return i
+}
+
+type Scan struct {
+	col      int
+	rangeCol *Range
+	row      int
+	rangeRow *Range
+}
+
+func (s Scan) String() string {
+	res := ""
+	if s.rangeCol == nil {
+		res += fmt.Sprintf("x=%d, ", s.col)
+	} else {
+		res += fmt.Sprintf("x=%d..%d, ", s.rangeCol.from, s.rangeCol.to)
+	}
+
+	if s.rangeRow == nil {
+		res += fmt.Sprintf("y=%d", s.row)
+	} else {
+		res += fmt.Sprintf("y=%d..%d", s.rangeRow.from, s.rangeRow.to)
+	}
+
+	return res + "\n"
+}
+
+type Range struct {
+	from int
+	to   int
+}
+
+func toScan(s string) Scan {
+	spaces := lib.NewDelimiter(s, " ")
+
+	a := s[:spaces.Ind[0]-1]
+	b := s[spaces.Ind[0]+1:]
+
+	scan := &Scan{}
+	updateScan(a, scan)
+	updateScan(b, scan)
+
+	return *scan
+}
+
+func updateScan(s string, scan *Scan) {
+	del := strings.Index(s, "..")
+
+	if s[0] == 'x' {
+		if del == -1 {
+			scan.col = lib.StringToInt(s[2:])
+		} else {
+			scan.rangeCol = &Range{
+				from: lib.StringToInt(s[2:del]),
+				to:   lib.StringToInt(s[del+2:]),
+			}
+		}
+	} else {
+		if del == -1 {
+			scan.row = lib.StringToInt(s[2:])
+		} else {
+			scan.rangeRow = &Range{
+				from: lib.StringToInt(s[2:del]),
+				to:   lib.StringToInt(s[del+2:]),
+			}
+		}
+	}
+}
+
+func fs2(input io.Reader) int {
+	scanner := bufio.NewScanner(input)
+	for scanner.Scan() {
+		line := scanner.Text()
+		_ = line
+	}
+
+	return 42
+}
