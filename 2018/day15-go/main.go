@@ -97,6 +97,7 @@ func (b *Board) round() {
 
 	for row := 0; row < len(b.grid); row++ {
 		for col := 0; col < len(b.grid[0]); col++ {
+			fmt.Println(row, col)
 			cell := b.grid[row][col]
 			if cell.unit == nil {
 				continue
@@ -350,9 +351,19 @@ func (u *Unit) selectTarget(board *Board) *Position {
 func shortest(board *Board, from Position, options []Position) *Position {
 	var nearests []Position
 	minDst := math.MaxInt
+
+	//// Greedy option to reduce the options
+	//sort.Slice(options, func(i, j int) bool {
+	//	a := options[i]
+	//	b := options[j]
+	//
+	//	return distance(from, a) < distance(from, b)
+	//})
+	//options = options[:lib.Min(len(options), 10)]
+
 	for _, option := range options {
-		bfs := Bfs{from: from, to: option, visited: make(map[Position]int), board: board}
-		dst, step := bfs.search(from, 0)
+		//fmt.Println(i, len(options))
+		dst, step := bfs(board, from, option)
 		if dst == math.MaxInt {
 			continue
 		}
@@ -383,70 +394,117 @@ func shortest(board *Board, from Position, options []Position) *Position {
 	return &nearests[0]
 }
 
-type Bfs struct {
-	from    Position
-	to      Position
-	visited map[Position]int
-	board   *Board
+type State struct {
+	pos       Position
+	current   int
+	firstStep *Position
 }
 
-func (b *Bfs) search(pos Position, cur int) (int, Position) {
-	if pos == b.to {
-		return cur, pos
-	}
+func bfs(board *Board, from Position, to Position) (int, Position) {
+	q := []State{{pos: from, current: 0}}
+	visited := make(map[Position]int)
 
-	fmt.Println(pos)
+	for len(q) != 0 {
+		levels := len(q)
 
-	if pos != b.from && !b.board.isEmpty(pos) {
-		return math.MaxInt, Position{}
-	}
+		min := 0
+		var step *Position
 
-	if v, exists := b.visited[pos]; exists {
-		if cur > v {
-			return math.MaxInt, Position{}
+		for i := 0; i < levels; i++ {
+			state := q[0]
+			q = q[1:]
+
+			if state.pos == to {
+				min = state.current
+				if step == nil {
+					step = state.firstStep
+				} else {
+					x := *step
+					y := x.min(*state.firstStep)
+					step = &y
+				}
+			}
+
+			if state.pos != from && !board.isEmpty(state.pos) {
+				continue
+			}
+
+			if v, exists := visited[state.pos]; exists {
+				if state.current > v {
+					continue
+				}
+			}
+			visited[state.pos] = state.current
+
+			state.current++
+
+			up := state.pos.delta(-1, 0)
+			if state.firstStep == nil {
+				q = append(q, State{
+					pos:       up,
+					current:   state.current,
+					firstStep: &up,
+				})
+			} else {
+				q = append(q, State{
+					pos:       up,
+					current:   state.current,
+					firstStep: state.firstStep,
+				})
+			}
+
+			down := state.pos.delta(1, 0)
+			if state.firstStep == nil {
+				q = append(q, State{
+					pos:       down,
+					current:   state.current,
+					firstStep: &down,
+				})
+			} else {
+				q = append(q, State{
+					pos:       down,
+					current:   state.current,
+					firstStep: state.firstStep,
+				})
+			}
+
+			left := state.pos.delta(0, -1)
+			if state.firstStep == nil {
+				q = append(q, State{
+					pos:       left,
+					current:   state.current,
+					firstStep: &left,
+				})
+			} else {
+				q = append(q, State{
+					pos:       left,
+					current:   state.current,
+					firstStep: state.firstStep,
+				})
+			}
+
+			right := state.pos.delta(0, 1)
+			if state.firstStep == nil {
+				q = append(q, State{
+					pos:       right,
+					current:   state.current,
+					firstStep: &right,
+				})
+			} else {
+				q = append(q, State{
+					pos:       right,
+					current:   state.current,
+					firstStep: state.firstStep,
+				})
+			}
+		}
+
+		if step != nil {
+			return min, *step
 		}
 	}
-	b.visited[pos] = cur
 
-	minDst := math.MaxInt
-	var step Position
-	cur++
-
-	up := pos.delta(-1, 0)
-	dst, _ := b.search(up, cur)
-	if dst < minDst {
-		minDst = dst
-		step = up
-	}
-
-	down := pos.delta(1, 0)
-	dst, _ = b.search(down, cur)
-	if dst < minDst {
-		minDst = dst
-		step = down
-	} else if dst == minDst {
-		step = step.min(down)
-	}
-
-	left := pos.delta(0, -1)
-	dst, _ = b.search(left, cur)
-	if dst < minDst {
-		minDst = dst
-		step = left
-	} else if dst == minDst {
-		step = step.min(left)
-	}
-
-	right := pos.delta(0, 1)
-	dst, _ = b.search(right, cur)
-	if dst < minDst {
-		minDst = dst
-		step = right
-	} else if dst == minDst {
-		step = step.min(right)
-	}
-
-	return minDst, step
+	return math.MaxInt, Position{}
 }
 
 func getPossibleSquares(board *Board, targets []*Unit) []Position {
