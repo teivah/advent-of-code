@@ -1,11 +1,9 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 	"math"
-	"sort"
 
 	lib "github.com/teivah/advent-of-code"
 )
@@ -97,7 +95,7 @@ func (b *Board) round() {
 
 	for row := 0; row < len(b.grid); row++ {
 		for col := 0; col < len(b.grid[0]); col++ {
-			fmt.Println(row, col)
+			//fmt.Println(row, col)
 			cell := b.grid[row][col]
 			if cell.unit == nil {
 				continue
@@ -349,8 +347,8 @@ func (u *Unit) selectTarget(board *Board) *Position {
 }
 
 func shortest(board *Board, from Position, options []Position) *Position {
-	var nearests []Position
-	minDst := math.MaxInt
+	//var nearests []Position
+	//minDst := math.MaxInt
 
 	//// Greedy option to reduce the options
 	//sort.Slice(options, func(i, j int) bool {
@@ -361,37 +359,48 @@ func shortest(board *Board, from Position, options []Position) *Position {
 	//})
 	//options = options[:lib.Min(len(options), 10)]
 
+	//for _, option := range options {
+	//	//fmt.Println(i, len(options))
+	//	dst, step := bfs(board, from, option)
+	//	if dst == math.MaxInt {
+	//		continue
+	//	}
+	//	if dst < minDst {
+	//		minDst = dst
+	//		nearests = []Position{step}
+	//	} else if dst == minDst {
+	//		nearests = append(nearests, step)
+	//	}
+	//}
+	//
+	//if len(nearests) == 0 {
+	//	return nil
+	//}
+	//
+	//sort.Slice(nearests, func(i, j int) bool {
+	//	a := nearests[i]
+	//	b := nearests[j]
+	//	if a.row < b.row {
+	//		return true
+	//	}
+	//	if b.row < a.row {
+	//		return false
+	//	}
+	//	return a.col < b.col
+	//})
+	//
+	//return &nearests[0]
+
+	tos := make(map[Position]struct{}, len(options))
 	for _, option := range options {
-		//fmt.Println(i, len(options))
-		dst, step := bfs(board, from, option)
-		if dst == math.MaxInt {
-			continue
-		}
-		if dst < minDst {
-			minDst = dst
-			nearests = []Position{step}
-		} else if dst == minDst {
-			nearests = append(nearests, step)
-		}
+		tos[option] = struct{}{}
 	}
 
-	if len(nearests) == 0 {
+	i, position := bfs2(board, from, tos)
+	if i == math.MaxInt {
 		return nil
 	}
-
-	sort.Slice(nearests, func(i, j int) bool {
-		a := nearests[i]
-		b := nearests[j]
-		if a.row < b.row {
-			return true
-		}
-		if b.row < a.row {
-			return false
-		}
-		return a.col < b.col
-	})
-
-	return &nearests[0]
+	return &position
 }
 
 type State struct {
@@ -415,6 +424,113 @@ func bfs(board *Board, from Position, to Position) (int, Position) {
 			q = q[1:]
 
 			if state.pos == to {
+				min = state.current
+				if step == nil {
+					step = state.firstStep
+				} else {
+					x := *step
+					y := x.min(*state.firstStep)
+					step = &y
+				}
+			}
+
+			if state.pos != from && !board.isEmpty(state.pos) {
+				continue
+			}
+
+			if v, exists := visited[state.pos]; exists {
+				if state.current > v {
+					continue
+				}
+			}
+			visited[state.pos] = state.current
+
+			state.current++
+
+			up := state.pos.delta(-1, 0)
+			if state.firstStep == nil {
+				q = append(q, State{
+					pos:       up,
+					current:   state.current,
+					firstStep: &up,
+				})
+			} else {
+				q = append(q, State{
+					pos:       up,
+					current:   state.current,
+					firstStep: state.firstStep,
+				})
+			}
+
+			down := state.pos.delta(1, 0)
+			if state.firstStep == nil {
+				q = append(q, State{
+					pos:       down,
+					current:   state.current,
+					firstStep: &down,
+				})
+			} else {
+				q = append(q, State{
+					pos:       down,
+					current:   state.current,
+					firstStep: state.firstStep,
+				})
+			}
+
+			left := state.pos.delta(0, -1)
+			if state.firstStep == nil {
+				q = append(q, State{
+					pos:       left,
+					current:   state.current,
+					firstStep: &left,
+				})
+			} else {
+				q = append(q, State{
+					pos:       left,
+					current:   state.current,
+					firstStep: state.firstStep,
+				})
+			}
+
+			right := state.pos.delta(0, 1)
+			if state.firstStep == nil {
+				q = append(q, State{
+					pos:       right,
+					current:   state.current,
+					firstStep: &right,
+				})
+			} else {
+				q = append(q, State{
+					pos:       right,
+					current:   state.current,
+					firstStep: state.firstStep,
+				})
+			}
+		}
+
+		if step != nil {
+			return min, *step
+		}
+	}
+
+	return math.MaxInt, Position{}
+}
+
+func bfs2(board *Board, from Position, tos map[Position]struct{}) (int, Position) {
+	q := []State{{pos: from, current: 0}}
+	visited := make(map[Position]int)
+
+	for len(q) != 0 {
+		levels := len(q)
+
+		min := 0
+		var step *Position
+
+		for i := 0; i < levels; i++ {
+			state := q[0]
+			q = q[1:]
+
+			if _, exists := tos[state.pos]; exists {
 				min = state.current
 				if step == nil {
 					step = state.firstStep
@@ -567,11 +683,66 @@ const (
 )
 
 func fs2(input io.Reader) int {
-	scanner := bufio.NewScanner(input)
-	for scanner.Scan() {
-		line := scanner.Text()
-		_ = line
-	}
+	lines := lib.ReaderToStrings(input)
 
-	return 42
+	for power := 4; ; power++ {
+		fmt.Println("power:", power)
+		grid := make([][]Cell, len(lines))
+		var goblins []*Unit
+		var elves []*Unit
+		for row, line := range lines {
+			grid[row] = make([]Cell, 0, len(line))
+			for col := 0; col < len(line); col++ {
+				switch line[col] {
+				case '#':
+					grid[row] = append(grid[row], Cell{cellType: wall})
+				case '.':
+					grid[row] = append(grid[row], Cell{cellType: empty})
+				case 'G':
+					g := &Unit{unitType: goblin, power: 3, hitPoints: 200, position: Position{row, col}}
+					goblins = append(goblins, g)
+					grid[row] = append(grid[row], Cell{cellType: empty, unit: g})
+				case 'E':
+					e := &Unit{unitType: elf, power: power, hitPoints: 200, position: Position{row, col}}
+					elves = append(elves, e)
+					grid[row] = append(grid[row], Cell{cellType: empty, unit: e})
+				}
+			}
+		}
+
+		board := &Board{
+			grid:    grid,
+			goblins: goblins,
+			elves:   elves,
+		}
+
+		numberElves := len(board.elves)
+		rounds := 0
+		for {
+			fmt.Println(rounds)
+			if len(board.goblins) == 0 || len(board.elves) != numberElves {
+				break
+			}
+
+			board.round()
+			board.print()
+			rounds++
+		}
+
+		if len(board.elves) != numberElves {
+			continue
+		}
+		sum := 0
+		if len(board.goblins) != 0 {
+			for _, goblin := range board.goblins {
+				sum += goblin.hitPoints
+			}
+		} else {
+			for _, elf := range board.elves {
+				sum += elf.hitPoints
+			}
+		}
+
+		return (rounds - 1) * sum
+	}
 }
