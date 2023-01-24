@@ -40,7 +40,6 @@ func fs1(input io.Reader) int {
 		elves:   elves,
 	}
 
-	//board.print()
 	rounds := 0
 	for {
 		fmt.Println(rounds)
@@ -95,7 +94,6 @@ func (b *Board) round() {
 
 	for row := 0; row < len(b.grid); row++ {
 		for col := 0; col < len(b.grid[0]); col++ {
-			//fmt.Println(row, col)
 			cell := b.grid[row][col]
 			if cell.unit == nil {
 				continue
@@ -347,50 +345,6 @@ func (u *Unit) selectTarget(board *Board) *Position {
 }
 
 func shortest(board *Board, from Position, options []Position) *Position {
-	//var nearests []Position
-	//minDst := math.MaxInt
-
-	//// Greedy option to reduce the options
-	//sort.Slice(options, func(i, j int) bool {
-	//	a := options[i]
-	//	b := options[j]
-	//
-	//	return distance(from, a) < distance(from, b)
-	//})
-	//options = options[:lib.Min(len(options), 10)]
-
-	//for _, option := range options {
-	//	//fmt.Println(i, len(options))
-	//	dst, step := bfs(board, from, option)
-	//	if dst == math.MaxInt {
-	//		continue
-	//	}
-	//	if dst < minDst {
-	//		minDst = dst
-	//		nearests = []Position{step}
-	//	} else if dst == minDst {
-	//		nearests = append(nearests, step)
-	//	}
-	//}
-	//
-	//if len(nearests) == 0 {
-	//	return nil
-	//}
-	//
-	//sort.Slice(nearests, func(i, j int) bool {
-	//	a := nearests[i]
-	//	b := nearests[j]
-	//	if a.row < b.row {
-	//		return true
-	//	}
-	//	if b.row < a.row {
-	//		return false
-	//	}
-	//	return a.col < b.col
-	//})
-	//
-	//return &nearests[0]
-
 	tos := make(map[Position]struct{}, len(options))
 	for _, option := range options {
 		tos[option] = struct{}{}
