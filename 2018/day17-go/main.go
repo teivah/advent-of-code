@@ -31,7 +31,7 @@ func fs1(input io.Reader) int {
 		}
 
 		if scan.rangeRow == nil {
-			maxRow = lib.Max(maxRow, scan.col)
+			maxRow = lib.Max(maxRow, scan.row)
 		} else {
 			maxRow = lib.Max(maxRow, scan.rangeRow.to)
 		}
@@ -39,19 +39,22 @@ func fs1(input io.Reader) int {
 
 	grid := newGrid(minRow, minCol, maxRow, maxCol, scans)
 
-	grid.dfs(Position{0, 500})
+	grid.dfs(Position{0, 500}, true)
 
 	fmt.Println(grid)
+	//fmt.Println(grid.Visited())
+	//fmt.Println(grid.visited[Position{11, 500}])
 	return grid.sumWater() - 1 // spring
 }
 
 type Grid struct {
-	minRow int
-	minCol int
-	maxRow int
-	maxCol int
-	board  [][]UnitType
-	spring Position
+	minRow  int
+	minCol  int
+	maxRow  int
+	maxCol  int
+	board   [][]UnitType
+	visited map[Position]bool
+	spring  Position
 }
 
 type Position struct {
@@ -85,9 +88,10 @@ func (g *Grid) unitType(current Position) *UnitType {
 	return &g.board[g.row(current.row)][g.col(current.col)]
 }
 
-func (g *Grid) dfs(current Position) bool {
+func (g *Grid) dfs(current Position, goingDown bool) bool {
 	if current.row >= g.maxRow {
-		g.visit(current)
+		g.board[g.row(current.row)][g.col(current.col)] = water
+		g.visited[current] = true
 		return true
 	}
 
@@ -99,7 +103,7 @@ func (g *Grid) dfs(current Position) bool {
 		return false
 	}
 
-	g.visit(current)
+	g.board[g.row(current.row)][g.col(current.col)] = water
 
 	// Down?
 	down := current.delta(1, 0)
@@ -109,21 +113,46 @@ func (g *Grid) dfs(current Position) bool {
 	}
 
 	if *downUnit == clay {
-		left := g.dfs(current.delta(0, -1))
-		right := g.dfs(current.delta(0, 1))
-		return left || right
+		left := g.dfs(current.delta(0, -1), false)
+		right := g.dfs(current.delta(0, 1), false)
+		res := left || right
+		g.visited[current] = res
+		return res
+	} else if *downUnit == water {
+		if goingDown {
+			return true
+		} else {
+			left := g.dfs(current.delta(0, -1), false)
+			right := g.dfs(current.delta(0, 1), false)
+			res := left || right
+			g.visited[current] = res
+			return res
+		}
+
+		//over := g.visited[down]
+		//if !over {
+		//	left := g.dfs(current.delta(0, -1))
+		//	right := g.dfs(current.delta(0, 1))
+		//	res := left || right
+		//	g.visited[current] = res
+		//	return res
+		//} else {
+		//	g.visited[current] = true
+		//	return true
+		//}
+
+		//return false
 	} else { // sand
-		if g.dfs(down) {
+		if g.dfs(down, true) {
+			g.visited[current] = true
 			return true
 		}
-		left := g.dfs(current.delta(0, -1))
-		right := g.dfs(current.delta(0, 1))
-		return left || right
+		left := g.dfs(current.delta(0, -1), false)
+		right := g.dfs(current.delta(0, 1), false)
+		res := left || right
+		g.visited[current] = res
+		return res
 	}
-}
-
-func (g *Grid) visit(current Position) {
-	g.board[g.row(current.row)][g.col(current.col)] = water
 }
 
 func (g *Grid) String() string {
@@ -139,6 +168,21 @@ func (g *Grid) String() string {
 				s += "+"
 			case water:
 				s += "~"
+			}
+		}
+		s += "\n"
+	}
+	return s
+}
+
+func (g *Grid) Visited() string {
+	s := ""
+	for r, row := range g.board {
+		for c := range row {
+			if g.visited[Position{r + g.minRow, c + g.minCol}] {
+				s += "X"
+			} else {
+				s += "."
 			}
 		}
 		s += "\n"
@@ -166,10 +210,11 @@ func newGrid(minRow int, minCol int, maxRow int, maxCol int, scans []Scan) *Grid
 	}
 
 	g := &Grid{minRow: minRow,
-		minCol: minCol,
-		maxRow: maxRow,
-		maxCol: maxCol,
-		board:  board,
+		minCol:  minCol,
+		maxRow:  maxRow,
+		maxCol:  maxCol,
+		board:   board,
+		visited: make(map[Position]bool),
 	}
 
 	g.board[g.row(0)][g.col(500)] = spring
