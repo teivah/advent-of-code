@@ -42,6 +42,7 @@
 * [Day 13](https://adventofcode.com/2018/day/13): [Go](2018/day13-go/main.go)
 * [Day 14](https://adventofcode.com/2018/day/14): [Go](2018/day14-go/main.go)
 * [Day 15](https://adventofcode.com/2018/day/15): [Go](2018/day15-go/main.go)
+* [Day 16](https://adventofcode.com/2018/day/16): [Go](2018/day16-go/main.go)
 
 ## 2017
 

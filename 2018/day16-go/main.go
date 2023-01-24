@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bufio"
-	"fmt"
 	"io"
 	"strconv"
 	"strings"
@@ -14,7 +12,6 @@ func fs1(input io.Reader) int {
 	samples := parseSamples(lib.ReaderToStrings(input))
 
 	sum := 0
-	fmt.Println(len(samples))
 	cmds := getCommands()
 	for _, sample := range samples {
 		options := 0
@@ -24,7 +21,6 @@ func fs1(input io.Reader) int {
 
 			if areRegsEqual(regs, sample.after) {
 				options++
-				//fmt.Println(k)
 			}
 		}
 		if options >= 3 {
@@ -244,11 +240,87 @@ func eqrr(a, b, c int) apply {
 }
 
 func fs2(input io.Reader) int {
-	scanner := bufio.NewScanner(input)
-	for scanner.Scan() {
-		line := scanner.Text()
-		_ = line
+	lines := lib.ReaderToStrings(input)
+	samples := parseSamples(lines)
+
+	type Cmd struct {
+		name string
+		f    func(int, int, int) apply
 	}
 
-	return 42
+	options := make(map[int][]Cmd)
+	for i := 0; i < 16; i++ {
+		for k, v := range getCommands() {
+			options[i] = append(options[i], Cmd{
+				name: k,
+				f:    v,
+			})
+		}
+	}
+
+	for _, sample := range samples {
+		cmds := options[sample.opcode]
+		var res []Cmd
+		for _, cmd := range cmds {
+			regs := copyRegs(sample.before)
+			cmd.f(sample.a, sample.b, sample.c)(regs)
+
+			if areRegsEqual(regs, sample.after) {
+				res = append(res, cmd)
+			}
+		}
+		options[sample.opcode] = res
+	}
+
+	res := make(map[int]Cmd)
+	var q []Cmd
+	for k, v := range options {
+		if len(v) == 1 {
+			res[k] = v[0]
+			q = append(q, v[0])
+			delete(options, k)
+		}
+	}
+
+	for len(q) != 0 {
+		root := q[0]
+		q = q[1:]
+
+		// Filter out cmd occurences
+		newOptions := make(map[int][]Cmd)
+		for k, cmds := range options {
+			var res []Cmd
+			for _, cmd := range cmds {
+				if cmd.name != root.name {
+					res = append(res, cmd)
+				}
+			}
+			newOptions[k] = res
+		}
+
+		options = newOptions
+		for k, v := range options {
+			if len(v) == 1 {
+				res[k] = v[0]
+				q = append(q, v[0])
+				delete(options, k)
+			}
+		}
+	}
+
+	i := 0
+	for ; i < len(lines); i++ {
+		if lines[i] == "" && lines[i+1] == "" {
+			i += 3
+			break
+		}
+	}
+
+	reg := make([]int, 4)
+	for ; i < len(lines); i++ {
+		cmd := listStringsToListInts(lines[i], " ")
+		res[cmd[0]].f(cmd[1], cmd[2], cmd[3])(reg)
+	}
+
+	return reg[0]
 }
