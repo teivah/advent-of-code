@@ -119,13 +119,20 @@ func (g *Grid) dfs(current Position) bool {
 		g.end[current] = res
 		return res
 	} else if *downUnit == water {
-		if g.end[current] {
+		if g.end[down] {
 			return true
 		}
 
-		// Is there a path?
-		// Down, left, right
+		if g.ends(down) {
+			g.end[down] = true
+			return true
+		}
 
+		left := g.dfs(current.delta(0, -1))
+		right := g.dfs(current.delta(0, 1))
+		res := left || right
+		g.end[current] = res
+		return res
 	} else { // sand
 		if g.dfs(down) {
 			return true
@@ -138,8 +145,34 @@ func (g *Grid) dfs(current Position) bool {
 	}
 }
 
-func (g *Grid) Path(position Position) bool {
+func (g *Grid) ends(position Position) bool {
+	q := []Position{position}
+	visited := make(map[Position]struct{})
 
+	for len(q) != 0 {
+		pos := q[0]
+		q = q[1:]
+
+		if _, exists := visited[pos]; exists {
+			continue
+		}
+
+		visited[pos] = struct{}{}
+		unit := g.unitType(pos)
+		if unit == nil || *unit != water {
+			continue
+		}
+
+		if g.end[pos] {
+			return true
+		}
+
+		q = append(q, pos.delta(1, 0))
+		q = append(q, pos.delta(0, -1))
+		q = append(q, pos.delta(0, 1))
+	}
+
+	return false
 }
 
 func (g *Grid) String() string {
@@ -148,13 +181,13 @@ func (g *Grid) String() string {
 		for _, t := range row {
 			switch t {
 			case sand:
-				s += "."
+				s += " "
 			case clay:
 				s += "#"
 			case spring:
 				s += "+"
 			case water:
-				s += "~"
+				s += "."
 			}
 		}
 		s += "\n"
