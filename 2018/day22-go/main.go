@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"math"
+
+	lib "github.com/teivah/advent-of-code"
 )
 
 func fs1(depth, col, row int) int {
@@ -175,7 +176,7 @@ func (c *Cave) bfs() int {
 	}
 	q := []State{{}}
 	target := Position{c.targetRow, c.targetCol}
-	min := math.MaxInt
+	miner := lib.NewMiner()
 
 	visited := make(map[ToolType]map[Position]int)
 
@@ -185,14 +186,10 @@ func (c *Cave) bfs() int {
 
 		if state.pos == target {
 			if state.tool == torch {
-				if state.minute < min {
-					min = state.minute
-				}
+				miner.Add(state.minute)
 			} else {
 				// Switching tool
-				if state.minute+7 < min {
-					min = state.minute + 7
-				}
+				miner.Add(state.minute + 7)
 			}
 			continue
 		}
@@ -217,7 +214,7 @@ func (c *Cave) bfs() int {
 						if tool == state.tool {
 							q = append(q, State{minute: state.minute + 1, pos: next, tool: tool})
 						} else {
-							q = append(q, State{minute: state.minute + 7, pos: next, tool: tool})
+							q = append(q, State{minute: state.minute + 7, pos: state.pos, tool: tool})
 						}
 					}
 				}
@@ -230,7 +227,7 @@ func (c *Cave) bfs() int {
 		add(state.pos.delta(0, 1))
 	}
 
-	return min
+	return miner.Get()
 }
 
 type Position struct {
