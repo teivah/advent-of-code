@@ -58,7 +58,6 @@ game:
 		}
 
 		// Do selections
-		//fmt.Println("--Selections--")
 		selections := make(map[string]string)
 		for _, attacker := range groups {
 			target := ""
@@ -84,6 +83,9 @@ game:
 
 				damage := attacker.calculateDamagePoints(&defender)
 				//fmt.Printf("%s would deal defending %s %d damage\n", attacker.id, defender.id, damage)
+				if damage == 0 {
+					continue
+				}
 				if damage > maxDamage ||
 					(damage == maxDamage && defender.effectivePower() > targetEffectivePower) ||
 					(damage == maxDamage && defender.effectivePower() == targetEffectivePower && defender.initiative > targetInitiative) {
@@ -104,7 +106,6 @@ game:
 				}
 			}
 		}
-		//fmt.Println()
 
 		// Attack order
 		var attackers []string
@@ -134,7 +135,6 @@ game:
 		})
 
 		// Attack
-		//fmt.Println("--Attacks--")
 		sumDead := 0
 		for _, id := range attackers {
 			attacker := getGroup(id, isImmuneArmy, immunes, infections)
@@ -165,7 +165,6 @@ game:
 				}
 			}
 		}
-		//fmt.Println()
 
 		// Is draw?
 		if sumDead == 0 {
@@ -349,7 +348,6 @@ func (g *Group) attack(enemy *Group) int {
 		damage -= enemy.hitPoints
 	}
 
-	//fmt.Printf("%s attack %s, killing %d units\n", g.id, enemy.id, before-enemy.units)
 	return killed
 }
 
