@@ -12,32 +12,35 @@ import (
 func TestFs1Test(t *testing.T) {
 	f, err := os.Open("test.txt")
 	require.NoError(t, err)
-	assert.Equal(t, 5216, fs1(f))
+	v, _ := fs1(f, 0)
+	assert.Equal(t, 5216, v)
 }
 
 func TestFs1Input(t *testing.T) {
 	f, err := os.Open("input.txt")
 	require.NoError(t, err)
-	assert.Equal(t, 19974, fs1(f))
+	v, _ := fs1(f, 0)
+	assert.Equal(t, 19974, v)
 }
 
 func TestFs2Test(t *testing.T) {
 	f, err := os.Open("test.txt")
 	require.NoError(t, err)
-	assert.Equal(t, 51, fs2(f))
+	v, _ := fs1(f, 1570)
+	assert.Equal(t, 51, v)
 }
 
 func TestFs2Input(t *testing.T) {
 	f, err := os.Open("input.txt")
 	require.NoError(t, err)
-	assert.Equal(t, 42, fs2(f))
+	assert.Equal(t, 6301, fs2(f))
 }
 
 func Test_parse(t *testing.T) {
 	f, err := os.Open("test.txt")
 	require.NoError(t, err)
 	lines := lib.ReaderToStrings(f)
-	g1, g2 := parse(lines)
+	g1, g2 := parse(lines, 0)
 	assert.Equal(t, map[string]Group{
 		"immune group 1": {
 			id:         "immune group 1",

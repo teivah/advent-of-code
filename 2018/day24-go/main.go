@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 	"math"
@@ -11,8 +10,12 @@ import (
 	lib "github.com/teivah/advent-of-code"
 )
 
-func fs1(input io.Reader) int {
-	immunes, infections := parse(lib.ReaderToStrings(input))
+func fs1(input io.Reader, boost int) (int, bool) {
+	return fs(lib.ReaderToStrings(input), boost)
+}
+
+func fs(lines []string, boost int) (int, bool) {
+	immunes, infections := parse(lines, boost)
 	isImmuneArmy := make(map[string]bool)
 	for k := range immunes {
 		isImmuneArmy[k] = true
@@ -55,7 +58,7 @@ game:
 		}
 
 		// Do selections
-		fmt.Println("--Selections--")
+		//fmt.Println("--Selections--")
 		selections := make(map[string]string)
 		for _, attacker := range groups {
 			target := ""
@@ -80,27 +83,14 @@ game:
 				}
 
 				damage := attacker.calculateDamagePoints(&defender)
-				fmt.Printf("%s would deal defending %s %d damage\n", attacker.id, defender.id, damage)
-				if damage > maxDamage {
+				//fmt.Printf("%s would deal defending %s %d damage\n", attacker.id, defender.id, damage)
+				if damage > maxDamage ||
+					(damage == maxDamage && defender.effectivePower() > targetEffectivePower) ||
+					(damage == maxDamage && defender.effectivePower() == targetEffectivePower && defender.initiative > targetInitiative) {
 					maxDamage = damage
 					target = defender.id
 					targetInitiative = defender.initiative
 					targetEffectivePower = defender.effectivePower()
-				} else if damage == maxDamage {
-					if defender.effectivePower() > targetEffectivePower {
-						maxDamage = damage
-						target = defender.id
-						targetInitiative = defender.initiative
-						targetEffectivePower = defender.effectivePower()
-					} else if defender.effectivePower() == targetEffectivePower {
-						if defender.initiative > targetInitiative {
-							maxDamage = damage
-							target = defender.id
-							targetInitiative = defender.initiative
-							targetEffectivePower = defender.effectivePower()
-						}
-					}
-
 				}
 			}
 
@@ -114,7 +104,7 @@ game:
 				}
 			}
 		}
-		fmt.Println()
+		//fmt.Println()
 
 		// Attack order
 		var attackers []string
@@ -144,12 +134,14 @@ game:
 		})
 
 		// Attack
-		fmt.Println("--Attacks--")
+		//fmt.Println("--Attacks--")
+		sumDead := 0
 		for _, id := range attackers {
 			attacker := getGroup(id, isImmuneArmy, immunes, infections)
 			defender := getGroup(selections[id], isImmuneArmy, immunes, infections)
 
 			deadUnits := attacker.attack(defender)
+			sumDead += deadUnits
 
 			if isImmuneArmy[defender.id] {
 				v := immunes[defender.id]
@@ -173,21 +165,28 @@ game:
 				}
 			}
 		}
-		fmt.Println()
+		//fmt.Println()
+
+		// Is draw?
+		if sumDead == 0 {
+			return 0, false
+		}
 	}
 
 	sum := 0
+	immuneWin := false
 	if len(immunes) != 0 {
 		for _, group := range immunes {
 			sum += group.units
 		}
+		immuneWin = true
 	} else {
 		for _, group := range infections {
 			sum += group.units
 		}
 	}
 
-	return sum
+	return sum, immuneWin
 }
 
 func getGroup(id string, isImmuneArmy map[string]bool, immunes map[string]Group, infections map[string]Group) *Group {
@@ -199,7 +198,7 @@ func getGroup(id string, isImmuneArmy map[string]bool, immunes map[string]Group,
 	return &group
 }
 
-func parse(lines []string) (map[string]Group, map[string]Group) {
+func parse(lines []string, boost int) (map[string]Group, map[string]Group) {
 	curGroup := make(map[string]Group)
 	var a map[string]Group
 
@@ -219,6 +218,7 @@ func parse(lines []string) (map[string]Group, map[string]Group) {
 		group := toGroup(line)
 		if immuneArmy {
 			group.id = fmt.Sprintf("immune group %d", id)
+			group.damage += boost
 		} else {
 			group.id = fmt.Sprintf("infection group %d", id)
 		}
@@ -301,6 +301,14 @@ type Group struct {
 	initiative int
 }
 
+func totalUnits(groups map[string]Group) int {
+	sum := 0
+	for _, group := range groups {
+		sum += group.units
+	}
+	return sum
+}
+
 func (g *Group) targetSelection() int {
 	return 0
 }
@@ -328,28 +336,28 @@ func (g *Group) attack(enemy *Group) int {
 	}
 
 	units := enemy.units
-	before := enemy.units
+	killed := 0
 	for i := 0; i < units; i++ {
 		if enemy.hitPoints > damage {
 			break
 		}
 		enemy.units--
+		killed++
 		if enemy.units == 0 {
 			break
 		}
 		damage -= enemy.hitPoints
 	}
 
-	fmt.Printf("%s attack %s, killing %d units\n", g.id, enemy.id, before-enemy.units)
-	return before - enemy.units
+	//fmt.Printf("%s attack %s, killing %d units\n", g.id, enemy.id, before-enemy.units)
+	return killed
 }
 
 func fs2(input io.Reader) int {
-	scanner := bufio.NewScanner(input)
-	for scanner.Scan() {
-		line := scanner.Text()
-		_ = line
+	lines := lib.ReaderToStrings(input)
+	for boost := 3; ; boost++ {
+		if remaining, immuneWin := fs(lines, boost); immuneWin {
+			return remaining
+		}
 	}
-
-	return 42
 }
