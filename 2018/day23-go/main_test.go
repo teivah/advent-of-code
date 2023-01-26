@@ -33,5 +33,5 @@ pos=<10,10,10>, r=5`)))
 func TestFs2Input(t *testing.T) {
 	f, err := os.Open("input.txt")
 	require.NoError(t, err)
-	assert.Equal(t, 886, fs2(f))
+	assert.Equal(t, 919, fs2(f))
 }

@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"math"
 	"math/rand"
 	"sort"
 	"strings"
@@ -117,28 +118,188 @@ func fs2(input io.Reader) int {
 		return a.occurence > b.occurence
 	})
 
-	bestValue := 0
-	var bestPosition Position
+	maxSumRange := 0
+	minDistance := math.MaxInt
+	found := false
 
-	for j := 0; j < 100; j++ {
-		botRange := bots[founds[0].id].r * 1000000
+	botRange := 100000000
+	//var best Position
+	var bests []Position
+	for j := 0; j < 10000; j++ {
+		//for j := 0; j < 1; j++ {
 		cur := bots[founds[0].id].pos
-		max := sumInRange(cur, bots)
-		for i := 0; i < 10000; i++ {
-			cur, max = find(max, cur, bots, botRange)
+		sumRange := sumInRange(cur, bots)
+		for i := 0; i < 100; i++ {
+			cur, sumRange, found = find(sumRange, cur, bots, botRange)
+			if !found {
+				break
+			}
 		}
 
-		if max > bestValue {
-			bestValue = max
-			bestPosition = cur
-			fmt.Println(bestValue, distance(Position{}, bestPosition))
+		curDistance := distance(Position{}, cur)
+
+		if sumRange > maxSumRange {
+			maxSumRange = sumRange
+			minDistance = curDistance
+			bests = []Position{cur}
+			//best = cur
+			fmt.Println(maxSumRange, minDistance)
+		} else if sumRange == maxSumRange {
+			bests = append(bests, cur)
+			if curDistance < minDistance {
+				minDistance = curDistance
+				//best = cur
+				fmt.Println(maxSumRange, minDistance)
+			}
 		}
 	}
 
-	return bestValue
+	//fmt.Println(best, minDistance)
+	//best = Position{12693513, 30274062, 43552241}
+	//maxSumRange = 919
+	//minDistance = 86519816
+	fmt.Println("step 2")
+
+	//for _, best := range bests {
+	//	const buffer = 10
+	//	for x := -buffer; x < buffer; x++ {
+	//		for y := -buffer; y < buffer; y++ {
+	//			for z := -buffer; z < buffer; z++ {
+	//				pos := best.Delta(x, y, z)
+	//				sumRange := sumInRange(pos, bots)
+	//				if sumRange != maxSumRange {
+	//					continue
+	//				}
+	//				d := distance(pos, Position{})
+	//				if d < minDistance {
+	//					minDistance = d
+	//					fmt.Println(minDistance)
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
+
+	for _, best := range bests {
+		px := 1
+		lastDistance := minDistance
+		for ; ; px++ {
+			pos := best.Delta(px, 0, 0)
+			sumRange := sumInRange(pos, bots)
+			if sumRange != maxSumRange {
+				break
+			}
+			d := distance(pos, Position{})
+			if d > lastDistance {
+				break
+			}
+			lastDistance = d
+		}
+
+		nx := -1
+		lastDistance = minDistance
+		for ; ; nx++ {
+			pos := best.Delta(nx, 0, 0)
+			sumRange := sumInRange(pos, bots)
+			if sumRange != maxSumRange {
+				break
+			}
+			d := distance(pos, Position{})
+			if d > lastDistance {
+				break
+			}
+			lastDistance = d
+		}
+
+		py := 1
+		lastDistance = minDistance
+		for ; ; py++ {
+			pos := best.Delta(0, py, 0)
+			sumRange := sumInRange(pos, bots)
+			if sumRange != maxSumRange {
+				break
+			}
+			d := distance(pos, Position{})
+			if d > lastDistance {
+				break
+			}
+			lastDistance = d
+		}
+
+		ny := -1
+		lastDistance = minDistance
+		for ; ; ny-- {
+			pos := best.Delta(0, ny, 0)
+			sumRange := sumInRange(pos, bots)
+			if sumRange != maxSumRange {
+				break
+			}
+			d := distance(pos, Position{})
+			if d > lastDistance {
+				break
+			}
+			lastDistance = d
+		}
+
+		pz := 1
+		lastDistance = minDistance
+		for ; ; pz++ {
+			pos := best.Delta(0, pz, 0)
+			sumRange := sumInRange(pos, bots)
+			if sumRange != maxSumRange {
+				break
+			}
+			d := distance(pos, Position{})
+			if d > lastDistance {
+				break
+			}
+			lastDistance = d
+		}
+
+		nz := -1
+		lastDistance = minDistance
+		for ; ; nz-- {
+			pos := best.Delta(0, nz, 0)
+			sumRange := sumInRange(pos, bots)
+			if sumRange != maxSumRange {
+				break
+			}
+			d := distance(pos, Position{})
+			if d > lastDistance {
+				break
+			}
+			lastDistance = d
+		}
+
+		fmt.Println(px, nx, py, ny, pz, nz)
+	}
+
+	//var best2 Position
+	//for j := 0; j < 1000000; j++ {
+	//	cur := best
+	//	for i := 0; i < 100; i++ {
+	//		cur, _, found = findDistance(maxSumRange, minDistance, cur, bots, botRange)
+	//		if !found {
+	//			break
+	//		}
+	//	}
+	//
+	//	curDistance := distance(Position{}, cur)
+	//
+	//	if curDistance < minDistance {
+	//		minDistance = curDistance
+	//		best2 = cur
+	//		fmt.Println(maxSumRange, minDistance)
+	//	}
+	//}
+	//
+	//fmt.Println(best2)
+
+	return minDistance
 }
 
-func find(max int, cur Position, bots []Bot, botRange int) (Position, int) {
+func find(max int, cur Position, bots []Bot, botRange int) (Position, int, bool) {
+	initMax := max
 	best := cur
 
 	deltax := func(i int) Position {
@@ -151,58 +312,114 @@ func find(max int, cur Position, bots []Bot, botRange int) (Position, int) {
 		return cur.Delta(0, 0, i)
 	}
 
-	nx := search(deltax, -botRange, 0, bots)
+	nx, v := search(deltax, -botRange, 0, bots)
 	if nx != nil {
-		v := sumInRange(*nx, bots)
 		if v > max {
 			max = v
 			best = *nx
 		}
 	}
-	px := search(deltax, 0, botRange, bots)
+	px, v := search(deltax, 0, botRange, bots)
 	if px != nil {
-		v := sumInRange(*px, bots)
 		if v > max {
 			max = v
 			best = *px
 		}
 	}
 
-	ny := search(deltay, -botRange, 0, bots)
+	ny, v := search(deltay, -botRange, 0, bots)
 	if ny != nil {
-		v := sumInRange(*ny, bots)
 		if v > max {
 			max = v
 			best = *ny
 		}
 	}
-	py := search(deltay, 0, botRange, bots)
+	py, v := search(deltay, 0, botRange, bots)
 	if py != nil {
-		v := sumInRange(*py, bots)
 		if v > max {
 			max = v
 			best = *py
 		}
 	}
 
-	nz := search(deltaz, -botRange, 0, bots)
+	nz, v := search(deltaz, -botRange, 0, bots)
 	if nz != nil {
-		v := sumInRange(*nz, bots)
 		if v > max {
 			max = v
 			best = *nz
 		}
 	}
-	pz := search(deltaz, 0, botRange, bots)
+	pz, v := search(deltaz, 0, botRange, bots)
 	if pz != nil {
-		v := sumInRange(*pz, bots)
 		if v > max {
 			max = v
 			best = *pz
 		}
 	}
 
-	return best, max
+	return best, max, max != initMax
+}
+
+func findDistance(d int, min int, cur Position, bots []Bot, botRange int) (Position, int, bool) {
+	initMin := min
+	best := cur
+
+	deltax := func(i int) Position {
+		return cur.Delta(i, 0, 0)
+	}
+	deltay := func(i int) Position {
+		return cur.Delta(0, i, 0)
+	}
+	deltaz := func(i int) Position {
+		return cur.Delta(0, 0, i)
+	}
+
+	nx, v := searchDistance(d, deltax, -botRange, 0, bots)
+	if nx != nil {
+		if v < min {
+			min = v
+			best = *nx
+		}
+	}
+	px, v := searchDistance(d, deltax, 0, botRange, bots)
+	if px != nil {
+		if v < min {
+			min = v
+			best = *px
+		}
+	}
+
+	ny, v := searchDistance(d, deltay, -botRange, 0, bots)
+	if ny != nil {
+		if v < min {
+			min = v
+			best = *ny
+		}
+	}
+	py, v := searchDistance(d, deltay, 0, botRange, bots)
+	if py != nil {
+		if v < min {
+			min = v
+			best = *py
+		}
+	}
+
+	nz, v := searchDistance(d, deltaz, -botRange, 0, bots)
+	if nz != nil {
+		if v < min {
+			min = v
+			best = *nz
+		}
+	}
+	pz, v := searchDistance(d, deltaz, 0, botRange, bots)
+	if pz != nil {
+		if v < min {
+			min = v
+			best = *pz
+		}
+	}
+
+	return best, min, min != initMin
 }
 
 type Delta func(int) Position
@@ -216,7 +433,7 @@ func rndRange(r int) int {
 	return r + int(float64(r)*rnd())
 }
 
-func search(delta Delta, from, to int, bots []Bot) *Position {
+func search(delta Delta, from, to int, bots []Bot) (*Position, int) {
 	from = rndRange(from)
 	to = rndRange(to)
 
@@ -232,7 +449,7 @@ func search(delta Delta, from, to int, bots []Bot) *Position {
 		v := sumInRange(p, bots)
 
 		if v > max {
-			return &p
+			return &p, v
 		}
 
 		if vl < vr {
@@ -241,7 +458,44 @@ func search(delta Delta, from, to int, bots []Bot) *Position {
 			r = mid - 1
 		}
 	}
-	return nil
+	return nil, 0
+}
+
+func searchDistance(d int, delta Delta, from, to int, bots []Bot) (*Position, int) {
+	from = rndRange(from)
+	to = rndRange(to)
+
+	vl := distance(delta(from), Position{})
+	vr := distance(delta(to), Position{})
+	min := lib.Min(vl, vr)
+
+	l := from
+	r := to
+	for l < r {
+		mid := l + (r-l)/2
+		p := delta(mid)
+		if sumInRange(p, bots) != d {
+			if vl < vr {
+				r = mid - 1
+			} else {
+				l = mid + 1
+			}
+			continue
+		}
+
+		v := distance(p, Position{})
+
+		if v < min {
+			return &p, v
+		}
+
+		if vl < vr {
+			r = mid - 1
+		} else {
+			l = mid + 1
+		}
+	}
+	return nil, 0
 }
 
 func sumInRange(pos Position, bots []Bot) int {
