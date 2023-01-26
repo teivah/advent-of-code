@@ -19,6 +19,5 @@ func TestFs2Test(t *testing.T) {
 }
 
 func TestFs2Input(t *testing.T) {
-	// 1035, 1041
 	assert.Equal(t, 1035, fs2(3198, 12, 757))
 }

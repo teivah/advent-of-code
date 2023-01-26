@@ -74,20 +74,20 @@ func toCave(depth, targetCol, targetRow int) *Cave {
 
 	board := make([][]Unit, targetRow)
 
-	for row := 0; row < targetRow; row++ {
-		board[row] = make([]Unit, 0, targetCol+1)
-		for col := 0; col < targetCol+1; col++ {
+	for y := 0; y < targetRow; y++ {
+		board[y] = make([]Unit, 0, targetCol+1)
+		for x := 0; x < targetCol+1; x++ {
 			gi := 0
-			if row == 0 && col == 0 {
+			if y == 0 && x == 0 {
 				gi = 0
-			} else if row == targetRow && col == targetCol {
+			} else if y == origRow && x == origCol {
 				gi = 0
-			} else if row == 0 {
-				gi = col * 16807
-			} else if col == 0 {
-				gi = row * 48271
+			} else if y == 0 {
+				gi = x * 16807
+			} else if x == 0 {
+				gi = y * 48271
 			} else {
-				gi = board[row][col-1].erosionLevel * board[row-1][col].erosionLevel
+				gi = board[y][x-1].erosionLevel * board[y-1][x].erosionLevel
 			}
 
 			el := (gi + depth) % 20183
@@ -107,7 +107,7 @@ func toCave(depth, targetCol, targetRow int) *Cave {
 				erosionLevel:  el,
 				geologicIndex: gi,
 			}
-			board[row] = append(board[row], unit)
+			board[y] = append(board[y], unit)
 		}
 	}
 
