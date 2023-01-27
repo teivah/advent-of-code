@@ -91,7 +91,11 @@ type Context struct {
 	modes []int
 }
 
-func (s *State) getValue(ctx Context, param int) int {
+func (s *State) getOutputIndex(param int) int {
+	return s.codes[s.offset+param+1]
+}
+
+func (s *State) getInput(ctx Context, param int) int {
 	if ctx.modes[param] == 0 {
 		return s.codes[s.codes[s.offset+1+param]]
 	}
@@ -101,22 +105,22 @@ func (s *State) getValue(ctx Context, param int) int {
 type Apply func(ctx Context)
 
 func (s *State) opcode1(ctx Context) {
-	s.codes[s.codes[s.offset+3]] = s.getValue(ctx, 0) + s.getValue(ctx, 1)
+	s.codes[s.getOutputIndex(2)] = s.getInput(ctx, 0) + s.getInput(ctx, 1)
 	s.offset += 4
 }
 
 func (s *State) opcode2(ctx Context) {
-	s.codes[s.codes[s.offset+3]] = s.getValue(ctx, 0) * s.getValue(ctx, 1)
+	s.codes[s.getOutputIndex(2)] = s.getInput(ctx, 0) * s.getInput(ctx, 1)
 	s.offset += 4
 }
 
 func (s *State) opcode3(ctx Context) {
-	s.codes[s.codes[s.offset+1]] = s.input
+	s.codes[s.getOutputIndex(0)] = s.input
 	s.offset += 2
 }
 
 func (s *State) opcode4(ctx Context) {
-	s.output = s.getValue(ctx, 0)
+	s.output = s.getInput(ctx, 0)
 	s.offset += 2
 }
 
