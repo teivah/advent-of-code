@@ -229,7 +229,15 @@ type Position struct {
 	Col int
 }
 
-func (p Position) delta(row, col int) Position {
+func (p Position) Manhattan(p2 Position) int {
+	return Abs(p.Row-p2.Row) + Abs(p.Col-p2.Col)
+}
+
+func (p Position) ManhattanZero() int {
+	return p.Manhattan(Position{})
+}
+
+func (p Position) Delta(row, col int) Position {
 	return Position{
 		Row: p.Row + row,
 		Col: p.Col + col,
