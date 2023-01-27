@@ -143,6 +143,7 @@ func (s *State) opcode7(ctx Context) {
 	} else {
 		s.codes[s.getOutputIndex(2)] = 0
 	}
+	s.offset += 4
 }
 
 func (s *State) opcode8(ctx Context) {
@@ -151,6 +152,7 @@ func (s *State) opcode8(ctx Context) {
 	} else {
 		s.codes[s.getOutputIndex(2)] = 0
 	}
+	s.offset += 4
 }
 
 func (s *State) opcode99(ctx Context) {
