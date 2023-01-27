@@ -1,15 +1,14 @@
 package main
 
 import (
-	"bufio"
 	"io"
 	"strings"
 
 	lib "github.com/teivah/advent-of-code"
 )
 
-func fs1(input io.Reader) int {
-	s := lib.ReaderToString(input)
+func fs(reader io.Reader, input int) int {
+	s := lib.ReaderToString(reader)
 	codes := lib.StringsToInts(strings.Split(s, ","))
 
 	state := &State{
@@ -17,8 +16,20 @@ func fs1(input io.Reader) int {
 		offset: 0,
 		over:   false,
 		mode:   0,
-		input:  1,
+		input:  input,
 	}
+	state.instructions = map[int]Apply{
+		1:  state.opcode1,
+		2:  state.opcode2,
+		3:  state.opcode3,
+		4:  state.opcode4,
+		5:  state.opcode5,
+		6:  state.opcode6,
+		7:  state.opcode7,
+		8:  state.opcode8,
+		99: state.opcode99,
+	}
+
 	for !state.over {
 		if state.offset >= len(codes) {
 			break
@@ -31,22 +42,7 @@ func fs1(input io.Reader) int {
 
 func (s *State) execute() {
 	opcode := toOpcode(s.codes[s.offset])
-	var apply Apply
-	switch opcode.opcode {
-	case 1:
-		apply = s.opcode1
-	case 2:
-		apply = s.opcode2
-	case 3:
-		apply = s.opcode3
-	case 4:
-		apply = s.opcode4
-	case 99:
-		apply = s.opcode99
-	default:
-		panic(opcode.opcode)
-	}
-	apply(opcode.ctx)
+	s.instructions[opcode.opcode](opcode.ctx)
 }
 
 type Opcode struct {
@@ -79,12 +75,13 @@ func toOpcode(i int) Opcode {
 }
 
 type State struct {
-	codes  []int
-	offset int
-	over   bool
-	mode   int
-	input  int
-	output int
+	codes        []int
+	offset       int
+	over         bool
+	mode         int
+	input        int
+	output       int
+	instructions map[int]Apply
 }
 
 type Context struct {
@@ -124,16 +121,38 @@ func (s *State) opcode4(ctx Context) {
 	s.offset += 2
 }
 
-func (s *State) opcode99(ctx Context) {
-	s.over = true
+func (s *State) opcode5(ctx Context) {
+	if s.getInput(ctx, 0) != 0 {
+		s.offset = s.getInput(ctx, 1)
+	} else {
+		s.offset += 3
+	}
 }
 
-func fs2(input io.Reader) int {
-	scanner := bufio.NewScanner(input)
-	for scanner.Scan() {
-		line := scanner.Text()
-		_ = line
+func (s *State) opcode6(ctx Context) {
+	if s.getInput(ctx, 0) == 0 {
+		s.offset = s.getInput(ctx, 1)
+	} else {
+		s.offset += 3
 	}
+}
 
-	return 42
+func (s *State) opcode7(ctx Context) {
+	if s.getInput(ctx, 0) < s.getInput(ctx, 1) {
+		s.codes[s.getOutputIndex(2)] = 1
+	} else {
+		s.codes[s.getOutputIndex(2)] = 0
+	}
+}
+
+func (s *State) opcode8(ctx Context) {
+	if s.getInput(ctx, 0) == s.getInput(ctx, 1) {
+		s.codes[s.getOutputIndex(2)] = 1
+	} else {
+		s.codes[s.getOutputIndex(2)] = 0
+	}
+}
+
+func (s *State) opcode99(ctx Context) {
+	s.over = true
 }
