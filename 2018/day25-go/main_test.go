@@ -1,10 +1,12 @@
 package main
 
 import (
+	"os"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestFs1Test_0(t *testing.T) {
@@ -57,9 +59,8 @@ func TestFs1Test_3(t *testing.T) {
 -1,-2,0,-2`)))
 }
 
-//
-//func TestFs1Input(t *testing.T) {
-//	f, err := os.Open("input.txt")
-//	require.NoError(t, err)
-//	assert.Equal(t, 42, fs1(f))
-//}
+func TestFs1Input(t *testing.T) {
+	f, err := os.Open("input.txt")
+	require.NoError(t, err)
+	assert.Equal(t, 425, fs1(f))
+}

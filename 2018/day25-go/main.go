@@ -47,7 +47,28 @@ func fs1(input io.Reader) int {
 		}
 	}
 
-	return len(constellations)
+	res := len(constellations)
+
+	for i := 0; i < len(constellations); i++ {
+		for j := i + 1; j < len(constellations); j++ {
+			if canGroup(constellations[i], constellations[j]) {
+				res--
+			}
+		}
+	}
+
+	return res
+}
+
+func canGroup(c1, c2 []Point) bool {
+	for _, p := range c1 {
+		for _, p2 := range c2 {
+			if p.sameConstellation(p2) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 type Point struct {
