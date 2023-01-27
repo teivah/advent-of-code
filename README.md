@@ -26,6 +26,10 @@
 * [Day 24](https://adventofcode.com/2022/day/24): [Go](2022/day24-go/main.go)
 * [Day 25](https://adventofcode.com/2022/day/25): [Go](2022/day25-go/main.go)
 
+## 2019
+
+* [Day 1](https://adventofcode.com/2019/day/1): [Go](2019/day1-go/main.go)
+
 ## 2018
 
 * [Day 1](https://adventofcode.com/2018/day/1): [Go](2018/day1-go/main.go)
