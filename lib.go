@@ -212,3 +212,26 @@ func CopyInts(s []int) []int {
 	}
 	return res
 }
+
+// Directions
+
+type Direction int
+
+const (
+	Up Direction = iota
+	Down
+	Left
+	Right
+)
+
+type Position struct {
+	Row int
+	Col int
+}
+
+func (p Position) delta(row, col int) Position {
+	return Position{
+		Row: p.Row + row,
+		Col: p.Col + col,
+	}
+}
