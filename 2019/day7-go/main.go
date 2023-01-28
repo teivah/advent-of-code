@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"strings"
 
@@ -18,14 +17,14 @@ func fs1(reader io.Reader) int {
 		input := 0
 		cpy := lib.CopyInts(codes)
 		for i := 0; i < 5; i++ {
-			input = run(cpy, input, perm[i])
+			input, _ = run(cpy, input, perm[i])
 		}
 		max.Add(input)
 	}
 	return max.Get()
 }
 
-func run(codes []int, input int, phaseSetting int) int {
+func run(codes []int, input int, phaseSetting int) (int, bool) {
 	state := &State{
 		codes:  codes,
 		offset: 0,
@@ -53,7 +52,18 @@ func run(codes []int, input int, phaseSetting int) int {
 		state.execute()
 	}
 
-	return state.output
+	return state.output, state.over
+}
+
+func runFromState(state *State) (int, bool) {
+	for !state.over && !state.paused {
+		if state.offset >= len(state.codes) {
+			break
+		}
+		state.execute()
+	}
+
+	return state.output, state.over
 }
 
 func permutations(idx int, v []int) [][]int {
@@ -110,6 +120,7 @@ type State struct {
 	codes        []int
 	offset       int
 	over         bool
+	paused       bool
 	output       int
 	instructions map[int]Apply
 
@@ -160,6 +171,8 @@ func (s *State) in(ctx Context) {
 func (s *State) out(ctx Context) {
 	s.output = s.getInput(ctx, 0)
 	s.offset += 2
+	s.paused = true
+	// TODO Disable for the next day
 }
 
 func (s *State) jnz(ctx Context) {
@@ -200,18 +213,51 @@ func (s *State) exit(ctx Context) {
 	s.over = true
 }
 
+// Provide each amplifier its phase setting at its first input instruction?
+
 func fs2(reader io.Reader) int {
 	s := lib.ReaderToString(reader)
 	codes := lib.StringsToInts(strings.Split(s, ","))
-	perms := permutations(0, []int{0, 1, 2, 3, 4})
+	perms := permutations(0, []int{5, 6, 7, 8, 9})
 
 	max := lib.NewMaxer()
+
 	for _, perm := range perms {
-		fmt.Println(perm)
 		input := 0
-		cpy := lib.CopyInts(codes)
+		states := make([]*State, 0, 5)
 		for i := 0; i < 5; i++ {
-			input = run(cpy, input, perm[i])
+			state := &State{
+				codes:  lib.CopyInts(codes),
+				offset: 0,
+				over:   false,
+			}
+			state.instructions = map[int]Apply{
+				1:  state.plus,
+				2:  state.mult,
+				3:  state.in,
+				4:  state.out,
+				5:  state.jnz,
+				6:  state.jiz,
+				7:  state.lt,
+				8:  state.eq,
+				99: state.exit,
+			}
+			states = append(states, state)
+		}
+
+	outer:
+		for {
+			for i := 0; i < 5; i++ {
+				states[i].over = false
+				states[i].paused = false
+				states[i].phaseSetting = perm[i]
+				states[i].input = input
+				v, over := runFromState(states[i])
+				input = v
+				if i == 4 && over {
+					break outer
+				}
+			}
 		}
 		max.Add(input)
 	}
