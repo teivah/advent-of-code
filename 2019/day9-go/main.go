@@ -8,18 +8,17 @@ import (
 	lib "github.com/teivah/advent-of-code"
 )
 
-func fs1(reader io.Reader) []int {
+func fs(reader io.Reader, input int) []int {
 	s := lib.ReaderToString(reader)
 	codes := lib.StringsToInts(strings.Split(s, ","))
 
-	const input = 1
 	output, _ := run(codes, input)
 	return output
 }
 
 func run(codes []int, input int) ([]int, bool) {
 	state := &State{
-		memory: append(codes, make([]int, 100)...),
+		memory: append(codes, make([]int, 1000)...),
 		offset: 0,
 		over:   false,
 		input:  input,
