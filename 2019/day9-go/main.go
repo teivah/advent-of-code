@@ -133,23 +133,6 @@ func (c Context) Until(i int) string {
 
 type Apply func(ctx Context)
 
-func (s *State) program(ctx Context, parameter int) int {
-	instructionIndex := s.offset + 1 + parameter
-	instructionValue := s.memory[instructionIndex]
-
-	switch ctx.modes[parameter] {
-	case 0: // Position
-		return s.memory[instructionValue]
-	case 1: // Immediate
-		return instructionValue
-	case 2: // Relative
-		offset := instructionValue + s.relativeBase
-		return s.memory[offset]
-	default:
-		panic(ctx.modes[parameter])
-	}
-}
-
 func (s *State) get(ctx Context, parameter int) int {
 	instructionIndex := s.offset + 1 + parameter
 	instructionValue := s.memory[instructionIndex]
@@ -164,6 +147,10 @@ func (s *State) get(ctx Context, parameter int) int {
 	default:
 		panic(ctx.modes[parameter])
 	}
+}
+
+func (s *State) set(ctx Context, parameter, value int) {
+	s.memory[s.index(ctx, parameter)] = value
 }
 
 func (s *State) index(ctx Context, parameter int) int {
@@ -187,7 +174,7 @@ func (s *State) plus(ctx Context) {
 		fmt.Println("plus", ctx, s.memory[s.offset+1], s.memory[s.offset+2], s.memory[s.offset+3])
 	}
 
-	s.memory[s.index(ctx, 2)] = s.get(ctx, 0) + s.get(ctx, 1)
+	s.set(ctx, 2, s.get(ctx, 0)+s.get(ctx, 1))
 	s.offset += 4
 }
 
@@ -196,7 +183,7 @@ func (s *State) mult(ctx Context) {
 		fmt.Println("mult", ctx, s.memory[s.offset+1], s.memory[s.offset+2], s.memory[s.offset+3])
 	}
 
-	s.memory[s.index(ctx, 2)] = s.get(ctx, 0) * s.get(ctx, 1)
+	s.set(ctx, 2, s.get(ctx, 0)*s.get(ctx, 1))
 	s.offset += 4
 }
 
@@ -205,7 +192,7 @@ func (s *State) in(ctx Context) {
 		fmt.Println("in", ctx.Until(1), s.memory[s.offset+1])
 	}
 
-	s.memory[s.index(ctx, 0)] = s.input
+	s.set(ctx, 0, s.input)
 	s.offset += 2
 }
 
@@ -248,9 +235,9 @@ func (s *State) lt(ctx Context) {
 	}
 
 	if s.get(ctx, 0) < s.get(ctx, 1) {
-		s.memory[s.index(ctx, 2)] = 1
+		s.set(ctx, 2, 1)
 	} else {
-		s.memory[s.index(ctx, 2)] = 0
+		s.set(ctx, 2, 0)
 	}
 	s.offset += 4
 }
@@ -261,9 +248,9 @@ func (s *State) eq(ctx Context) {
 	}
 
 	if s.get(ctx, 0) == s.get(ctx, 1) {
-		s.memory[s.index(ctx, 2)] = 1
+		s.set(ctx, 2, 1)
 	} else {
-		s.memory[s.index(ctx, 2)] = 0
+		s.set(ctx, 2, 0)
 	}
 	s.offset += 4
 }
@@ -273,7 +260,7 @@ func (s *State) rlt(ctx Context) {
 		fmt.Println("rlt", ctx.Until(1), s.memory[s.offset+1])
 	}
 
-	s.relativeBase += s.program(ctx, 0)
+	s.relativeBase += s.get(ctx, 0)
 	s.offset += 2
 }
 

@@ -18,13 +18,13 @@ func TestFs1Test(t *testing.T) {
 }
 
 func TestFs1Unit(t *testing.T) {
-	//assert.Equal(t, []int{-1}, fs1(strings.NewReader(`109,-1,4,1,99`)))
-	//assert.Equal(t, []int{1}, fs1(strings.NewReader(`109,-1,104,1,99`)))
-	//assert.Equal(t, []int{109}, fs1(strings.NewReader(`109,-1,204,1,99`)))
-	//assert.Equal(t, []int{204}, fs1(strings.NewReader(`109,1,9,2,204,-6,99`)))
-	//assert.Equal(t, []int{204}, fs1(strings.NewReader(`109,1,109,9,204,-6,99`)))
-	//assert.Equal(t, []int{204}, fs1(strings.NewReader(`109,1,209,-1,204,-106,99`)))
-	//assert.Equal(t, []int{1}, fs1(strings.NewReader(`109,1,3,3,204,2,99`)))
+	assert.Equal(t, []int{-1}, fs1(strings.NewReader(`109,-1,4,1,99`)))
+	assert.Equal(t, []int{1}, fs1(strings.NewReader(`109,-1,104,1,99`)))
+	assert.Equal(t, []int{109}, fs1(strings.NewReader(`109,-1,204,1,99`)))
+	assert.Equal(t, []int{204}, fs1(strings.NewReader(`109,1,9,2,204,-6,99`)))
+	assert.Equal(t, []int{204}, fs1(strings.NewReader(`109,1,109,9,204,-6,99`)))
+	assert.Equal(t, []int{204}, fs1(strings.NewReader(`109,1,209,-1,204,-106,99`)))
+	assert.Equal(t, []int{1}, fs1(strings.NewReader(`109,1,3,3,204,2,99`)))
 	assert.Equal(t, []int{1}, fs1(strings.NewReader(`109,1,203,2,204,2,99`)))
 }
 
