@@ -94,6 +94,11 @@ func StringPermutations(idx int, runes []rune) []string {
 	return res
 }
 
+func RuneToInt(r rune) int {
+	return int(r - '0')
+}
+
+
 // ---------- Math ----------
 
 type Maxer struct {
