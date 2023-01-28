@@ -16,19 +16,9 @@ func fs1(input io.Reader, steps int) int {
 	}
 
 	for i := 0; i < steps; i++ {
-		//for _, moon := range moons {
-		//	fmt.Println(moon)
-		//}
-		//fmt.Println()
-
 		moons = gravity(moons)
 		moons = velocity(moons)
 	}
-
-	//for _, moon := range moons {
-	//	fmt.Println(moon)
-	//}
-	//fmt.Println()
 
 	totalEnergy := 0
 	for _, moon := range moons {
@@ -114,10 +104,39 @@ func toMoon(s string) Moon {
 
 func fs2(input io.Reader) int {
 	scanner := bufio.NewScanner(input)
+	var moons []Moon
 	for scanner.Scan() {
-		line := scanner.Text()
-		_ = line
+		moons = append(moons, toMoon(scanner.Text()))
 	}
 
-	return 42
+	type entry struct {
+		moon1 Moon
+		moon2 Moon
+		moon3 Moon
+		moon4 Moon
+	}
+
+	set := make(map[entry]struct{})
+
+	for i := 0; ; i++ {
+		if i%1000_000 == 0 {
+			fmt.Println(i)
+		}
+		moons = gravity(moons)
+		moons = velocity(moons)
+
+		e := entry{moons[0], moons[1], moons[2], moons[3]}
+		if _, exists := set[e]; exists {
+			return i
+		}
+		set[e] = struct{}{}
+		//printMoons(moons)
+	}
+}
+
+func printMoons(moons []Moon) {
+	for _, moon := range moons {
+		fmt.Println(moon)
+	}
+	fmt.Println()
 }
