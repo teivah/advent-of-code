@@ -213,8 +213,6 @@ func (s *State) exit(ctx Context) {
 	s.over = true
 }
 
-// Provide each amplifier its phase setting at its first input instruction?
-
 func fs2(reader io.Reader) int {
 	s := lib.ReaderToString(reader)
 	codes := lib.StringsToInts(strings.Split(s, ","))
