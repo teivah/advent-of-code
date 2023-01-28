@@ -114,8 +114,7 @@ func fs2(input io.Reader, nth int) int {
 		grid = append(grid, row)
 	}
 
-	//station, _ := getMonitoringStation(grid, asteroids)
-	station := lib.Position{3, 8}
+	station, _ := getMonitoringStation(grid, asteroids)
 
 	currentAngle := 90.
 	for {
@@ -146,7 +145,7 @@ func fs2(input io.Reader, nth int) int {
 
 		if bestAngleIndex == -1 {
 			// We need to find the max angle
-			max := 361.
+			max := -1.
 			for i, angle := range angles {
 				if angle > max {
 					max = angle
@@ -158,33 +157,16 @@ func fs2(input io.Reader, nth int) int {
 		// Shoot i
 		target := options[bestAngleIndex]
 
-		for row := 0; row < len(grid); row++ {
-			for col := 0; col < len(grid[0]); col++ {
-				pos := lib.Position{row, col}
-				if pos == station {
-					fmt.Print("X")
-					continue
-				}
-				if pos == target {
-					fmt.Print("O")
-					continue
-				}
-				if asteroids[pos] {
-					fmt.Print("#")
-				} else {
-					fmt.Print(".")
-				}
-			}
-			fmt.Println()
+		currentAngle = angles[bestAngleIndex] - 0.0001
+		if currentAngle < 0 {
+			currentAngle = 359.999
 		}
-		fmt.Println()
-
-		currentAngle = angles[bestAngleIndex]
 		nth--
 		if nth == 0 {
 			return target.Col*100 + target.Row
 		}
 		delete(asteroids, target)
+		grid[target.Row][target.Col] = false
 	}
 }
 
