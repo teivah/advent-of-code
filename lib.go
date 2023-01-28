@@ -287,3 +287,18 @@ func (p Position) Delta(row, col int) Position {
 		Col: p.Col + col,
 	}
 }
+
+func (p Position) Move(direction Direction, moves int) Position {
+	switch direction {
+	case Up:
+		return p.Delta(-moves, 0)
+	case Down:
+		return p.Delta(moves, 0)
+	case Left:
+		return p.Delta(0, -moves)
+	case Right:
+		return p.Delta(0, moves)
+	}
+
+	panic ("not handled")
+}
