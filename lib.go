@@ -2,6 +2,7 @@ package lib
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"math"
 	"strconv"
@@ -232,6 +233,10 @@ const (
 type Position struct {
 	Row int
 	Col int
+}
+
+func (p Position) String() string {
+	return fmt.Sprintf("row=%d, col=%d", p.Row, p.Col)
 }
 
 func (p Position) Manhattan(p2 Position) int {
