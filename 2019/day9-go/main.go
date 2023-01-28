@@ -1,13 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"strings"
 
 	lib "github.com/teivah/advent-of-code"
 )
 
-func fs1(reader io.Reader) int {
+func fs1(reader io.Reader) []int {
 	s := lib.ReaderToString(reader)
 	codes := lib.StringsToInts(strings.Split(s, ","))
 
@@ -16,13 +17,14 @@ func fs1(reader io.Reader) int {
 	return output
 }
 
-func run(codes []int, input int) (int, bool) {
+func run(codes []int, input int) ([]int, bool) {
 	state := &State{
 		program: codes,
-		memory:  make([]int, 1000),
+		memory:  make([]int, 100000000),
 		offset:  0,
 		over:    false,
 		input:   input,
+		debug:   true,
 	}
 	state.instructions = map[int]Apply{
 		1:  state.plus,
@@ -82,11 +84,12 @@ func toOpcode(i int) Opcode {
 }
 
 type State struct {
+	debug        bool
 	program      []int
 	memory       []int
 	offset       int
 	over         bool
-	output       int
+	output       []int
 	instructions map[int]Apply
 	input        int
 	relativeMode int
@@ -96,81 +99,151 @@ type Context struct {
 	modes []int
 }
 
-func (s *State) getOutputIndex(param int) int {
-	return s.program[s.offset+param+1]
+func (c Context) String() string {
+	var s []string
+	for _, mode := range c.modes {
+		switch mode {
+		case 0:
+			s = append(s, "position")
+		case 1:
+			s = append(s, "immediate")
+		case 2:
+			s = append(s, "relative")
+		default:
+			panic(mode)
+		}
+	}
+	return fmt.Sprintf("[%s]", strings.Join(s, ", "))
 }
 
-func (s *State) getInput(ctx Context, param int) int {
+func (s *State) getParameter(ctx Context, param int) int {
+	instructionIndex := s.offset + 1 + param
 	switch ctx.modes[param] {
-	case 0:
-		return s.program[s.program[s.offset+1+param]]
-	case 1:
-		return s.program[s.offset+1+param]
-	case 2:
-		return s.program[s.program[s.offset+1+param]+s.relativeMode]
+	case 0: // Position
+		position := s.program[instructionIndex]
+		return s.memory[position]
+	case 1: // Immediate
+		return s.program[instructionIndex]
+	case 2: // Relative
+		relativeBase := s.program[instructionIndex]
+		return s.program[relativeBase+s.relativeMode]
 	default:
 		panic(ctx.modes[param])
 	}
 }
 
+func (s *State) getValue(ctx Context, v int) int {
+	switch ctx.modes[0] {
+	case 0: // Position
+		return s.memory[v]
+	case 1: // Immediate
+		return v
+	case 2: // Relative
+		relativeBase := s.program[v]
+		return s.memory[relativeBase+s.relativeMode]
+	default:
+		panic(ctx.modes[0])
+	}
+}
+
+func (s *State) getOutputIndex(param int) int {
+	return s.program[s.offset+param+1]
+}
+
 type Apply func(ctx Context)
 
 func (s *State) plus(ctx Context) {
-	s.program[s.getOutputIndex(2)] = s.getInput(ctx, 0) + s.getInput(ctx, 1)
+	if s.debug {
+		fmt.Println("plus", ctx, s.program[s.offset+1], s.program[s.offset+2], s.program[s.offset+3])
+	}
+
+	s.memory[s.getOutputIndex(2)] = s.getParameter(ctx, 0) + s.getParameter(ctx, 1)
 	s.offset += 4
 }
 
 func (s *State) mult(ctx Context) {
-	s.program[s.getOutputIndex(2)] = s.getInput(ctx, 0) * s.getInput(ctx, 1)
+	if s.debug {
+		fmt.Println("mult", ctx, s.program[s.offset+1], s.program[s.offset+2], s.program[s.offset+3])
+	}
+
+	s.memory[s.getOutputIndex(2)] = s.getParameter(ctx, 0) * s.getParameter(ctx, 1)
 	s.offset += 4
 }
 
 func (s *State) in(ctx Context) {
-	s.program[s.getOutputIndex(0)] = s.input
+	if s.debug {
+		fmt.Println("in", ctx, s.program[s.offset+1])
+	}
+
+	s.memory[s.getOutputIndex(0)] = s.getValue(ctx, s.input)
 	s.offset += 2
 }
 
 func (s *State) out(ctx Context) {
-	s.output = s.getInput(ctx, 0)
+	if s.debug {
+		fmt.Println("out", ctx, s.program[s.offset+1])
+	}
+
+	s.output = append(s.output, s.getParameter(ctx, 0))
 	s.offset += 2
 }
 
 func (s *State) jnz(ctx Context) {
-	if s.getInput(ctx, 0) != 0 {
-		s.offset = s.getInput(ctx, 1)
+	if s.debug {
+		fmt.Println("jnz", ctx, s.program[s.offset+1], s.program[s.offset+2])
+	}
+
+	if s.getParameter(ctx, 0) != 0 {
+		s.offset = s.getParameter(ctx, 1)
 	} else {
 		s.offset += 3
 	}
 }
 
 func (s *State) jiz(ctx Context) {
-	if s.getInput(ctx, 0) == 0 {
-		s.offset = s.getInput(ctx, 1)
+	if s.debug {
+		fmt.Println("jiz", ctx, s.program[s.offset+1], s.program[s.offset+2])
+	}
+
+	if s.getParameter(ctx, 0) == 0 {
+		s.offset = s.getParameter(ctx, 1)
 	} else {
 		s.offset += 3
 	}
 }
 
 func (s *State) lt(ctx Context) {
-	if s.getInput(ctx, 0) < s.getInput(ctx, 1) {
-		s.program[s.getOutputIndex(2)] = 1
+	if s.debug {
+		fmt.Println("lt", ctx, s.program[s.offset+1], s.program[s.offset+2], s.program[s.offset+3])
+	}
+
+	if s.getParameter(ctx, 0) < s.getParameter(ctx, 1) {
+		s.memory[s.getOutputIndex(2)] = 1
 	} else {
-		s.program[s.getOutputIndex(2)] = 0
+		s.memory[s.getOutputIndex(2)] = 0
 	}
 	s.offset += 4
 }
 
 func (s *State) eq(ctx Context) {
-	if s.getInput(ctx, 0) == s.getInput(ctx, 1) {
-		s.program[s.getOutputIndex(2)] = 1
+	if s.debug {
+		fmt.Println("eq", ctx, s.program[s.offset+1], s.program[s.offset+2], s.program[s.offset+3])
+	}
+
+	if s.getParameter(ctx, 0) == s.getParameter(ctx, 1) {
+		s.memory[s.getOutputIndex(2)] = 1
 	} else {
-		s.program[s.getOutputIndex(2)] = 0
+		s.memory[s.getOutputIndex(2)] = 0
 	}
 	s.offset += 4
 }
 
 func (s *State) rlt(ctx Context) {
-	s.relativeMode = s.getInput(ctx, 0)
+	if s.debug {
+		fmt.Println("rlt", ctx, s.program[s.offset+1])
+	}
+
+	s.relativeMode += s.getValue(ctx, s.program[s.offset+1])
 	s.offset += 2
 }
 
