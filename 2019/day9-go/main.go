@@ -92,7 +92,7 @@ type State struct {
 	output       []int
 	instructions map[int]Apply
 	input        int
-	relativeMode int
+	relativeBase int
 }
 
 type Context struct {
@@ -126,28 +126,40 @@ func (s *State) getParameter(ctx Context, param int) int {
 		return s.program[instructionIndex]
 	case 2: // Relative
 		relativeBase := s.program[instructionIndex]
-		return s.program[relativeBase+s.relativeMode]
+		return s.program[relativeBase+s.relativeBase]
 	default:
 		panic(ctx.modes[param])
 	}
 }
 
-func (s *State) getValue(ctx Context, v int) int {
+func (s *State) getValue(ctx Context, parameter int) int {
 	switch ctx.modes[0] {
 	case 0: // Position
-		return s.memory[v]
+		return s.memory[parameter]
 	case 1: // Immediate
-		return v
+		return parameter
 	case 2: // Relative
-		relativeBase := s.program[v]
-		return s.memory[relativeBase+s.relativeMode]
+		return s.memory[s.relativeBase+parameter]
 	default:
 		panic(ctx.modes[0])
 	}
 }
 
-func (s *State) getOutputIndex(param int) int {
-	return s.program[s.offset+param+1]
+func (s *State) getIndex(ctx Context, parameter int) int {
+	switch ctx.modes[0] {
+	case 0: // Position
+		return parameter
+	case 1: // Immediate
+		panic(ctx.modes[0])
+	case 2: // Relative
+		return s.relativeBase + parameter
+	default:
+		panic(ctx.modes[0])
+	}
+}
+
+func (s *State) getOutputIndex(ctx Context, parameter int) int {
+	return s.program[s.offset+parameter+1]
 }
 
 type Apply func(ctx Context)
@@ -157,7 +169,7 @@ func (s *State) plus(ctx Context) {
 		fmt.Println("plus", ctx, s.program[s.offset+1], s.program[s.offset+2], s.program[s.offset+3])
 	}
 
-	s.memory[s.getOutputIndex(2)] = s.getParameter(ctx, 0) + s.getParameter(ctx, 1)
+	s.memory[s.getOutputIndex(ctx, 2)] = s.getParameter(ctx, 0) + s.getParameter(ctx, 1)
 	s.offset += 4
 }
 
@@ -166,7 +178,7 @@ func (s *State) mult(ctx Context) {
 		fmt.Println("mult", ctx, s.program[s.offset+1], s.program[s.offset+2], s.program[s.offset+3])
 	}
 
-	s.memory[s.getOutputIndex(2)] = s.getParameter(ctx, 0) * s.getParameter(ctx, 1)
+	s.memory[s.getOutputIndex(ctx, 2)] = s.getParameter(ctx, 0) * s.getParameter(ctx, 1)
 	s.offset += 4
 }
 
@@ -175,7 +187,8 @@ func (s *State) in(ctx Context) {
 		fmt.Println("in", ctx, s.program[s.offset+1])
 	}
 
-	s.memory[s.getOutputIndex(0)] = s.getValue(ctx, s.input)
+	//s.memory[s.getOutputIndex(ctx, 0)] = s.input
+	s.memory[s.getIndex(ctx, 0)] = s.input
 	s.offset += 2
 }
 
@@ -218,9 +231,9 @@ func (s *State) lt(ctx Context) {
 	}
 
 	if s.getParameter(ctx, 0) < s.getParameter(ctx, 1) {
-		s.memory[s.getOutputIndex(2)] = 1
+		s.memory[s.getOutputIndex(ctx, 2)] = 1
 	} else {
-		s.memory[s.getOutputIndex(2)] = 0
+		s.memory[s.getOutputIndex(ctx, 2)] = 0
 	}
 	s.offset += 4
 }
@@ -231,9 +244,9 @@ func (s *State) eq(ctx Context) {
 	}
 
 	if s.getParameter(ctx, 0) == s.getParameter(ctx, 1) {
-		s.memory[s.getOutputIndex(2)] = 1
+		s.memory[s.getOutputIndex(ctx, 2)] = 1
 	} else {
-		s.memory[s.getOutputIndex(2)] = 0
+		s.memory[s.getOutputIndex(ctx, 2)] = 0
 	}
 	s.offset += 4
 }
@@ -243,7 +256,7 @@ func (s *State) rlt(ctx Context) {
 		fmt.Println("rlt", ctx, s.program[s.offset+1])
 	}
 
-	s.relativeMode += s.getValue(ctx, s.program[s.offset+1])
+	s.relativeBase += s.getValue(ctx, s.program[s.offset+1])
 	s.offset += 2
 }
 
