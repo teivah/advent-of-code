@@ -10,14 +10,15 @@ import (
 
 func fs1(input io.Reader, steps int) int {
 	scanner := bufio.NewScanner(input)
-	var moons []Moon
+	var moons []*Moon
 	for scanner.Scan() {
-		moons = append(moons, toMoon(scanner.Text()))
+		moon := toMoon(scanner.Text())
+		moons = append(moons, &moon)
 	}
 
 	for i := 0; i < steps; i++ {
-		moons = gravity(moons)
-		moons = velocity(moons)
+		gravity(moons)
+		velocity(moons)
 	}
 
 	totalEnergy := 0
@@ -30,54 +31,45 @@ func fs1(input io.Reader, steps int) int {
 	return totalEnergy
 }
 
-func gravity(moons []Moon) []Moon {
-	res := make([]Moon, len(moons))
-	copy(res, moons)
-
+func gravity(moons []*Moon) {
 	for i := 0; i < len(moons); i++ {
 		for j := i + 1; j < len(moons); j++ {
 			a := moons[i]
 			b := moons[j]
 
 			if a.x < b.x {
-				res[i].vx++
-				res[j].vx--
+				moons[i].vx++
+				moons[j].vx--
 			} else if a.x > b.x {
-				res[j].vx++
-				res[i].vx--
+				moons[j].vx++
+				moons[i].vx--
 			}
 
 			if a.y < b.y {
-				res[i].vy++
-				res[j].vy--
+				moons[i].vy++
+				moons[j].vy--
 			} else if a.y > b.y {
-				res[j].vy++
-				res[i].vy--
+				moons[j].vy++
+				moons[i].vy--
 			}
 
 			if a.z < b.z {
-				res[i].vz++
-				res[j].vz--
+				moons[i].vz++
+				moons[j].vz--
 			} else if a.z > b.z {
-				res[j].vz++
-				res[i].vz--
+				moons[j].vz++
+				moons[i].vz--
 			}
 		}
 	}
-
-	return res
 }
 
-func velocity(moons []Moon) []Moon {
-	res := make([]Moon, len(moons))
-	copy(res, moons)
-
-	for i := range res {
-		res[i].x += res[i].vx
-		res[i].y += res[i].vy
-		res[i].z += res[i].vz
+func velocity(moons []*Moon) {
+	for i := range moons {
+		moons[i].x += moons[i].vx
+		moons[i].y += moons[i].vy
+		moons[i].z += moons[i].vz
 	}
-	return res
 }
 
 type Moon struct {
@@ -104,9 +96,10 @@ func toMoon(s string) Moon {
 
 func fs2(input io.Reader) int {
 	scanner := bufio.NewScanner(input)
-	var moons []Moon
+	var moons []*Moon
 	for scanner.Scan() {
-		moons = append(moons, toMoon(scanner.Text()))
+		moon := toMoon(scanner.Text())
+		moons = append(moons, &moon)
 	}
 
 	type entry struct {
@@ -116,27 +109,33 @@ func fs2(input io.Reader) int {
 		moon4 Moon
 	}
 
-	set := make(map[entry]struct{})
+	//for i := 0; ; i++ {
+	//	fmt.Printf("%d: %v %d %d %d\n", i, moons[0].vz, moons[1].vz, moons[2].vz, moons[3].vz)
+	//	gravity(moons)
+	//	velocity(moons)
+	//}
 
-	for i := 0; ; i++ {
-		if i%1000_000 == 0 {
-			fmt.Println(i)
-		}
-		moons = gravity(moons)
-		moons = velocity(moons)
-
-		e := entry{moons[0], moons[1], moons[2], moons[3]}
-		if _, exists := set[e]; exists {
-			return i
-		}
-		set[e] = struct{}{}
-		//printMoons(moons)
-	}
+	// Running a series of print, we notice:
+	// * x repeat each 186028 occurrences
+	// * y repeat each 231614 occurrences
+	// * z repeat each 102356 occurrences
+	// So we simply return the least common multiple of these three numbers
+	return leastCommonMultiple(186028, 231614, 102356)
 }
 
-func printMoons(moons []Moon) {
-	for _, moon := range moons {
-		fmt.Println(moon)
+func greatestCommonDivisor(a, b int) int {
+	for b != 0 {
+		t := b
+		b = a % b
+		a = t
 	}
-	fmt.Println()
+	return a
+}
+
+func leastCommonMultiple(a, b int, integers ...int) int {
+	result := a * b / greatestCommonDivisor(a, b)
+	for i := 0; i < len(integers); i++ {
+		result = leastCommonMultiple(result, integers[i])
+	}
+	return result
 }
