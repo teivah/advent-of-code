@@ -19,14 +19,13 @@ func fs1(reader io.Reader) []int {
 
 func run(codes []int, input int) ([]int, bool) {
 	state := &State{
-		program: codes,
-		memory:  make([]int, 100000000),
-		offset:  0,
-		over:    false,
-		input:   input,
-		debug:   true,
+		memory: append(codes, make([]int, 100)...),
+		offset: 0,
+		over:   false,
+		input:  input,
+		debug:  true,
 	}
-	state.instructions = map[int]Apply{
+	state.functions = map[int]Apply{
 		1:  state.plus,
 		2:  state.mult,
 		3:  state.in,
@@ -50,8 +49,8 @@ func run(codes []int, input int) ([]int, bool) {
 }
 
 func (s *State) execute() {
-	opcode := toOpcode(s.program[s.offset])
-	s.instructions[opcode.opcode](opcode.ctx)
+	opcode := toOpcode(s.memory[s.offset])
+	s.functions[opcode.opcode](opcode.ctx)
 }
 
 type Opcode struct {
@@ -85,12 +84,11 @@ func toOpcode(i int) Opcode {
 
 type State struct {
 	debug        bool
-	program      []int
 	memory       []int
 	offset       int
 	over         bool
 	output       []int
-	instructions map[int]Apply
+	functions    map[int]Apply
 	input        int
 	relativeBase int
 }
@@ -116,98 +114,117 @@ func (c Context) String() string {
 	return fmt.Sprintf("[%s]", strings.Join(s, ", "))
 }
 
-func (s *State) getParameter(ctx Context, param int) int {
-	instructionIndex := s.offset + 1 + param
-	switch ctx.modes[param] {
-	case 0: // Position
-		position := s.program[instructionIndex]
-		return s.memory[position]
-	case 1: // Immediate
-		return s.program[instructionIndex]
-	case 2: // Relative
-		relativeBase := s.program[instructionIndex]
-		return s.program[relativeBase+s.relativeBase]
-	default:
-		panic(ctx.modes[param])
+func (c Context) Until(i int) string {
+	var s []string
+	for _, mode := range c.modes[:i] {
+		switch mode {
+		case 0:
+			s = append(s, "position")
+		case 1:
+			s = append(s, "immediate")
+		case 2:
+			s = append(s, "relative")
+		default:
+			panic(mode)
+		}
 	}
-}
-
-func (s *State) getValue(ctx Context, parameter int) int {
-	switch ctx.modes[0] {
-	case 0: // Position
-		return s.memory[parameter]
-	case 1: // Immediate
-		return parameter
-	case 2: // Relative
-		return s.memory[s.relativeBase+parameter]
-	default:
-		panic(ctx.modes[0])
-	}
-}
-
-func (s *State) getIndex(ctx Context, parameter int) int {
-	switch ctx.modes[0] {
-	case 0: // Position
-		return parameter
-	case 1: // Immediate
-		panic(ctx.modes[0])
-	case 2: // Relative
-		return s.relativeBase + parameter
-	default:
-		panic(ctx.modes[0])
-	}
-}
-
-func (s *State) getOutputIndex(ctx Context, parameter int) int {
-	return s.program[s.offset+parameter+1]
+	return fmt.Sprintf("[%s]", strings.Join(s, ", "))
 }
 
 type Apply func(ctx Context)
 
+func (s *State) program(ctx Context, parameter int) int {
+	instructionIndex := s.offset + 1 + parameter
+	instructionValue := s.memory[instructionIndex]
+
+	switch ctx.modes[parameter] {
+	case 0: // Position
+		return s.memory[instructionValue]
+	case 1: // Immediate
+		return instructionValue
+	case 2: // Relative
+		offset := instructionValue + s.relativeBase
+		return s.memory[offset]
+	default:
+		panic(ctx.modes[parameter])
+	}
+}
+
+func (s *State) get(ctx Context, parameter int) int {
+	instructionIndex := s.offset + 1 + parameter
+	instructionValue := s.memory[instructionIndex]
+
+	switch ctx.modes[parameter] {
+	case 0: // Position
+		return s.memory[instructionValue]
+	case 1: // Immediate
+		return instructionValue
+	case 2: // Relative
+		return s.memory[instructionValue+s.relativeBase]
+	default:
+		panic(ctx.modes[parameter])
+	}
+}
+
+func (s *State) index(ctx Context, parameter int) int {
+	instructionIndex := s.offset + 1 + parameter
+	instructionValue := s.memory[instructionIndex]
+
+	switch ctx.modes[parameter] {
+	case 0: // Position
+		return instructionValue
+	case 1: // Immediate
+		panic(ctx.modes[parameter])
+	case 2: // Relative
+		return instructionValue + s.relativeBase
+	default:
+		panic(ctx.modes[parameter])
+	}
+}
+
 func (s *State) plus(ctx Context) {
 	if s.debug {
-		fmt.Println("plus", ctx, s.program[s.offset+1], s.program[s.offset+2], s.program[s.offset+3])
+		fmt.Println("plus", ctx, s.memory[s.offset+1], s.memory[s.offset+2], s.memory[s.offset+3])
 	}
 
-	s.memory[s.getOutputIndex(ctx, 2)] = s.getParameter(ctx, 0) + s.getParameter(ctx, 1)
+	s.memory[s.index(ctx, 2)] = s.get(ctx, 0) + s.get(ctx, 1)
 	s.offset += 4
 }
 
 func (s *State) mult(ctx Context) {
 	if s.debug {
-		fmt.Println("mult", ctx, s.program[s.offset+1], s.program[s.offset+2], s.program[s.offset+3])
+		fmt.Println("mult", ctx, s.memory[s.offset+1], s.memory[s.offset+2], s.memory[s.offset+3])
 	}
 
-	s.memory[s.getOutputIndex(ctx, 2)] = s.getParameter(ctx, 0) * s.getParameter(ctx, 1)
+	s.memory[s.index(ctx, 2)] = s.get(ctx, 0) * s.get(ctx, 1)
 	s.offset += 4
 }
 
 func (s *State) in(ctx Context) {
 	if s.debug {
-		fmt.Println("in", ctx, s.program[s.offset+1])
+		fmt.Println("in", ctx.Until(1), s.memory[s.offset+1])
 	}
 
-	//s.memory[s.getOutputIndex(ctx, 0)] = s.input
-	s.memory[s.getIndex(ctx, 0)] = s.input
+	s.memory[s.index(ctx, 0)] = s.input
 	s.offset += 2
 }
 
 func (s *State) out(ctx Context) {
 	if s.debug {
-		fmt.Println("out", ctx, s.program[s.offset+1])
+		fmt.Println("out", ctx.Until(1), s.memory[s.offset+1])
 	}
 
-	s.output = append(s.output, s.getParameter(ctx, 0))
+	s.output = append(s.output, s.get(ctx, 0))
 	s.offset += 2
 }
 
 func (s *State) jnz(ctx Context) {
 	if s.debug {
-		fmt.Println("jnz", ctx, s.program[s.offset+1], s.program[s.offset+2])
+		fmt.Println("jnz", ctx.Until(2), s.memory[s.offset+1], s.memory[s.offset+2])
 	}
 
-	if s.getParameter(ctx, 0) != 0 {
-		s.offset = s.getParameter(ctx, 1)
+	if s.get(ctx, 0) != 0 {
+		s.offset = s.get(ctx, 1)
 	} else {
 		s.offset += 3
 	}
@@ -215,11 +232,11 @@ func (s *State) jnz(ctx Context) {
 
 func (s *State) jiz(ctx Context) {
 	if s.debug {
-		fmt.Println("jiz", ctx, s.program[s.offset+1], s.program[s.offset+2])
+		fmt.Println("jiz", ctx.Until(2), s.memory[s.offset+1], s.memory[s.offset+2])
 	}
 
-	if s.getParameter(ctx, 0) == 0 {
-		s.offset = s.getParameter(ctx, 1)
+	if s.get(ctx, 0) == 0 {
+		s.offset = s.get(ctx, 1)
 	} else {
 		s.offset += 3
 	}
@@ -227,36 +244,36 @@ func (s *State) jiz(ctx Context) {
 
 func (s *State) lt(ctx Context) {
 	if s.debug {
-		fmt.Println("lt", ctx, s.program[s.offset+1], s.program[s.offset+2], s.program[s.offset+3])
+		fmt.Println("lt", ctx, s.memory[s.offset+1], s.memory[s.offset+2], s.memory[s.offset+3])
 	}
 
-	if s.getParameter(ctx, 0) < s.getParameter(ctx, 1) {
-		s.memory[s.getOutputIndex(ctx, 2)] = 1
+	if s.get(ctx, 0) < s.get(ctx, 1) {
+		s.memory[s.index(ctx, 2)] = 1
 	} else {
-		s.memory[s.getOutputIndex(ctx, 2)] = 0
+		s.memory[s.index(ctx, 2)] = 0
 	}
 	s.offset += 4
 }
 
 func (s *State) eq(ctx Context) {
 	if s.debug {
-		fmt.Println("eq", ctx, s.program[s.offset+1], s.program[s.offset+2], s.program[s.offset+3])
+		fmt.Println("eq", ctx, s.memory[s.offset+1], s.memory[s.offset+2], s.memory[s.offset+3])
 	}
 
-	if s.getParameter(ctx, 0) == s.getParameter(ctx, 1) {
-		s.memory[s.getOutputIndex(ctx, 2)] = 1
+	if s.get(ctx, 0) == s.get(ctx, 1) {
+		s.memory[s.index(ctx, 2)] = 1
 	} else {
-		s.memory[s.getOutputIndex(ctx, 2)] = 0
+		s.memory[s.index(ctx, 2)] = 0
 	}
 	s.offset += 4
 }
 
 func (s *State) rlt(ctx Context) {
 	if s.debug {
-		fmt.Println("rlt", ctx, s.program[s.offset+1])
+		fmt.Println("rlt", ctx.Until(1), s.memory[s.offset+1])
 	}
 
-	s.relativeBase += s.getValue(ctx, s.program[s.offset+1])
+	s.relativeBase += s.program(ctx, 0)
 	s.offset += 2
 }
 
