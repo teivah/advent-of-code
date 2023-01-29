@@ -230,6 +230,20 @@ const (
 	Right
 )
 
+func (d Direction) Opposite() Direction {
+	switch d {
+	case Up:
+		return Down
+	case Down:
+		return Up
+	case Left:
+		return Right
+	case Right:
+		return Left
+	}
+	panic("not handled")
+}
+
 func (d Direction) Turn(turn Direction) Direction {
 	if turn == Up || turn == Down {
 		return turn
