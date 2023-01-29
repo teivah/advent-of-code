@@ -17,54 +17,31 @@ const (
 	ball   = 4
 )
 
-func fs(reader io.Reader) int {
-	s := lib.ReaderToString(reader)
-	codes := lib.StringsToInts(strings.Split(s, ","))
+func fs1(reader io.Reader) int {
+	codes := lib.StringsToInts(strings.Split(lib.ReaderToString(reader), ","))
 
-	state := run(codes)
+	s := run(codes, nil)
 
 	minX := math.MaxInt
 	minY := math.MaxInt
 	maxX := math.MinInt
 	maxY := math.MinInt
-	for _, x := range state.x {
+	for _, x := range s.x {
 		minX = lib.Min(minX, x)
 		maxX = lib.Max(maxX, x)
 	}
-	for _, y := range state.y {
+	for _, y := range s.y {
 		minY = lib.Min(minY, y)
 		maxY = lib.Max(maxY, y)
 	}
 
 	board := make(map[lib.Position]int)
-	for i := 0; i < len(state.x); i++ {
-		x := state.x[i]
-		y := state.y[i]
-		tile := state.tiles[i]
+	for i := 0; i < len(s.x); i++ {
+		x := s.x[i]
+		y := s.y[i]
+		tile := s.tiles[i]
 		board[lib.Position{y, x}] = tile
 	}
-
-	//for row := minY; row <= maxY; row++ {
-	//	for col := minX; col <= maxX; col++ {
-	//		if v, exists := board[lib.Position{row, col}]; exists {
-	//			switch v {
-	//			case empty:
-	//				fmt.Print(" ")
-	//			case wall:
-	//				fmt.Print("|")
-	//			case block:
-	//				fmt.Print("#")
-	//			case paddle:
-	//				fmt.Print("_")
-	//			case ball:
-	//				fmt.Print("O")
-	//			}
-	//		} else {
-	//			fmt.Print(" ")
-	//		}
-	//	}
-	//	fmt.Println()
-	//}
 
 	sum := 0
 	for _, v := range board {
@@ -76,11 +53,12 @@ func fs(reader io.Reader) int {
 	return sum
 }
 
-func run(codes []int) *State {
+func run(codes []int, preAction func(*State)) *State {
 	state := &State{
 		memory: append(codes, make([]int, 1000)...),
 		offset: 0,
 		over:   false,
+		board:  make(map[lib.Position]int),
 		//debug:  true,
 	}
 	state.functions = map[int]Apply{
@@ -94,6 +72,10 @@ func run(codes []int) *State {
 		8:  state.eq,
 		9:  state.rlt,
 		99: state.exit,
+	}
+
+	if preAction != nil {
+		preAction(state)
 	}
 
 	for !state.over {
@@ -148,10 +130,16 @@ type State struct {
 	functions    map[int]Apply
 	relativeBase int
 
-	output int
-	x      []int
-	y      []int
-	tiles  []int
+	output      int
+	x           []int
+	y           []int
+	tiles       []int
+	minX        int
+	minY        int
+	maxX        int
+	maxY        int
+	board       map[lib.Position]int
+	latestScore int
 }
 
 type Context struct {
@@ -252,6 +240,7 @@ func (s *State) in(ctx Context) {
 	if s.debug {
 		fmt.Println("in", ctx.Until(1), s.memory[s.offset+1])
 	}
+	s.printGame()
 
 	s.set(ctx, 0, 0)
 	s.offset += 2
@@ -269,11 +258,50 @@ func (s *State) out(ctx Context) {
 	case 1:
 		s.y = append(s.y, v)
 	case 2:
-		s.tiles = append(s.tiles, v)
+		if s.x[len(s.x)-1] == 1 && s.y[len(s.y)-1] == 0 {
+			s.latestScore = v
+			s.x = s.x[:len(s.x)-1]
+			s.y = s.y[:len(s.y)-1]
+		} else {
+			x := s.x[len(s.x)-1]
+			y := s.y[len(s.y)-1]
+			s.minX = lib.Min(s.minX, x)
+			s.maxX = lib.Max(s.maxX, x)
+			s.minY = lib.Min(s.minY, y)
+			s.maxY = lib.Max(s.maxY, y)
+			s.board[lib.Position{y, x}] = v
+			s.tiles = append(s.tiles, v)
+		}
 	}
 
 	s.output++
 	s.offset += 2
+}
+
+func (s *State) printGame() {
+	fmt.Printf("Score: %v\n", s.latestScore)
+	for row := s.minY; row <= s.maxY; row++ {
+		for col := s.minX; col <= s.maxX; col++ {
+			if v, exists := s.board[lib.Position{row, col}]; exists {
+				switch v {
+				case empty:
+					fmt.Print(" ")
+				case wall:
+					fmt.Print("|")
+				case block:
+					fmt.Print("#")
+				case paddle:
+					fmt.Print("_")
+				case ball:
+					fmt.Print("O")
+				}
+			} else {
+				fmt.Print(" ")
+			}
+		}
+		fmt.Println()
+	}
+	fmt.Println()
 }
 
 func (s *State) jnz(ctx Context) {
@@ -337,4 +365,14 @@ func (s *State) rlt(ctx Context) {
 
 func (s *State) exit(ctx Context) {
 	s.over = true
+}
+
+func fs2(reader io.Reader) int {
+	codes := lib.StringsToInts(strings.Split(lib.ReaderToString(reader), ","))
+
+	run(codes, func(state *State) {
+		state.memory[0] = 2
+	})
+
+	return 0
 }
