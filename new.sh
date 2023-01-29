@@ -8,7 +8,6 @@ if [ "$1" = "go" ]; then
   go get github.com/teivah/advent-of-code@v0.0.12
   cd ../..
 fi
-curl --cookie "session=$ADVENT_OF_CODE_COOKIE" https://adventofcode.com/$2/day/$3/input -o $2/day$3-$1/tmp.txt
-tr -d "\n" < $2/day$3-$1/tmp.txt > $2/day$3-$1/input.txt
-rm $2/day$3-$1/tmp.txt
+curl --cookie "session=$ADVENT_OF_CODE_COOKIE" https://adventofcode.com/$2/day/$3/input -o $2/day$3-$1/input.txt
+perl -i -pe 'chomp if eof' $2/day$3-$1/input.txt
 idea $2/day$3-$1
