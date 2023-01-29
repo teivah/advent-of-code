@@ -17,19 +17,19 @@ func fs1(input io.Reader) int {
 		transformations[t.to.name] = t
 	}
 
-	v, _ := min(Unit{"FUEL", 1}, transformations, make(map[string]Unit))
+	v := min(Unit{"FUEL", 1}, transformations, make(map[string]Unit))
 	return v
 }
 
-func min(unit Unit, transformations map[string]Transformation, remaining map[string]Unit) (int, int) {
+func min(unit Unit, transformations map[string]Transformation, remaining map[string]Unit) int {
 	if unit.name == "ORE" {
-		return unit.count, 0
+		return unit.count
 	}
 
 	if v, exists := remaining[unit.name]; exists {
 		if v.count >= unit.count {
 			del(remaining, v.count-unit.count, unit.name)
-			return 0, 0
+			return 0
 		}
 	}
 
@@ -44,16 +44,15 @@ func min(unit Unit, transformations map[string]Transformation, remaining map[str
 	// We need to repeat the process n times
 
 	v := n*t.to.count - unit.count
-	remaining = cpy(remaining)
 
 	sum := 0
 	for _, needed := range t.from {
-		count, r := min(needed, transformations, remaining)
-		add(remaining, r, needed.name)
+		count := min(needed, transformations, remaining)
 		sum += count
 	}
 
-	return sum, v
+	add(remaining, v, unit.name)
+	return sum
 }
 
 func cpy(remaining map[string]Unit) map[string]Unit {

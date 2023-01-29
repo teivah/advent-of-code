@@ -25,6 +25,10 @@ func TestFs1Test(t *testing.T) {
 4 C, 1 A => 1 CA
 2 AB, 3 BC, 4 CA => 1 FUEL`)))
 
+	//	assert.Equal(t, 10, fs1(strings.NewReader(`10 ORE => 10 A
+	//8 A => 1 B
+	//2 A, 1 B => 1 FUEL`)))
+
 	//assert.Equal(t, 10, fs1(strings.NewReader(`10 ORE => 1 FUEL`)))
 	//assert.Equal(t, 100, fs1(strings.NewReader(`10 ORE => 10 A
 	//100 A => 1 FUEL`)))
