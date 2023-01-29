@@ -218,9 +218,9 @@ func fs2(input io.Reader) int {
 		transformations[t.to.name] = t
 	}
 
-	one := min("FUEL", 1, transformations)
 	const v = 1_000_000_000_000
-	return int(
-		(float64(v) / float64(one)) *
-			float64(v) / float64(min("FUEL", v/one, transformations)))
+	one := min("FUEL", 1, transformations)
+	sec := min("FUEL", v/one, transformations)
+
+	return int((float64(1000000000000) / float64(one)) * (float64(1000000000000) / float64(sec)))
 }
