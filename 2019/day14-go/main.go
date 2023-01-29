@@ -17,42 +17,92 @@ func fs1(input io.Reader) int {
 		transformations[t.to.name] = t
 	}
 
-	v := min(Unit{"FUEL", 1}, transformations, make(map[string]Unit))
+	v := min("FUEL", 1, transformations)
 	return v
 }
 
-func min(unit Unit, transformations map[string]Transformation, remaining map[string]Unit) int {
-	if unit.name == "ORE" {
-		return unit.count
-	}
-
-	if v, exists := remaining[unit.name]; exists {
-		if v.count >= unit.count {
-			del(remaining, v.count-unit.count, unit.name)
-			return 0
+func min(name string, count int, transformations map[string]Transformation) int {
+	inDegree := make(map[string]int)
+	for k, t := range transformations {
+		inDegree[k] = 0
+		for _, v := range t.from {
+			inDegree[v.name] = 0
 		}
 	}
 
-	t := transformations[unit.name]
+	for _, t := range transformations {
+		for _, v := range t.from {
+			inDegree[v.name]++
+		}
+	}
 
+	var q []string
+	for k, v := range inDegree {
+		if v == 0 {
+			q = append(q, k)
+		}
+	}
+
+	level := 0
+	levels := make(map[string]int)
+	for len(q) != 0 {
+		v := len(q)
+		for i := 0; i < v; i++ {
+			s := q[0]
+			q = q[1:]
+			levels[s] = level
+
+			for _, unit := range transformations[s].from {
+				inDegree[unit.name]--
+				if inDegree[unit.name] == 0 {
+					q = append(q, unit.name)
+				}
+			}
+		}
+		level++
+	}
+
+	m := needed(name, count, transformations)
+
+	level = 1
+	for {
+		m2 := make(map[string]int)
+		for name, count := range m {
+			if levels[name] != level {
+				m2[name] += count
+				continue
+			}
+
+			m3 := needed(name, count, transformations)
+			for k, v := range m3 {
+				m2[k] += v
+			}
+		}
+
+		m = m2
+		if len(m) == 1 {
+			if v, exists := m["ORE"]; exists {
+				return v
+			}
+		}
+		level++
+	}
+}
+
+func needed(name string, count int, transformations map[string]Transformation) map[string]int {
+	t := transformations[name]
 	n := 1
 	for ; ; n++ {
-		if n*t.to.count >= unit.count {
+		if n*t.to.count >= count {
 			break
 		}
 	}
-	// We need to repeat the process n times
 
-	v := n*t.to.count - unit.count
-
-	sum := 0
-	for _, needed := range t.from {
-		count := min(needed, transformations, remaining)
-		sum += count
+	sub := make(map[string]int)
+	for _, unit := range t.from {
+		sub[unit.name] += unit.count * n
 	}
-
-	add(remaining, v, unit.name)
-	return sum
+	return sub
 }
 
 func cpy(remaining map[string]Unit) map[string]Unit {
@@ -162,10 +212,15 @@ func (u Unit) String() string {
 
 func fs2(input io.Reader) int {
 	scanner := bufio.NewScanner(input)
+	transformations := make(map[string]Transformation)
 	for scanner.Scan() {
-		line := scanner.Text()
-		_ = line
+		t := toTransformation(scanner.Text())
+		transformations[t.to.name] = t
 	}
 
-	return 42
+	one := min("FUEL", 1, transformations)
+	const v = 1_000_000_000_000
+	return int(
+		(float64(v) / float64(one)) *
+			float64(v) / float64(min("FUEL", v/one, transformations)))
 }
