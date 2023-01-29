@@ -40,6 +40,7 @@
 * [Day 10](https://adventofcode.com/2019/day/10): [Go](2019/day10-go/main.go)
 * [Day 11](https://adventofcode.com/2019/day/11): [Go](2019/day11-go/main.go)
 * [Day 12](https://adventofcode.com/2019/day/12): [Go](2019/day12-go/main.go)
+* [Day 13](https://adventofcode.com/2019/day/13): [Go](2019/day13-go/main.go)
 
 ## 2018
 

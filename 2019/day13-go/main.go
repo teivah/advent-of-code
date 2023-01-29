@@ -15,6 +15,10 @@ const (
 	block  = 2
 	paddle = 3
 	ball   = 4
+
+	paddleDirectionLeft    = -1
+	paddleDirectionNeutral = 0
+	paddleDirectionRight   = 1
 )
 
 func fs1(reader io.Reader) int {
@@ -130,16 +134,21 @@ type State struct {
 	functions    map[int]Apply
 	relativeBase int
 
-	output      int
-	x           []int
-	y           []int
-	tiles       []int
-	minX        int
-	minY        int
-	maxX        int
-	maxY        int
-	board       map[lib.Position]int
-	latestScore int
+	output         int
+	x              []int
+	y              []int
+	tiles          []int
+	minX           int
+	minY           int
+	maxX           int
+	maxY           int
+	board          map[lib.Position]int
+	latestScore    int
+	ball           lib.Position
+	ballDirectionX lib.Direction
+	ballDirectionY lib.Direction
+	paddle         lib.Position
+	nextXMove      int
 }
 
 type Context struct {
@@ -242,7 +251,7 @@ func (s *State) in(ctx Context) {
 	}
 	s.printGame()
 
-	s.set(ctx, 0, 0)
+	s.set(ctx, 0, s.nextXMove)
 	s.offset += 2
 }
 
@@ -258,7 +267,7 @@ func (s *State) out(ctx Context) {
 	case 1:
 		s.y = append(s.y, v)
 	case 2:
-		if s.x[len(s.x)-1] == 1 && s.y[len(s.y)-1] == 0 {
+		if s.x[len(s.x)-1] == -1 && s.y[len(s.y)-1] == 0 {
 			s.latestScore = v
 			s.x = s.x[:len(s.x)-1]
 			s.y = s.y[:len(s.y)-1]
@@ -271,6 +280,61 @@ func (s *State) out(ctx Context) {
 			s.maxY = lib.Max(s.maxY, y)
 			s.board[lib.Position{y, x}] = v
 			s.tiles = append(s.tiles, v)
+
+			switch v {
+			case paddle:
+				s.paddle = lib.Position{y, x}
+			case ball:
+				newBall := lib.Position{y, x}
+				if newBall.Col < s.ball.Col {
+					s.ballDirectionX = lib.Left
+				} else if newBall.Col > s.ball.Col {
+					s.ballDirectionX = lib.Right
+				}
+				if newBall.Row < s.ball.Row {
+					s.ballDirectionY = lib.Up
+				} else if newBall.Row > s.ball.Row {
+					s.ballDirectionY = lib.Down
+				}
+				s.ball = newBall
+
+				if s.ballDirectionY == lib.Up {
+					if s.ball.Col < s.paddle.Col {
+						s.nextXMove = paddleDirectionLeft
+					} else if s.ball.Col > s.paddle.Col {
+						s.nextXMove = paddleDirectionRight
+					} else {
+						s.nextXMove = paddleDirectionNeutral
+					}
+				} else {
+					if s.ball.Col < s.paddle.Col {
+						// Ball on the left
+						if s.ballDirectionX == lib.Left {
+							s.nextXMove = paddleDirectionLeft
+						} else {
+							if s.ball.Col+1 == s.paddle.Col {
+								s.nextXMove = paddleDirectionNeutral
+							} else {
+								s.nextXMove = paddleDirectionLeft
+							}
+						}
+					} else if s.ball.Col > s.paddle.Col {
+						// Ball on the right
+						s.nextXMove = 1
+						if s.ballDirectionX == lib.Right {
+							s.nextXMove = paddleDirectionRight
+						} else {
+							if s.ball.Col-1 == s.paddle.Col {
+								s.nextXMove = paddleDirectionNeutral
+							} else {
+								s.nextXMove = paddleDirectionRight
+							}
+						}
+					} else if s.ball.Col == s.paddle.Col {
+						s.nextXMove = paddleDirectionNeutral
+					}
+				}
+			}
 		}
 	}
 
@@ -301,6 +365,7 @@ func (s *State) printGame() {
 		}
 		fmt.Println()
 	}
+	fmt.Printf("%v\n", s.paddle.Col)
 	fmt.Println()
 }
 
@@ -370,9 +435,9 @@ func (s *State) exit(ctx Context) {
 func fs2(reader io.Reader) int {
 	codes := lib.StringsToInts(strings.Split(lib.ReaderToString(reader), ","))
 
-	run(codes, func(state *State) {
+	state := run(codes, func(state *State) {
 		state.memory[0] = 2
 	})
 
-	return 0
+	return state.latestScore
 }
