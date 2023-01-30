@@ -99,6 +99,10 @@ func RuneToInt(r rune) int {
 	return int(r - '0')
 }
 
+func IntToRune(i int) rune {
+	s := strconv.Itoa(i)
+	return []rune(s)[0]
+}
 
 // ---------- Math ----------
 
