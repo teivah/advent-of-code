@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"io"
 	"strings"
 	"unicode"
@@ -12,6 +11,22 @@ import (
 func fs1(input io.Reader) int {
 	board := toBoard(lib.ReaderToStrings(input))
 	return board.bfs()
+}
+
+type Key struct {
+	visited  int
+	position lib.Position
+}
+
+func toKey(position lib.Position, remainingKeys map[rune]bool) Key {
+	v := 0
+	for r := range remainingKeys {
+		v += 1 << int(r-'a')
+	}
+	return Key{
+		visited:  v,
+		position: position,
+	}
 }
 
 func (b *Board) bfs() int {
@@ -28,18 +43,24 @@ func (b *Board) bfs() int {
 			position:      b.position,
 			remainingKeys: remainingKeys,
 			closedDoors:   closedDoors,
-			visited:       make(map[lib.Position]bool),
+			visited:       map[lib.Position]bool{b.position: true},
 		},
 	}
+
+	global := make(map[Key]int)
 
 	for len(q) != 0 {
 		e := q[0]
 		q = q[1:]
 
-		if e.visited[e.position] {
-			continue
+		k := toKey(e.position, e.remainingKeys)
+		if distance, exists := global[k]; exists {
+			if distance <= e.distance {
+				continue
+			}
 		}
-		e.visited[e.position] = true
+		global[k] = e.distance
+		//fmt.Println(len(q)) // 611
 
 		r := b.grid[e.position]
 		if isKey(r) {
@@ -58,24 +79,32 @@ func (b *Board) bfs() int {
 			}
 		}
 
-		up := e.position.Delta(-1, 0)
-		if b.exists(up) && !e.visited[up] {
-			q = append(q, e.new(up))
+		pos := e.position.Delta(-1, 0)
+		if b.exists(pos) && !e.visited[pos] {
+			e := e.new(pos)
+			e.moveUntilIntersection(b, lib.Up)
+			q = append(q, e)
 		}
 
-		down := e.position.Delta(1, 0)
-		if b.exists(down) && !e.visited[down] {
-			q = append(q, e.new(down))
+		pos = e.position.Delta(1, 0)
+		if b.exists(pos) && !e.visited[pos] {
+			e := e.new(pos)
+			e.moveUntilIntersection(b, lib.Down)
+			q = append(q, e)
 		}
 
-		left := e.position.Delta(0, -1)
-		if b.exists(left) && !e.visited[left] {
-			q = append(q, e.new(left))
+		pos = e.position.Delta(0, -1)
+		if b.exists(pos) && !e.visited[pos] {
+			e := e.new(pos)
+			e.moveUntilIntersection(b, lib.Left)
+			q = append(q, e)
 		}
 
-		right := e.position.Delta(0, 1)
-		if b.exists(right) && !e.visited[right] {
-			q = append(q, e.new(right))
+		pos = e.position.Delta(0, 1)
+		if b.exists(pos) && !e.visited[pos] {
+			e := e.new(pos)
+			e.moveUntilIntersection(b, lib.Right)
+			q = append(q, e)
 		}
 	}
 
@@ -93,6 +122,50 @@ type Entry struct {
 	closedDoors   map[rune]bool
 	distance      int
 	visited       map[lib.Position]bool
+}
+
+func (e *Entry) moveUntilIntersection(b *Board, dir lib.Direction) {
+	for {
+		if e.visited[e.position] {
+			break
+		}
+		e.visited[e.position] = true
+		if b.isIntersection(e.position) {
+			break
+		}
+
+		r := b.grid[e.position]
+		if isKey(r) || isDoor(r) {
+			break
+		}
+
+		pos := e.position.Move(dir, 1)
+
+		_, exists := b.grid[pos]
+		if !exists {
+			break
+		}
+
+		e.position = pos
+		e.distance++
+	}
+}
+
+func (b *Board) isIntersection(pos lib.Position) bool {
+	sum := 0
+	if b.exists(pos.Delta(-1, 0)) {
+		sum++
+	}
+	if b.exists(pos.Delta(1, 0)) {
+		sum++
+	}
+	if b.exists(pos.Delta(0, -1)) {
+		sum++
+	}
+	if b.exists(pos.Delta(0, 1)) {
+		sum++
+	}
+	return sum > 2
 }
 
 func (e Entry) new(pos lib.Position) Entry {
@@ -122,6 +195,7 @@ type Board struct {
 	doors    map[rune]lib.Position
 	keys     map[lib.Position]rune
 	position lib.Position
+	maxKey   int
 }
 
 func toBoard(lines []string) *Board {
@@ -146,6 +220,7 @@ func toBoard(lines []string) *Board {
 			} else if isKey(r) {
 				grid[pos] = r
 				keys[pos] = r
+				board.maxKey = lib.Max(board.maxKey, int(r-'a'))
 			} else if isDoor(r) {
 				grid[pos] = r
 				doors[r] = pos
@@ -175,11 +250,6 @@ const (
 )
 
 func fs2(input io.Reader) int {
-	scanner := bufio.NewScanner(input)
-	for scanner.Scan() {
-		line := scanner.Text()
-		_ = line
-	}
-
-	return 42
+	board := toBoard(lib.ReaderToStrings(input))
+	return board.bfs()
 }
