@@ -20,6 +20,7 @@ func fs1(input io.Reader, phases int) string {
 			sb.WriteRune(r)
 		}
 		s = sb.String()
+		_ = s
 	}
 	return s[:8]
 }
@@ -46,30 +47,31 @@ func to(pattern []int, i int, s string) rune {
 	return lib.IntToRune(lib.Abs(sum % 10))
 }
 
-func fs2(input io.Reader, phases, repeat int) string {
+func fs2(input io.Reader, phases, repeat int) []int {
 	s := lib.ReaderToString(input)
-	//size := len(s)
 	offset := lib.StringToInt(s[:7])
-
-	pattern := []int{0, 1, 0, -1}
+	d := 8
 	s = strings.Repeat(s, repeat)
 
-	for phase := 0; phase < phases; phase++ {
-		sb := strings.Builder{}
-		for i := 0; i < len(s); i++ {
-			r := to(pattern, i, s)
-			sb.WriteRune(r)
-		}
-		s = sb.String()
+	v := toInts(s)
+	for i := 0; i < phases; i++ {
+		do(v, offset)
 	}
+	return v[offset : offset+d]
+}
 
-	//before := 0
-	//for i := 0; i < repeat; i++ {
-	//	x := s[before : before+size]
-	//	fmt.Println(i, x[offset:offset+8])
-	//	before = before + size
-	//}
+func toInts(s string) []int {
+	res := make([]int, len(s))
+	for i := 0; i < len(s); i++ {
+		res[i] = lib.RuneToInt(rune(s[i]))
+	}
+	return res
+}
 
-	return s[offset : offset+8]
-	//return ""
+func do(v []int, offset int) {
+	sum := 0
+	for i := len(v) - 1; i >= offset; i-- {
+		sum += v[i]
+		v[i] = (sum) % 10
+	}
 }
