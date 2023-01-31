@@ -167,15 +167,6 @@ func (b *Board) bfs4() int {
 		}
 		global[k] = e.distance
 
-		/*
-			0 [row=3, col=5 row=3, col=7 row=5, col=5 row=5, col=7]
-			1 [row=2, col=5 row=3, col=7 row=5, col=5 row=5, col=7]
-			3 [row=2, col=5 row=1, col=7 row=5, col=5 row=5, col=7]
-			5 [row=2, col=5 row=1, col=9 row=5, col=5 row=5, col=7]
-			6 [row=2, col=5 row=1, col=9 row=5, col=5 row=6, col=7]
-			7 [row=2, col=5 row=1, col=9 row=5, col=5 row=7, col=7]
-			8 [row=3, col=5 row=1, col=9 row=5, col=5 row=7, col=7]
-		*/
 		//fmt.Println(e.distance, e.positions)
 
 		for posID := 0; posID < len(e.positions); posID++ {
