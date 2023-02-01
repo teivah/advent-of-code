@@ -5,6 +5,7 @@ import (
 	"strings"
 	"unicode"
 
+	pq "github.com/emirpasic/gods/queues/priorityqueue"
 	lib "github.com/teivah/advent-of-code"
 )
 
@@ -132,7 +133,7 @@ func (b *Board) bfs() int {
 	return -1
 }
 
-func (b *Board) bfs4() int {
+func (b *Board) best() int {
 	remainingKeys := make(map[rune]bool)
 	for _, r := range b.keys {
 		remainingKeys[r] = true
@@ -141,23 +142,35 @@ func (b *Board) bfs4() int {
 	for r := range b.doors {
 		closedDoors[r] = true
 	}
-	visited := make(map[lib.Position]bool)
-	for _, position := range b.positions {
-		visited[position] = true
-	}
-	e4 := Entry4{
+	q := pq.NewWith(func(a, b interface{}) int {
+		priorityA := a.(Entry4).distance
+		priorityB := b.(Entry4).distance
+		return priorityA - priorityB
+	})
+	q.Enqueue(Entry4{
 		positions:     b.positions,
 		remainingKeys: remainingKeys,
 		closedDoors:   closedDoors,
-		visited:       visited,
-	}
-	q := []Entry4{e4}
+	})
 
 	global := make(map[Key4]int)
 
-	for len(q) != 0 {
-		e := q[0]
-		q = q[1:]
+	buffer := 1_000
+	found := false
+	best := lib.NewMiner()
+
+	for !q.Empty() {
+		if found {
+			buffer--
+			if buffer == 0 {
+				return best.Get()
+			}
+		}
+
+		x, _ := q.Dequeue()
+		e := x.(Entry4)
+
+		//fmt.Println(e.distance, e.positions)
 
 		k := toKeys(e.positions, e.remainingKeys)
 		if distance, exists := global[k]; exists {
@@ -167,108 +180,103 @@ func (b *Board) bfs4() int {
 		}
 		global[k] = e.distance
 
-		//fmt.Println(e.distance, e.positions)
-
-		for posID := 0; posID < len(e.positions); posID++ {
-			pos := e.positions[posID].Delta(-1, 0)
-			if b.exists(pos) && !e.visited[pos] {
-				e := e.new(posID, pos)
-				e.moveUntilIntersectionOrKeyOrDoor(posID, b, lib.Up)
-
-				r := b.grid[e.positions[posID]]
-				if isKey(r) {
-					if e.remainingKeys[r] {
-						delete(e.remainingKeys, r)
-						if len(e.remainingKeys) == 0 {
-							return e.distance
-						}
-
-						delete(e.closedDoors, unicode.ToUpper(r))
-						e.visited = make(map[lib.Position]bool)
-					}
+		for i := 0; i < len(b.positions); i++ {
+			keys := b.accessibleKeys(e.closedDoors, e.positions[i])
+			for r, keyloc := range keys {
+				if !e.remainingKeys[r] {
+					continue
 				}
-				if isDoor(r) && e.closedDoors[r] {
-
-				} else {
-					q = append(q, e)
+				e := e.new(i, keyloc.pos, keyloc.distance)
+				delete(e.remainingKeys, r)
+				if len(e.remainingKeys) == 0 {
+					//return e.distance
+					best.Add(e.distance)
+					found = true
+					continue
 				}
-			}
-
-			pos = e.positions[posID].Delta(1, 0)
-			if b.exists(pos) && !e.visited[pos] {
-				e := e.new(posID, pos)
-				e.moveUntilIntersectionOrKeyOrDoor(posID, b, lib.Down)
-
-				r := b.grid[e.positions[posID]]
-				if isKey(r) {
-					if e.remainingKeys[r] {
-						delete(e.remainingKeys, r)
-						if len(e.remainingKeys) == 0 {
-							return e.distance
-						}
-
-						delete(e.closedDoors, unicode.ToUpper(r))
-						e.visited = make(map[lib.Position]bool)
-					}
-				}
-				if isDoor(r) && e.closedDoors[r] {
-
-				} else {
-					q = append(q, e)
-				}
-			}
-
-			pos = e.positions[posID].Delta(0, -1)
-			if b.exists(pos) && !e.visited[pos] {
-				e := e.new(posID, pos)
-				e.moveUntilIntersectionOrKeyOrDoor(posID, b, lib.Left)
-
-				r := b.grid[e.positions[posID]]
-				if isKey(r) {
-					if e.remainingKeys[r] {
-						delete(e.remainingKeys, r)
-						if len(e.remainingKeys) == 0 {
-							return e.distance
-						}
-
-						delete(e.closedDoors, unicode.ToUpper(r))
-						e.visited = make(map[lib.Position]bool)
-					}
-				}
-				if isDoor(r) && e.closedDoors[r] {
-
-				} else {
-					q = append(q, e)
-				}
-			}
-
-			pos = e.positions[posID].Delta(0, 1)
-			if b.exists(pos) && !e.visited[pos] {
-				e := e.new(posID, pos)
-				e.moveUntilIntersectionOrKeyOrDoor(posID, b, lib.Right)
-
-				r := b.grid[e.positions[posID]]
-				if isKey(r) {
-					if e.remainingKeys[r] {
-						delete(e.remainingKeys, r)
-						if len(e.remainingKeys) == 0 {
-							return e.distance
-						}
-
-						delete(e.closedDoors, unicode.ToUpper(r))
-						e.visited = make(map[lib.Position]bool)
-					}
-				}
-				if isDoor(r) && e.closedDoors[r] {
-
-				} else {
-					q = append(q, e)
-				}
+				delete(e.closedDoors, unicode.ToUpper(r))
+				q.Enqueue(e)
 			}
 		}
 	}
 
 	return -1
+}
+
+type KeyLocation struct {
+	distance int
+	pos      lib.Position
+}
+
+func (b *Board) accessibleKeys(closedDoor map[rune]bool, position lib.Position) map[rune]KeyLocation {
+	type State struct {
+		distance int
+		position lib.Position
+	}
+	q := []State{{position: position}}
+
+	visited := make(map[lib.Position]int)
+	keys := make(map[rune]KeyLocation)
+
+	for len(q) != 0 {
+		s := q[0]
+		q = q[1:]
+
+		if v, exists := visited[s.position]; exists {
+			if v <= s.distance {
+				continue
+			}
+		}
+		visited[s.position] = s.distance
+
+		r := b.grid[s.position]
+		if isKey(r) {
+			keys[r] = KeyLocation{s.distance, s.position}
+		}
+
+		pos := s.position.Delta(-1, 0)
+		if r, exists := b.grid[pos]; exists {
+			if !isDoor(r) {
+				q = append(q, State{s.distance + 1, pos})
+			} else if door, exists := b.doorsPosition[pos]; exists {
+				if !closedDoor[door] {
+					q = append(q, State{s.distance + 1, pos})
+				}
+			}
+		}
+		pos = s.position.Delta(1, 0)
+		if r, exists := b.grid[pos]; exists {
+			if !isDoor(r) {
+				q = append(q, State{s.distance + 1, pos})
+			} else if door, exists := b.doorsPosition[pos]; exists {
+				if !closedDoor[door] {
+					q = append(q, State{s.distance + 1, pos})
+				}
+			}
+		}
+		pos = s.position.Delta(0, -1)
+		if r, exists := b.grid[pos]; exists {
+			if !isDoor(r) {
+				q = append(q, State{s.distance + 1, pos})
+			} else if door, exists := b.doorsPosition[pos]; exists {
+				if !closedDoor[door] {
+					q = append(q, State{s.distance + 1, pos})
+				}
+			}
+		}
+		pos = s.position.Delta(0, 1)
+		if r, exists := b.grid[pos]; exists {
+			if !isDoor(r) {
+				q = append(q, State{s.distance + 1, pos})
+			} else if door, exists := b.doorsPosition[pos]; exists {
+				if !closedDoor[door] {
+					q = append(q, State{s.distance + 1, pos})
+				}
+			}
+		}
+	}
+
+	return keys
 }
 
 func (b *Board) exists(pos lib.Position) bool {
@@ -289,7 +297,6 @@ type Entry4 struct {
 	remainingKeys map[rune]bool
 	closedDoors   map[rune]bool
 	distance      int
-	visited       map[lib.Position]bool
 }
 
 func (e *Entry) moveUntilIntersection(b *Board, dir lib.Direction) {
@@ -319,33 +326,6 @@ func (e *Entry) moveUntilIntersection(b *Board, dir lib.Direction) {
 	}
 }
 
-func (e *Entry4) moveUntilIntersectionOrKeyOrDoor(i int, b *Board, dir lib.Direction) {
-	for {
-		if e.visited[e.positions[i]] {
-			break
-		}
-		e.visited[e.positions[i]] = true
-		if b.isIntersection(e.positions[i]) {
-			break
-		}
-
-		r := b.grid[e.positions[i]]
-		if isKey(r) || isDoor(r) {
-			break
-		}
-
-		pos := e.positions[i].Move(dir, 1)
-
-		_, exists := b.grid[pos]
-		if !exists {
-			break
-		}
-
-		e.positions[i] = pos
-		e.distance++
-	}
-}
-
 func (b *Board) isIntersection(pos lib.Position) bool {
 	sum := 0
 	if b.exists(pos.Delta(-1, 0)) {
@@ -363,18 +343,14 @@ func (b *Board) isIntersection(pos lib.Position) bool {
 	return sum > 2
 }
 
-func (e Entry4) new(i int, pos lib.Position) Entry4 {
+func (e Entry4) new(i int, pos lib.Position, distance int) Entry4 {
 	remainingKeys := make(map[rune]bool, len(e.remainingKeys))
 	closedDoors := make(map[rune]bool, len(e.closedDoors))
-	visited := make(map[lib.Position]bool, len(e.visited))
 	for k, v := range e.remainingKeys {
 		remainingKeys[k] = v
 	}
 	for k, v := range e.closedDoors {
 		closedDoors[k] = v
-	}
-	for k, v := range e.visited {
-		visited[k] = v
 	}
 
 	positions := make([]lib.Position, len(e.positions))
@@ -387,8 +363,7 @@ func (e Entry4) new(i int, pos lib.Position) Entry4 {
 		positions:     positions,
 		remainingKeys: remainingKeys,
 		closedDoors:   closedDoors,
-		visited:       visited,
-		distance:      e.distance + 1,
+		distance:      e.distance + distance,
 	}
 }
 
@@ -415,12 +390,13 @@ func (e Entry) new(pos lib.Position) Entry {
 }
 
 type Board struct {
-	grid      map[lib.Position]rune
-	doors     map[rune]lib.Position
-	keys      map[lib.Position]rune
-	position  lib.Position
-	positions []lib.Position
-	maxKey    int
+	grid          map[lib.Position]rune
+	doors         map[rune]lib.Position
+	doorsPosition map[lib.Position]rune
+	keys          map[lib.Position]rune
+	position      lib.Position
+	positions     []lib.Position
+	maxKey        int
 }
 
 func toBoard(lines []string) *Board {
@@ -465,6 +441,7 @@ func toBoard(lines []string) *Board {
 func toBoard4(lines []string) *Board {
 	grid := make(map[lib.Position]rune)
 	doors := make(map[rune]lib.Position)
+	doorsPosition := make(map[lib.Position]rune)
 	keys := make(map[lib.Position]rune)
 	row := -1
 	board := &Board{
@@ -492,6 +469,7 @@ func toBoard4(lines []string) *Board {
 			} else if isDoor(r) {
 				grid[pos] = r
 				doors[r] = pos
+				doorsPosition[pos] = r
 			} else {
 				panic(r)
 			}
@@ -501,6 +479,7 @@ func toBoard4(lines []string) *Board {
 	board.grid = grid
 	board.doors = doors
 	board.keys = keys
+	board.doorsPosition = doorsPosition
 
 	return board
 }
@@ -519,5 +498,5 @@ const (
 
 func fs2(input io.Reader) int {
 	board := toBoard4(lib.ReaderToStrings(input))
-	return board.bfs4()
+	return board.best()
 }

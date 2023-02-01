@@ -51,46 +51,46 @@ func TestFs1Input(t *testing.T) {
 }
 
 func TestFs2Test(t *testing.T) {
-	//assert.Equal(t, 8, fs2(strings.NewReader(
-	//	`#######
-	//       #a.#Cd#
-	//       ##@#@##
-	//       #######
-	//       ##@#@##
-	//       #cB#Ab#
-	//       #######`)))
+	assert.Equal(t, 8, fs2(strings.NewReader(
+		`#######
+	#a.#Cd#
+	##@#@##
+	#######
+	##@#@##
+	#cB#Ab#
+	#######`)))
 
-	//	assert.Equal(t, 24, fs2(strings.NewReader(
-	//		`###############
-	//#d.ABC.#.....a#
-	//######@#@######
-	//###############
-	//######@#@######
-	//#b.....#.....c#
-	//###############`)))
+	assert.Equal(t, 24, fs2(strings.NewReader(
+		`###############
+	#d.ABC.#.....a#
+	######@#@######
+	###############
+	######@#@######
+	#b.....#.....c#
+	###############`)))
 
-	//	assert.Equal(t, 32, fs2(strings.NewReader(
-	//		`#############
-	//#DcBa.#.GhKl#
-	//#.###@#@#I###
-	//#e#d#####j#k#
-	//###C#@#@###J#
-	//#fEbA.#.FgHi#
-	//#############`)))
+	assert.Equal(t, 32, fs2(strings.NewReader(
+		`#############
+	#DcBa.#.GhKl#
+	#.###@#@#I###
+	#e#d#####j#k#
+	###C#@#@###J#
+	#fEbA.#.FgHi#
+	#############`)))
 
 	assert.Equal(t, 72, fs2(strings.NewReader(`#############
-#g#f.D#..h#l#
-#F###e#E###.#
-#dCba@#@BcIJ#
-#############
-#nK.L@#@G...#
-#M###N#H###.#
-#o#m..#i#jk.#
-#############`)))
+	#g#f.D#..h#l#
+	#F###e#E###.#
+	#dCba@#@BcIJ#
+	#############
+	#nK.L@#@G...#
+	#M###N#H###.#
+	#o#m..#i#jk.#
+	#############`)))
 }
 
 func TestFs2Input(t *testing.T) {
 	f, err := os.Open("input2.txt")
 	require.NoError(t, err)
-	assert.Equal(t, 42, fs2(f))
+	assert.Equal(t, 2348, fs2(f))
 }
