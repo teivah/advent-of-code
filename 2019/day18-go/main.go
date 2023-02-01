@@ -155,22 +155,16 @@ func (b *Board) best() int {
 
 	global := make(map[Key4]int)
 
-	buffer := 1_000
 	found := false
 	best := lib.NewMiner()
 
 	for !q.Empty() {
-		if found {
-			buffer--
-			if buffer == 0 {
-				return best.Get()
-			}
-		}
-
 		x, _ := q.Dequeue()
 		e := x.(Entry4)
 
-		//fmt.Println(e.distance, e.positions)
+		if e.distance >= best.Get() {
+			continue
+		}
 
 		k := toKeys(e.positions, e.remainingKeys)
 		if distance, exists := global[k]; exists {
@@ -189,7 +183,7 @@ func (b *Board) best() int {
 				e := e.new(i, keyloc.pos, keyloc.distance)
 				delete(e.remainingKeys, r)
 				if len(e.remainingKeys) == 0 {
-					//return e.distance
+					// As we use a priority queue, we shouldn't return directly but instead exhaust the queue
 					best.Add(e.distance)
 					found = true
 					continue
@@ -200,6 +194,9 @@ func (b *Board) best() int {
 		}
 	}
 
+	if found {
+		return best.Get()
+	}
 	return -1
 }
 
