@@ -26,6 +26,34 @@
 * [Day 24](https://adventofcode.com/2022/day/24): [Go](2022/day24-go/main.go)
 * [Day 25](https://adventofcode.com/2022/day/25): [Go](2022/day25-go/main.go)
 
+## 2020
+
+* [Day 1](https://adventofcode.com/2020/day/1): [Go](2020/day1-go/main.go)
+* [Day 2](https://adventofcode.com/2020/day/2): [Go](2020/day2-go/main.go)
+* [Day 3](https://adventofcode.com/2020/day/3): [Go](2020/day3-go/main.go)
+* [Day 4](https://adventofcode.com/2020/day/4): [Go](2020/day4-go/main.go)
+* [Day 5](https://adventofcode.com/2020/day/5): [Go](2020/day5-go/main.go)
+* [Day 6](https://adventofcode.com/2020/day/6): [Go](2020/day6-go/main.go)
+* [Day 7](https://adventofcode.com/2020/day/7): [Go](2020/day7-go/main.go)
+* [Day 8](https://adventofcode.com/2020/day/8): [Go](2020/day8-go/main.go)
+* [Day 9](https://adventofcode.com/2020/day/9): [Go](2020/day9-go/main.go)
+* [Day 10](https://adventofcode.com/2020/day/10): [Go](2020/day10-go/main.go)
+* [Day 11](https://adventofcode.com/2020/day/11): [Go](2020/day11-go/main.go)
+* [Day 12](https://adventofcode.com/2020/day/12): [Go](2020/day12-go/main.go)
+* [Day 13](https://adventofcode.com/2020/day/13): [Go](2020/day13-go/main.go)
+* [Day 14](https://adventofcode.com/2020/day/14): [Go](2020/day14-go/main.go)
+* [Day 15](https://adventofcode.com/2020/day/15): [Go](2020/day15-go/main.go)
+* [Day 16](https://adventofcode.com/2020/day/16): [Go](2020/day16-go/main.go)
+* [Day 17](https://adventofcode.com/2020/day/17): [Go](2020/day17-go/main.go)
+* [Day 18](https://adventofcode.com/2020/day/18): [Go](2020/day18-go/main.go)
+* [Day 19](https://adventofcode.com/2020/day/19): [Go](2020/day19-go/main.go)
+* [Day 20](https://adventofcode.com/2020/day/20): [Go](2020/day20-go/main.go)
+* [Day 21](https://adventofcode.com/2020/day/21): [Go](2020/day21-go/main.go)
+* [Day 22](https://adventofcode.com/2020/day/22): [Go](2020/day22-go/main.go)
+* [Day 23](https://adventofcode.com/2020/day/23): [Go](2020/day23-go/main.go)
+* [Day 24](https://adventofcode.com/2020/day/24): [Go](2020/day24-go/main.go)
+* [Day 25](https://adventofcode.com/2020/day/25): [Go](2020/day25-go/main.go)
+
 ## 2019
 
 * [Day 1](https://adventofcode.com/2019/day/1): [Go](2019/day1-go/main.go)
