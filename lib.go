@@ -79,6 +79,15 @@ func ReaderToStrings(input io.Reader) []string {
 	return strings
 }
 
+func ReaderToInts(input io.Reader) []int {
+	scanner := bufio.NewScanner(input)
+	var res []int
+	for scanner.Scan() {
+		res = append(res, StringToInt(scanner.Text()))
+	}
+	return res
+}
+
 // ---------- String ----------
 
 func StringPermutations(idx int, runes []rune) []string {
