@@ -50,6 +50,9 @@
 * [Day 20](https://adventofcode.com/2019/day/20): [Go](2019/day20-go/main.go)
 * [Day 21](https://adventofcode.com/2019/day/21): [Go](2019/day21-go/main.go)
 * [Day 22](https://adventofcode.com/2019/day/22): [Go](2019/day22-go/main.go)
+* [Day 23](https://adventofcode.com/2019/day/23): [Go](2019/day23-go/main.go)
+* [Day 24](https://adventofcode.com/2019/day/24): [Go](2019/day24-go/main.go)
+* [Day 25](https://adventofcode.com/2019/day/25): [Go](2019/day25-go/main.go)
 
 ## 2018
 
