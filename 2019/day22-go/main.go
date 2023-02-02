@@ -1,14 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"io"
+	"math/big"
 	"strings"
 
 	lib "github.com/teivah/advent-of-code"
 )
-
-const cards = 10007
 
 func fs1(input io.Reader, nb, n int) int {
 	lines := lib.ReaderToStrings(input)
@@ -96,34 +94,39 @@ func cut(n int) apply {
 	}
 }
 
-func fs2(input io.Reader, spaceCards, shuffling, n int) int {
-	lines := lib.ReaderToStrings(input)
+func fs2(input io.Reader, l, times, index int64) int64 {
+	v := big.NewInt(index)
+	m := big.NewInt(l)
+	t := big.NewInt(times)
 
-	var funcs []apply
+	i := big.NewInt(0)
+	d := big.NewInt(1)
+
+	lines := lib.ReaderToStrings(input)
 	for _, line := range lines {
 		del := lib.NewDelimiter(line, " ")
 		if strings.Contains(line, "deal with") {
-			funcs = append(funcs, increment(del.GetInt(3)))
+			x := big.NewInt(int64(del.GetInt(3)))
+			x.ModInverse(x, m)
+			d.Mul(d, x)
 		} else if strings.Contains(line, "cut") {
-			funcs = append(funcs, cut(del.GetInt(1)))
+			x := big.NewInt(int64(del.GetInt(1)))
+			i.Add(i, x.Mul(x, d))
 		} else if strings.Contains(line, "deal") {
-			funcs = append(funcs, deal())
+			d.Neg(d)
+			i.Add(i, d)
 		} else {
 			panic(line)
 		}
 	}
 
-	cards := make([]int, spaceCards)
-	for i := 0; i < spaceCards; i++ {
-		cards[i] = i
-	}
+	a := big.NewInt(1)
+	a.Sub(a, d).ModInverse(a, m)
 
-	for shuffle := 0; shuffle < shuffling; shuffle++ {
-		fmt.Println(cards)
-		for _, f := range funcs {
-			cards = f(cards)
-		}
-	}
+	d.Exp(d, t, m)
+	it := big.NewInt(1)
+	it.Sub(it, d).Mul(it, a).Mul(it, i)
+	v.Mul(v, d).Add(v, it).Mod(v, m)
 
-	return cards[n]
+	return v.Int64()
 }

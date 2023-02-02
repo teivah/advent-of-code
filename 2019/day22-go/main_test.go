@@ -32,8 +32,7 @@ func TestFs1Input(t *testing.T) {
 func TestFs2Input(t *testing.T) {
 	f, err := os.Open("input.txt")
 	require.NoError(t, err)
-	//assert.Equal(t, 42, fs2(f, 119315717514047, 101741582076661, 2020))
-	assert.Equal(t, 42, fs2(f, 10007, 10, 0))
+	assert.Equal(t, int64(104073967000066), fs2(f, 119315717514047, 101741582076661, 2020))
 }
 
 func Test_deal(t *testing.T) {
