@@ -12,5 +12,12 @@ func TestFs1Input(t *testing.T) {
 	f, err := os.Open("input.txt")
 	require.NoError(t, err)
 
-	assert.Equal(t, 23626, fs(f))
+	assert.Equal(t, 23626, fs1(f))
+}
+
+func TestFs2Input(t *testing.T) {
+	f, err := os.Open("input.txt")
+	require.NoError(t, err)
+
+	assert.Equal(t, 23626, fs2(f))
 }

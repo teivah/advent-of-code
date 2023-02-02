@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"strings"
+	"sync"
 	"time"
 
 	lib "github.com/teivah/advent-of-code"
@@ -14,7 +15,7 @@ const (
 	buffer   = 1000
 )
 
-func fs(reader io.Reader) int {
+func fs1(reader io.Reader) int {
 	s := lib.ReaderToString(reader)
 	codes := lib.StringsToInts(strings.Split(s, ","))
 
@@ -30,27 +31,48 @@ func fs(reader io.Reader) int {
 		}()
 	}
 
-	return <-nic.result
+	return (<-nic.result).y
 }
 
 type NIC struct {
 	chs    []chan int
 	over   chan struct{}
-	result chan int
+	result chan Packet
+
+	mu   sync.RWMutex
+	idle []bool
 }
 
-func NewNIC() NIC {
-
+func NewNIC() *NIC {
 	var chs []chan int
 	for i := 0; i < machines; i++ {
 		chs = append(chs, make(chan int, buffer))
 	}
 
-	return NIC{
+	return &NIC{
 		chs:    chs,
 		over:   make(chan struct{}),
-		result: make(chan int),
+		result: make(chan Packet, buffer),
+		idle:   make([]bool, machines),
 	}
+}
+
+func (n *NIC) setIdle(id int, value bool) {
+	n.mu.Lock()
+	defer n.mu.Unlock()
+	n.idle[id] = value
+}
+
+func (n *NIC) allIdle() bool {
+	n.mu.RLock()
+	defer n.mu.RUnlock()
+	fmt.Println(n.idle)
+	for _, idle := range n.idle {
+		if !idle {
+			return false
+		}
+	}
+	return true
 }
 
 func run(codes []int, postActions func(*State)) *State {
@@ -130,7 +152,7 @@ type State struct {
 	relativeBase int
 
 	id           int
-	nic          NIC
+	nic          *NIC
 	idGiven      bool
 	inputBuffer  []int
 	outputBuffer []int
@@ -244,6 +266,7 @@ func (s *State) in(ctx Context) {
 			s.set(ctx, 0, v)
 		case <-time.After(1 * time.Second):
 			s.set(ctx, 0, -1)
+			s.nic.setIdle(s.id, true)
 		case <-s.nic.over:
 			s.over = true
 			return
@@ -259,20 +282,22 @@ func (s *State) out(ctx Context) {
 	}
 
 	v := s.get(ctx, 0)
+	s.nic.setIdle(s.id, false)
 	s.outputBuffer = append(s.outputBuffer, v)
 
 	if len(s.outputBuffer) == 3 {
 		destination := s.outputBuffer[0]
 		if destination == 255 {
-			s.nic.result <- s.outputBuffer[2]
-			close(s.nic.over)
-			s.over = true
-			return
+			s.nic.result <- Packet{
+				x: s.outputBuffer[1],
+				y: s.outputBuffer[2],
+			}
+		} else {
+			s.nic.chs[destination] <- s.outputBuffer[1]
+			s.nic.chs[destination] <- s.outputBuffer[2]
+			s.outputBuffer = nil
 		}
 
-		s.nic.chs[destination] <- s.outputBuffer[1]
-		s.nic.chs[destination] <- s.outputBuffer[2]
-		s.outputBuffer = nil
 	}
 
 	s.offset += 2
@@ -339,4 +364,70 @@ func (s *State) rlt(ctx Context) {
 
 func (s *State) exit(ctx Context) {
 	s.over = true
+}
+
+func fs2(reader io.Reader) int {
+	s := lib.ReaderToString(reader)
+	codes := lib.StringsToInts(strings.Split(s, ","))
+
+	nic := NewNIC()
+
+	for i := 0; i < machines; i++ {
+		i := i
+		go func() {
+			_ = run(codes, func(state *State) {
+				state.nic = nic
+				state.id = i
+			})
+		}()
+	}
+
+	// NAT
+	result := make(chan int)
+	go func() {
+		duration := 3 * time.Second
+		timer := time.NewTimer(duration)
+		var lastValue Packet
+		for {
+			timer.Reset(duration)
+			select {
+			case <-timer.C:
+				fmt.Println(len(nic.result))
+
+				//if nic.allIdle() {
+				var last Packet
+
+			outer:
+				for {
+					select {
+					case v := <-nic.result:
+						last = v
+					default:
+						break outer
+					}
+				}
+
+				if last == lastValue {
+					result <- last.x
+					result <- last.y
+					close(result)
+					return
+				}
+
+				fmt.Println("sending", last)
+				nic.chs[0] <- last.y
+				lastValue = last
+				//} else {
+				//	fmt.Println("no")
+				//}
+			}
+		}
+	}()
+
+	return <-result
+}
+
+type Packet struct {
+	x int
+	y int
 }
