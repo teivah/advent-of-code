@@ -264,6 +264,11 @@ const (
 	Down
 	Left
 	Right
+
+	UpLeft
+	UpRight
+	DownLeft
+	DownRight
 )
 
 func (d Direction) Opposite() Direction {
@@ -348,6 +353,14 @@ func (p Position) Move(direction Direction, moves int) Position {
 		return p.Delta(0, -moves)
 	case Right:
 		return p.Delta(0, moves)
+	case UpLeft:
+		return p.Delta(-moves, -moves)
+	case UpRight:
+		return p.Delta(-moves, moves)
+	case DownLeft:
+		return p.Delta(moves, -moves)
+	case DownRight:
+		return p.Delta(moves, moves)
 	}
 
 	panic ("not handled")
