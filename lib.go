@@ -255,6 +255,22 @@ func CopyInts(s []int) []int {
 	return res
 }
 
+func FindMinInts(numbers []int) int {
+	m := NewMiner()
+	for _, number := range numbers {
+		m.Add(number)
+	}
+	return m.Get()
+}
+
+func FindMaxInts(numbers []int) int {
+	m := NewMaxer()
+	for _, number := range numbers {
+		m.Add(number)
+	}
+	return m.Get()
+}
+
 // Directions
 
 type Direction int
