@@ -52,6 +52,10 @@ func (d Delimiter) GetStrings() []string {
 	return res
 }
 
+func (d Delimiter) GetInts(s []string) []int {
+	return StringsToInts(s)
+}
+
 func (d Delimiter) GetString(i int) string {
 	if i == 0 {
 		return d.s[:d.Ind[0]]
