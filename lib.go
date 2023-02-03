@@ -26,12 +26,14 @@ func ReaderToString(input io.Reader) string {
 type Delimiter struct {
 	Ind []int
 	s   string
+	del string
 }
 
 func NewDelimiter(s, del string) Delimiter {
 	return Delimiter{
 		Ind: IndexAll(s, del),
 		s:   s,
+		del: del,
 	}
 }
 
@@ -62,10 +64,10 @@ func (d Delimiter) GetString(i int) string {
 	}
 
 	if i == len(d.Ind) {
-		return d.s[d.Ind[len(d.Ind)-1]+1:]
+		return d.s[d.Ind[len(d.Ind)-1]+len(d.del):]
 	}
 
-	return d.s[d.Ind[i-1]+1 : d.Ind[i]]
+	return d.s[d.Ind[i-1]+len(d.del) : d.Ind[i]]
 }
 
 func (d Delimiter) GetInt(i int) int {
