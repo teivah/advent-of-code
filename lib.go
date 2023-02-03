@@ -35,6 +35,23 @@ func NewDelimiter(s, del string) Delimiter {
 	}
 }
 
+func (d Delimiter) GetStrings() []string {
+	if len(d.Ind) == 0 {
+		if d.s == "" {
+			return nil
+		}
+
+		return []string{d.s}
+	}
+
+	var res []string
+	for i := 0; i <= len(d.Ind); i++ {
+		res = append(res, d.GetString(i))
+	}
+
+	return res
+}
+
 func (d Delimiter) GetString(i int) string {
 	if i == 0 {
 		return d.s[:d.Ind[0]]
