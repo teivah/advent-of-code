@@ -233,21 +233,18 @@ func ManhattanDistance(row, col int) int {
 
 func GreatestCommonDivisor(a, b int) int {
 	for b != 0 {
-		t := b
-		b = a % b
-		a = t
+		a, b = b, a%b
 	}
 	return a
 }
 
-func LeastCommonMultiple(a, b int, integers ...int) int {
-	result := a * b / GreatestCommonDivisor(a, b)
-	for i := 0; i < len(integers); i++ {
-		result = GreatestCommonDivisor(result, integers[i])
+func LeastCommonMultiple(numbers []int) int {
+	lcm := numbers[0]
+	for _, number := range numbers[1:] {
+		lcm = lcm * number / GreatestCommonDivisor(lcm, number)
 	}
-	return result
+	return lcm
 }
-
 
 // ---------- Conversions ----------
 
