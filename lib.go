@@ -231,6 +231,24 @@ func ManhattanDistance(row, col int) int {
 	return Abs(row) + Abs(col)
 }
 
+func GreatestCommonDivisor(a, b int) int {
+	for b != 0 {
+		t := b
+		b = a % b
+		a = t
+	}
+	return a
+}
+
+func LeastCommonMultiple(a, b int, integers ...int) int {
+	result := a * b / GreatestCommonDivisor(a, b)
+	for i := 0; i < len(integers); i++ {
+		result = GreatestCommonDivisor(result, integers[i])
+	}
+	return result
+}
+
+
 // ---------- Conversions ----------
 
 func StringToInt(s string) int {
