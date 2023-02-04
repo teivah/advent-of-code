@@ -74,6 +74,10 @@ func (d Delimiter) GetInt(i int) int {
 	return StringToInt(d.GetString(i))
 }
 
+func (d Delimiter) TryGetInt(i int) (int, bool) {
+	return TryStringToInt(d.GetString(i))
+}
+
 func (d Delimiter) IsInt(i int) bool {
 	_, err := strconv.Atoi(d.GetString(i))
 	return err == nil
@@ -236,6 +240,15 @@ func StringToInt(s string) int {
 	}
 	return i
 }
+
+func TryStringToInt(s string) (int, bool) {
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		return 0, false
+	}
+	return i, true
+}
+
 
 func StringsToInts(s []string) []int {
 	res := make([]int, len(s))
