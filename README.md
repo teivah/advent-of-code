@@ -52,7 +52,7 @@
 * [Day 22](https://adventofcode.com/2020/day/22): [Go](2020/day22-go/main.go)
 * [Day 23](https://adventofcode.com/2020/day/23): [Go](2020/day23-go/main.go)
 * [Day 24](https://adventofcode.com/2020/day/24): [Go](2020/day24-go/main.go)
-* [Day 25](https://adventofcode.com/2020/day/25): [Go](2020/day25-go/main.go)
+* [Day 25](https://adventofcode.com/2020/day/25): [Rust](2020/day25-rust/src/lib.rs)
 
 ## 2019
 

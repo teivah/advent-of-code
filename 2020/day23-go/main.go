@@ -16,7 +16,6 @@ func fs1(input string, moves int) string {
 
 type Ring struct {
 	len     int
-	head    *Node
 	current *Node
 	nodes   map[int]*Node
 }
@@ -25,12 +24,8 @@ func (r *Ring) round() {
 	saved := r.current.next
 	removed := make(map[int]bool)
 	tmp := saved
-	isHeadRemoved := false
 	for i := 0; i < 3; i++ {
 		removed[tmp.value] = true
-		if tmp == r.head {
-			isHeadRemoved = true
-		}
 		tmp = tmp.next
 	}
 
@@ -57,12 +52,6 @@ func (r *Ring) round() {
 	next.previous = saved.next.next
 
 	r.current = r.current.next
-
-	if destination == r.head {
-		r.head = next.previous
-	} else if isHeadRemoved {
-		r.head = destination
-	}
 }
 
 func (r *Ring) String() string {
@@ -101,7 +90,6 @@ func toRing(s string) *Ring {
 	return &Ring{
 		len:     len(values),
 		current: head,
-		head:    head,
 		nodes:   nodes,
 	}
 }
@@ -164,9 +152,8 @@ func toRing2(s string) *Ring {
 	previous.next = head
 	head.previous = previous
 	return &Ring{
-		len:     len(values),
+		len:     1_000_000,
 		current: head,
-		head:    head,
 		nodes:   nodes,
 	}
 }
