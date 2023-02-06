@@ -28,38 +28,37 @@ func buildSquare(tiles map[int]Tile, squareLength int, row, col int, squares [][
 
 	cpy := copyTiles(tiles)
 	for id, tile := range tiles {
-		hash := tile.hashes[0]
-		//for _, hash := range tile.hashes {
-		// Up
-		if row != 0 {
-			if hash[aoc.Up] != squares[row-1][col].hashes[aoc.Down] {
-				continue
+		for _, hash := range tile.hashes {
+			// Up
+			if row != 0 {
+				if hash[aoc.Up] != squares[row-1][col].hashes[aoc.Down] {
+					continue
+				}
 			}
-		}
 
-		// Left
-		if col != 0 {
-			if hash[aoc.Left] != squares[row][col-1].hashes[aoc.Right] {
-				continue
+			// Left
+			if col != 0 {
+				if hash[aoc.Left] != squares[row][col-1].hashes[aoc.Right] {
+					continue
+				}
 			}
-		}
 
-		delete(cpy, id)
-		squares[row][col] = SelectedTile{
-			id:     id,
-			hashes: hash,
+			delete(cpy, id)
+			squares[row][col] = SelectedTile{
+				id:     id,
+				hashes: hash,
+			}
+			nextRow := row
+			nextCol := col + 1
+			if nextCol == squareLength {
+				nextCol = 0
+				nextRow++
+			}
+			if v := buildSquare(cpy, squareLength, nextRow, nextCol, squares); v != -1 {
+				return v
+			}
+			cpy[id] = tile
 		}
-		nextRow := row
-		nextCol := col + 1
-		if nextCol == squareLength {
-			nextCol = 0
-			nextRow++
-		}
-		if v := buildSquare(cpy, squareLength, nextRow, nextCol, squares); v != -1 {
-			return v
-		}
-		cpy[id] = tile
-		//}
 	}
 	return -1
 }
@@ -96,17 +95,27 @@ func toTiles(lines []string) map[int]Tile {
 			board = append(board, row)
 		}
 
+		var hashes []map[aoc.Direction]int
+		hashes = append(hashes, computeHashes(board))
+		hashes = append(hashes, computeHashes(flipMatrix(board)))
+		hashes = append(hashes, computeHashes(rotateMatrix(board)))
+		hashes = append(hashes, computeHashes(flipMatrix(rotateMatrix(board))))
+		hashes = append(hashes, computeHashes(rotateMatrix(rotateMatrix(board))))
+		hashes = append(hashes, computeHashes(flipMatrix(rotateMatrix(rotateMatrix(board)))))
+		hashes = append(hashes, computeHashes(rotateMatrix(rotateMatrix(rotateMatrix(board)))))
+		hashes = append(hashes, computeHashes(flipMatrix(rotateMatrix(rotateMatrix(rotateMatrix(board))))))
+
 		tiles[id] = Tile{
 			id:     id,
 			board:  board,
-			hashes: computeHashes(board),
+			hashes: hashes,
 		}
 	}
 
 	return tiles
 }
 
-func computeHashes(board [][]bool) []map[aoc.Direction]int {
+func computeHashes(board [][]bool) map[aoc.Direction]int {
 	up := 0
 	down := 0
 	for col := 0; col < len(board[0]); col++ {
@@ -130,71 +139,47 @@ func computeHashes(board [][]bool) []map[aoc.Direction]int {
 		}
 	}
 
-	a := up
-	b := left
-	c := down
-	d := right
-	return []map[aoc.Direction]int{
-		{
-			aoc.Up:    a,
-			aoc.Left:  b,
-			aoc.Down:  c,
-			aoc.Right: d,
-		},
-		{
-			aoc.Up:    flip(b),
-			aoc.Left:  c,
-			aoc.Down:  flip(d),
-			aoc.Right: a,
-		},
-		{
-			aoc.Up:    flip(c),
-			aoc.Left:  flip(d),
-			aoc.Down:  flip(a),
-			aoc.Right: flip(b),
-		},
-		{
-			aoc.Up:    d,
-			aoc.Left:  flip(a),
-			aoc.Down:  c,
-			aoc.Right: flip(b),
-		},
-		{
-			aoc.Up:    a,
-			aoc.Left:  d,
-			aoc.Down:  c,
-			aoc.Right: b,
-		},
-		{
-			aoc.Up:    flip(b),
-			aoc.Left:  a,
-			aoc.Down:  flip(d),
-			aoc.Right: c,
-		},
-		{
-			aoc.Up:    flip(c),
-			aoc.Left:  flip(b),
-			aoc.Down:  flip(a),
-			aoc.Right: flip(d),
-		},
-		{
-			aoc.Up:    d,
-			aoc.Left:  flip(c),
-			aoc.Down:  b,
-			aoc.Right: flip(a),
-		},
+	return map[aoc.Direction]int{
+		aoc.Up:    up,
+		aoc.Left:  left,
+		aoc.Down:  down,
+		aoc.Right: right,
 	}
 }
 
-func flip(x int) int {
-	flipped := 0
-	for i := 0; i < 9; i++ {
-		flipped = flipped << 1
-		if x&1 == 1 {
-			flipped = flipped | 1
-		}
-		x = x >> 1
+func flipMatrix(matrix [][]bool) [][]bool {
+	n := len(matrix)
+	m := len(matrix[0])
+
+	flipped := make([][]bool, n)
+	for i := range flipped {
+		flipped[i] = make([]bool, m)
 	}
+
+	for i := 0; i < n; i++ {
+		for j := 0; j < m; j++ {
+			flipped[n-i-1][j] = matrix[i][j]
+		}
+	}
+
+	return flipped
+}
+
+func rotateMatrix(matrix [][]bool) [][]bool {
+	n := len(matrix)
+	m := len(matrix[0])
+
+	flipped := make([][]bool, m)
+	for i := range flipped {
+		flipped[i] = make([]bool, n)
+	}
+
+	for i := 0; i < n; i++ {
+		for j := 0; j < m; j++ {
+			flipped[j][n-i-1] = matrix[i][j]
+		}
+	}
+
 	return flipped
 }
 
@@ -207,40 +192,6 @@ type Tile struct {
 	id     int
 	board  [][]bool
 	hashes []map[aoc.Direction]int
-}
-
-func rotateHorizontally(matrix [][]bool) [][]bool {
-	rows := len(matrix)
-	cols := len(matrix[0])
-	flipped := make([][]bool, rows)
-	for i := range flipped {
-		flipped[i] = make([]bool, cols)
-	}
-
-	for i := 0; i < rows; i++ {
-		for j := 0; j < cols; j++ {
-			flipped[i][j] = matrix[i][cols-j-1]
-		}
-	}
-
-	return flipped
-}
-
-func rotateVertically(matrix [][]bool) [][]bool {
-	rows := len(matrix)
-	cols := len(matrix[0])
-	flipped := make([][]bool, rows)
-	for i := range flipped {
-		flipped[i] = make([]bool, cols)
-	}
-
-	for i := 0; i < rows; i++ {
-		for j := 0; j < cols; j++ {
-			flipped[i][j] = matrix[rows-i-1][j]
-		}
-	}
-
-	return flipped
 }
 
 func fs2(input io.Reader) int {
