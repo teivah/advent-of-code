@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"io"
 	"math"
 
@@ -9,44 +8,46 @@ import (
 )
 
 func fs1(input io.Reader) int {
-	tiles := toTiles(aoc.ReaderToStrings(input))
+	tiles, _ := toTiles(aoc.ReaderToStrings(input))
 	squareLength := int(math.Sqrt(float64(len(tiles))))
 	squares := make([][]SelectedTile, squareLength)
 	for i := 0; i < squareLength; i++ {
 		squares[i] = make([]SelectedTile, squareLength)
 	}
-	return buildSquare(tiles, squareLength, 0, 0, squares)
+	v, _ := buildSquare(tiles, squareLength, 0, 0, squares)
+	return v
 }
 
-func buildSquare(tiles map[int]Tile, squareLength int, row, col int, squares [][]SelectedTile) int {
+func buildSquare(tiles map[int][]Tile, squareLength int, row, col int, squares [][]SelectedTile) (int, [][]SelectedTile) {
 	if row == squareLength {
-		return squares[0][0].id *
-			squares[0][squareLength-1].id *
-			squares[squareLength-1][0].id *
-			squares[squareLength-1][squareLength-1].id
+		return squares[0][0].tileID *
+			squares[0][squareLength-1].tileID *
+			squares[squareLength-1][0].tileID *
+			squares[squareLength-1][squareLength-1].tileID, squares
 	}
 
 	cpy := copyTiles(tiles)
-	for id, tile := range tiles {
-		for _, hash := range tile.hashes {
+	for id, subtiles := range tiles {
+		for transformID, tile := range subtiles {
 			// Up
 			if row != 0 {
-				if hash[aoc.Up] != squares[row-1][col].hashes[aoc.Down] {
+				if tile.hashes[aoc.Up] != squares[row-1][col].hashes[aoc.Down] {
 					continue
 				}
 			}
 
 			// Left
 			if col != 0 {
-				if hash[aoc.Left] != squares[row][col-1].hashes[aoc.Right] {
+				if tile.hashes[aoc.Left] != squares[row][col-1].hashes[aoc.Right] {
 					continue
 				}
 			}
 
 			delete(cpy, id)
 			squares[row][col] = SelectedTile{
-				id:     id,
-				hashes: hash,
+				tileID:      id,
+				transformID: transformID,
+				hashes:      tile.hashes,
 			}
 			nextRow := row
 			nextCol := col + 1
@@ -54,26 +55,31 @@ func buildSquare(tiles map[int]Tile, squareLength int, row, col int, squares [][
 				nextCol = 0
 				nextRow++
 			}
-			if v := buildSquare(cpy, squareLength, nextRow, nextCol, squares); v != -1 {
-				return v
+			if v, squares := buildSquare(cpy, squareLength, nextRow, nextCol, squares); v != -1 {
+				return v, squares
 			}
-			cpy[id] = tile
+			cpy[id] = subtiles
 		}
 	}
-	return -1
+	return -1, nil
 }
 
-func copyTiles(tiles map[int]Tile) map[int]Tile {
-	res := make(map[int]Tile, len(tiles))
+func copyTiles(tiles map[int][]Tile) map[int][]Tile {
+	res := make(map[int][]Tile, len(tiles))
 	for k, v := range tiles {
-		res[k] = v
+		s := make([]Tile, len(v))
+		for i, x := range v {
+			s[i] = x
+		}
+		res[k] = s
 	}
 	return res
 }
 
-func toTiles(lines []string) map[int]Tile {
-	tiles := make(map[int]Tile)
+func toTiles(lines []string) (map[int][]Tile, int) {
+	tiles := make(map[int][]Tile)
 
+	length := 0
 	for i := 0; i < len(lines); i++ {
 		id := aoc.StringToInt(lines[i][5 : len(lines[i])-1])
 		i++
@@ -95,24 +101,65 @@ func toTiles(lines []string) map[int]Tile {
 			board = append(board, row)
 		}
 
-		var hashes []map[aoc.Direction]int
-		hashes = append(hashes, computeHashes(board))
-		hashes = append(hashes, computeHashes(flipMatrix(board)))
-		hashes = append(hashes, computeHashes(rotateMatrix(board)))
-		hashes = append(hashes, computeHashes(flipMatrix(rotateMatrix(board))))
-		hashes = append(hashes, computeHashes(rotateMatrix(rotateMatrix(board))))
-		hashes = append(hashes, computeHashes(flipMatrix(rotateMatrix(rotateMatrix(board)))))
-		hashes = append(hashes, computeHashes(rotateMatrix(rotateMatrix(rotateMatrix(board)))))
-		hashes = append(hashes, computeHashes(flipMatrix(rotateMatrix(rotateMatrix(rotateMatrix(board))))))
-
-		tiles[id] = Tile{
+		tiles[id] = append(tiles[id], Tile{
 			id:     id,
 			board:  board,
-			hashes: hashes,
-		}
+			hashes: computeHashes(board),
+		})
+
+		b := flipMatrix(board)
+		tiles[id] = append(tiles[id], Tile{
+			id:     id,
+			board:  b,
+			hashes: computeHashes(b),
+		})
+
+		b = rotateMatrix(board)
+		tiles[id] = append(tiles[id], Tile{
+			id:     id,
+			board:  b,
+			hashes: computeHashes(b),
+		})
+
+		b = flipMatrix(rotateMatrix(board))
+		tiles[id] = append(tiles[id], Tile{
+			id:     id,
+			board:  b,
+			hashes: computeHashes(b),
+		})
+
+		b = rotateMatrix(rotateMatrix(board))
+		tiles[id] = append(tiles[id], Tile{
+			id:     id,
+			board:  b,
+			hashes: computeHashes(b),
+		})
+
+		b = flipMatrix(rotateMatrix(rotateMatrix(board)))
+		tiles[id] = append(tiles[id], Tile{
+			id:     id,
+			board:  b,
+			hashes: computeHashes(b),
+		})
+
+		b = rotateMatrix(rotateMatrix(rotateMatrix(board)))
+		tiles[id] = append(tiles[id], Tile{
+			id:     id,
+			board:  b,
+			hashes: computeHashes(b),
+		})
+
+		b = flipMatrix(rotateMatrix(rotateMatrix(rotateMatrix(board))))
+		tiles[id] = append(tiles[id], Tile{
+			id:     id,
+			board:  b,
+			hashes: computeHashes(b),
+		})
+
+		length = len(board)
 	}
 
-	return tiles
+	return tiles, length
 }
 
 func computeHashes(board [][]bool) map[aoc.Direction]int {
@@ -184,22 +231,134 @@ func rotateMatrix(matrix [][]bool) [][]bool {
 }
 
 type SelectedTile struct {
-	id     int
-	hashes map[aoc.Direction]int
+	tileID      int
+	transformID int
+	hashes      map[aoc.Direction]int
 }
 
 type Tile struct {
 	id     int
 	board  [][]bool
-	hashes []map[aoc.Direction]int
+	hashes map[aoc.Direction]int
 }
 
 func fs2(input io.Reader) int {
-	scanner := bufio.NewScanner(input)
-	for scanner.Scan() {
-		line := scanner.Text()
-		_ = line
+	tiles, length := toTiles(aoc.ReaderToStrings(input))
+	squareLength := int(math.Sqrt(float64(len(tiles))))
+	squares := make([][]SelectedTile, squareLength)
+	for i := 0; i < squareLength; i++ {
+		squares[i] = make([]SelectedTile, squareLength)
 	}
 
-	return 42
+	_, selected := buildSquare(tiles, squareLength, 0, 0, squares)
+
+	cutLength := length - 2
+	final := make([][]bool, cutLength*squareLength)
+	for i := 0; i < cutLength*squareLength; i++ {
+		final[i] = make([]bool, cutLength*squareLength)
+	}
+
+	for r, row := range selected {
+		for c, st := range row {
+			tile := tiles[st.tileID][st.transformID]
+
+			for br := 1; br < len(tile.board)-1; br++ {
+				for bc := 1; bc < len(tile.board)-1; bc++ {
+					final[r*cutLength+br-1][c*cutLength+bc-1] = tile.board[br][bc]
+				}
+			}
+		}
+	}
+
+	if v := findSeaMonster(final); v != 0 {
+		return v
+	}
+
+	if v := findSeaMonster(flipMatrix(final)); v != 0 {
+		return v
+	}
+
+	if v := findSeaMonster(rotateMatrix(final)); v != 0 {
+		return v
+	}
+
+	if v := findSeaMonster(flipMatrix(rotateMatrix(final))); v != 0 {
+		return v
+	}
+
+	if v := findSeaMonster(rotateMatrix(rotateMatrix(final))); v != 0 {
+		return v
+	}
+
+	if v := findSeaMonster(flipMatrix(rotateMatrix(rotateMatrix(final)))); v != 0 {
+		return v
+	}
+
+	if v := findSeaMonster(rotateMatrix(rotateMatrix(rotateMatrix(final)))); v != 0 {
+		return v
+	}
+
+	if v := findSeaMonster(flipMatrix(rotateMatrix(rotateMatrix(rotateMatrix(final))))); v != 0 {
+		return v
+	}
+
+	return 0
+}
+
+/*
+                  #
+#    ##    ##    ###
+ #  #  #  #  #  #
+*/
+func findSeaMonster(board [][]bool) int {
+	found := false
+	for row := 0; row < len(board)-2; row++ {
+		for col := 0; col < len(board[0])-19; col++ {
+			if board[row][col+18] &&
+				board[row+1][col] &&
+				board[row+1][col+5] &&
+				board[row+1][col+6] &&
+				board[row+1][col+11] &&
+				board[row+1][col+12] &&
+				board[row+1][col+17] &&
+				board[row+1][col+18] &&
+				board[row+1][col+19] &&
+				board[row+2][col+1] &&
+				board[row+2][col+4] &&
+				board[row+2][col+7] &&
+				board[row+2][col+10] &&
+				board[row+2][col+13] &&
+				board[row+2][col+16] {
+				found = true
+				board[row][col+18] = false
+				board[row+1][col] = false
+				board[row+1][col+5] = false
+				board[row+1][col+6] = false
+				board[row+1][col+11] = false
+				board[row+1][col+12] = false
+				board[row+1][col+17] = false
+				board[row+1][col+18] = false
+				board[row+1][col+19] = false
+				board[row+2][col+1] = false
+				board[row+2][col+4] = false
+				board[row+2][col+7] = false
+				board[row+2][col+10] = false
+				board[row+2][col+13] = false
+				board[row+2][col+16] = false
+			}
+		}
+	}
+	if !found {
+		return 0
+	}
+
+	sum := 0
+	for row := 0; row < len(board); row++ {
+		for col := 0; col < len(board[0]); col++ {
+			if board[row][col] {
+				sum++
+			}
+		}
+	}
+	return sum
 }
