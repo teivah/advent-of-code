@@ -54,8 +54,8 @@ func (d Delimiter) GetStrings() []string {
 	return res
 }
 
-func (d Delimiter) GetInts(s []string) []int {
-	return StringsToInts(s)
+func (d Delimiter) GetInts() []int {
+	return StringsToInts(d.GetStrings())
 }
 
 func (d Delimiter) GetString(i int) string {
@@ -264,7 +264,6 @@ func TryStringToInt(s string) (int, bool) {
 	return i, true
 }
 
-
 func StringsToInts(s []string) []int {
 	res := make([]int, len(s))
 	for i, v := range s {
@@ -419,5 +418,5 @@ func (p Position) Move(direction Direction, moves int) Position {
 		return p.Delta(moves, moves)
 	}
 
-	panic ("not handled")
+	panic("not handled")
 }
