@@ -140,6 +140,10 @@ func IntToRune(i int) rune {
 	return []rune(s)[0]
 }
 
+func IsRuneDecimal(r rune) bool {
+	return r >= '0' && r <= '9'
+}
+
 // ---------- Math ----------
 
 type Maxer struct {
