@@ -186,6 +186,33 @@ func (m *Miner) Get() int {
 	return m.min
 }
 
+type MinerMaxer struct {
+	min *Miner
+	max *Maxer
+}
+
+func NewMinerMaxer() *MinerMaxer {
+	return &MinerMaxer{
+		min: NewMiner(),
+		max: NewMaxer(),
+	}
+}
+
+func (m *MinerMaxer) Add(values ...int) {
+	for _, v := range values {
+		m.min.Add(v)
+		m.max.Add(v)
+	}
+}
+
+func (m *MinerMaxer) GetMin() int {
+	return m.min.Get()
+}
+
+func (m *MinerMaxer) GetMax() int {
+	return m.max.Get()
+}
+
 func Min(a, b int) int {
 	if a < b {
 		return a
