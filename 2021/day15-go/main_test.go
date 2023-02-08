@@ -11,23 +11,23 @@ import (
 func TestFs1Test(t *testing.T) {
 	f, err := os.Open("test.txt")
 	require.NoError(t, err)
-	assert.Equal(t, 1588, fs1(f, 10))
+	assert.Equal(t, 40, fs1(f))
 }
 
 func TestFs1Input(t *testing.T) {
 	f, err := os.Open("input.txt")
 	require.NoError(t, err)
-	assert.Equal(t, 2587, fs1(f, 10))
+	assert.Equal(t, 530, fs1(f))
 }
 
 func TestFs2Test(t *testing.T) {
 	f, err := os.Open("test.txt")
 	require.NoError(t, err)
-	assert.Equal(t, 2188189693529, fs2(f, 40))
+	assert.Equal(t, 42, fs2(f))
 }
 
 func TestFs2Input(t *testing.T) {
 	f, err := os.Open("input.txt")
 	require.NoError(t, err)
-	assert.Equal(t, 3318837563123, fs2(f, 40))
+	assert.Equal(t, 42, fs2(f))
 }

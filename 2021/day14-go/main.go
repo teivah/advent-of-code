@@ -60,6 +60,21 @@ func transform(cur *Node, transformations map[string]rune) {
 	}
 }
 
+func getDifference(cur *Node) int {
+	m := make(map[rune]int)
+	for cur != nil {
+		m[cur.r]++
+		cur = cur.next
+	}
+
+	minMax := aoc.NewMinerMaxer()
+	for _, v := range m {
+		minMax.Add(v)
+	}
+
+	return minMax.GetMax() - minMax.GetMin()
+}
+
 type Node struct {
 	r        rune
 	previous *Node
@@ -76,41 +91,39 @@ func fs2(input io.Reader, steps int) int {
 		transformations[del.GetString(0)] = rune(del.GetString(1)[0])
 	}
 
-	head := &Node{
-		r: rune(template[0]),
-	}
-	cur := head
+	pairs := make(map[string]int)
 	for i := 1; i < len(template); i++ {
-		n := &Node{
-			r:        rune(template[i]),
-			previous: cur,
-		}
-		cur.next = n
-		cur = n
+		pairs[fmt.Sprintf("%c%c", template[i-1], template[i])]++
 	}
 
-	previous := 0
 	for i := 0; i < steps; i++ {
-		v := getDifference(head)
-		fmt.Println(i, v-previous)
-		previous = v
-		transform(head, transformations)
+		pairs = transformPairs(pairs, transformations)
 	}
 
-	return getDifference(head)
-}
-
-func getDifference(cur *Node) int {
 	m := make(map[rune]int)
-	for cur != nil {
-		m[cur.r]++
-		cur = cur.next
+	for s, v := range pairs {
+		m[rune(s[0])] += v
+		m[rune(s[1])] += v
 	}
 
 	minMax := aoc.NewMinerMaxer()
 	for _, v := range m {
 		minMax.Add(v)
 	}
+	return (minMax.GetMax()-minMax.GetMin())/2 + 1
+}
 
-	return minMax.GetMax() - minMax.GetMin()
+func transformPairs(pairs map[string]int, transformations map[string]rune) map[string]int {
+	res := make(map[string]int, len(pairs))
+	for k, count := range pairs {
+		if dest, exists := transformations[k]; exists {
+			pair1 := fmt.Sprintf("%c%c", rune(k[0]), dest)
+			pair2 := fmt.Sprintf("%c%c", dest, rune(k[1]))
+			res[pair1] += count
+			res[pair2] += count
+		} else {
+			res[k] = count
+		}
+	}
+	return res
 }
