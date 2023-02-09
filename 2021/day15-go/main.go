@@ -1,10 +1,8 @@
 package main
 
 import (
-	"bufio"
 	"io"
 
-	pq "github.com/emirpasic/gods/queues/priorityqueue"
 	aoc "github.com/teivah/advent-of-code"
 )
 
@@ -18,7 +16,7 @@ func fs1(input io.Reader) int {
 		}
 	}
 
-	return bfs(grid, aoc.Position{
+	return findBest(grid, aoc.Position{
 		Row: len(lines) - 1,
 		Col: len(lines[0]) - 1,
 	})
@@ -29,22 +27,17 @@ type Entry struct {
 	risk int
 }
 
-func bfs(grid map[aoc.Position]int, target aoc.Position) int {
-	q := pq.NewWith(func(a, b interface{}) int {
-		priorityA := a.(Entry).risk
-		priorityB := b.(Entry).risk
-		return priorityA - priorityB
-	})
-	q.Enqueue(Entry{})
+func findBest(grid map[aoc.Position]int, target aoc.Position) int {
+	q := []Entry{{}}
 	visited := make(map[aoc.Position]int)
 
 	best := aoc.NewMiner()
-	for !q.Empty() {
-		x, _ := q.Dequeue()
-		e := x.(Entry)
+	for len(q) != 0 {
+		e := q[0]
+		q = q[1:]
 
 		if e.pos == target {
-			best.Add(e.risk)
+			best.Add(e.risk + grid[target] - grid[aoc.Position{}])
 			continue
 		}
 
@@ -59,7 +52,7 @@ func bfs(grid map[aoc.Position]int, target aoc.Position) int {
 
 		p := e.pos.Delta(-1, 0)
 		if _, exists := grid[p]; exists {
-			q.Enqueue(Entry{
+			q = append(q, Entry{
 				pos:  p,
 				risk: e.risk,
 			})
@@ -67,7 +60,7 @@ func bfs(grid map[aoc.Position]int, target aoc.Position) int {
 
 		p = e.pos.Delta(1, 0)
 		if _, exists := grid[p]; exists {
-			q.Enqueue(Entry{
+			q = append(q, Entry{
 				pos:  p,
 				risk: e.risk,
 			})
@@ -75,7 +68,7 @@ func bfs(grid map[aoc.Position]int, target aoc.Position) int {
 
 		p = e.pos.Delta(0, -1)
 		if _, exists := grid[p]; exists {
-			q.Enqueue(Entry{
+			q = append(q, Entry{
 				pos:  p,
 				risk: e.risk,
 			})
@@ -83,7 +76,7 @@ func bfs(grid map[aoc.Position]int, target aoc.Position) int {
 
 		p = e.pos.Delta(0, 1)
 		if _, exists := grid[p]; exists {
-			q.Enqueue(Entry{
+			q = append(q, Entry{
 				pos:  p,
 				risk: e.risk,
 			})
@@ -94,11 +87,43 @@ func bfs(grid map[aoc.Position]int, target aoc.Position) int {
 }
 
 func fs2(input io.Reader) int {
-	scanner := bufio.NewScanner(input)
-	for scanner.Scan() {
-		line := scanner.Text()
-		_ = line
+	lines := aoc.ReaderToStrings(input)
+	grid := make(map[aoc.Position]int)
+	for row, line := range lines {
+		for col := 0; col < len(line); col++ {
+			r := rune(line[col])
+			grid[aoc.Position{row, col}] = aoc.RuneToInt(r)
+		}
 	}
 
-	return 42
+	maxRow := aoc.NewMaxer()
+	maxCol := aoc.NewMaxer()
+	for deltaRow := 0; deltaRow < 5; deltaRow++ {
+		for deltaCol := 0; deltaCol < 5; deltaCol++ {
+			if deltaRow == 0 && deltaCol == 0 {
+				continue
+			}
+
+			delta := deltaRow + deltaCol
+			for row, line := range lines {
+				for col := 0; col < len(line); col++ {
+					r := deltaRow*len(lines) + row
+					c := deltaCol*len(lines[0]) + col
+					v := grid[aoc.Position{row, col}] + delta
+					if v > 9 {
+						v = (v % 10) + 1
+					}
+					grid[aoc.Position{r, c}] =
+						v
+					maxRow.Add(r)
+					maxCol.Add(c)
+				}
+			}
+		}
+	}
+
+	return findBest(grid, aoc.Position{
+		Row: maxRow.Get(),
+		Col: maxCol.Get(),
+	})
 }
