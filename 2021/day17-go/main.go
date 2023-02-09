@@ -1,9 +1,6 @@
 package main
 
 import (
-	"bufio"
-	"io"
-
 	aoc "github.com/teivah/advent-of-code"
 )
 
@@ -80,12 +77,28 @@ type position struct {
 	col int
 }
 
-func fs2(input io.Reader) int {
-	scanner := bufio.NewScanner(input)
-	for scanner.Scan() {
-		line := scanner.Text()
-		_ = line
+func fs2(from, to position) int {
+	b := Board{from, to}
+	return b.all()
+}
+
+func (b Board) all() int {
+	const (
+		minRow = -100
+		minCol = -100
+		maxRow = 400
+		maxCol = 400
+	)
+
+	sum := 0
+	for row := minRow; row <= maxRow; row++ {
+		for col := minCol; col <= maxCol; col++ {
+			_, inside := b.fire(position{row, col})
+			if inside {
+				sum++
+			}
+		}
 	}
 
-	return 42
+	return sum
 }
