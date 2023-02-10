@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 	"math"
@@ -65,37 +64,67 @@ func explode(s string) (string, bool) {
 		if s[i] == '[' {
 			open++
 			if open >= 5 {
-				r1 := rune(s[i+1])
-				r2 := rune(s[i+3])
-				if aoc.IsRuneDecimal(r1) && aoc.IsRuneDecimal(r2) {
-					// Explode
-					x := aoc.RuneToInt(r1)
-					y := aoc.RuneToInt(r2)
-					s = transformString(s, i, i+5, "0")
+				if aoc.IsRuneDecimal(rune(s[i+1])) {
+					start := i
+					j := i + 2
+					for aoc.IsRuneDecimal(rune(s[j])) {
+						j++
+					}
+					x := aoc.StringToInt(s[i+1 : j])
 
-					for left := i - 1; left >= 0; left-- {
-						r := rune(s[left])
-						if aoc.IsRuneDecimal(r) {
-							inc := aoc.RuneToInt(r) + x
-							v := strconv.Itoa(inc)
-							s = transformString(s, left, left+1, v)
-							if inc > 9 {
-								i++
+					if s[j] != ',' {
+						continue
+					}
+
+					i = j + 1
+
+					if aoc.IsRuneDecimal(rune(s[i])) {
+						j := i + 1
+						for aoc.IsRuneDecimal(rune(s[j])) {
+							j++
+						}
+						y := aoc.StringToInt(s[i:j])
+
+						// Explode
+
+						s = transformString(s, start, j+1, "0")
+
+						i = start
+						for left := i - 1; left >= 0; left-- {
+							if aoc.IsRuneDecimal(rune(s[left])) {
+								j := left - 1
+								for aoc.IsRuneDecimal(rune(s[j])) {
+									j--
+								}
+								before := s[j+1 : left+1]
+								n := aoc.StringToInt(before)
+								v := strconv.Itoa(n + x)
+								s = transformString(s, j+1, left+1, v)
+								// Increment i
+
+								if len(before) < len(v) {
+									i += len(v) - len(before)
+								}
+
+								break
 							}
-							break
 						}
-					}
 
-					for right := i + 1; right < len(s); right++ {
-						r := rune(s[right])
-						if aoc.IsRuneDecimal(r) {
-							v := strconv.Itoa(aoc.RuneToInt(r) + y)
-							s = transformString(s, right, right+1, v)
-							break
+						for right := i + 1; right < len(s); right++ {
+							if aoc.IsRuneDecimal(rune(s[right])) {
+								j := right + 1
+								for aoc.IsRuneDecimal(rune(s[j])) {
+									j++
+								}
+								n := aoc.StringToInt(s[right:j])
+								v := strconv.Itoa(n + y)
+								s = transformString(s, right, j, v)
+								break
+							}
 						}
-					}
 
-					return s, true
+						return s, true
+					}
 				}
 			}
 		} else if s[i] == ']' {
@@ -171,11 +200,20 @@ func transformString(s string, from, to int, res string) string {
 }
 
 func fs2(input io.Reader) int {
-	scanner := bufio.NewScanner(input)
-	for scanner.Scan() {
-		line := scanner.Text()
-		_ = line
+	lines := aoc.ReaderToStrings(input)
+
+	max := aoc.NewMaxer()
+	for i := 0; i < len(lines); i++ {
+		for j := i + 1; j < len(lines); j++ {
+			res := add(lines[i], lines[j])
+			res = reduction(res)
+			max.Add(magnitude(res))
+
+			res = add(lines[j], lines[i])
+			res = reduction(res)
+			max.Add(magnitude(res))
+		}
 	}
 
-	return 42
+	return max.Get()
 }
