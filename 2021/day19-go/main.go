@@ -73,41 +73,56 @@ func findIntersections(sc1, sc2 []Position) []Position {
 			contains[rotation] = append(contains[rotation], id)
 		}
 	}
-	x := 68
-	y := -1246
-	z := -43
-	sums := make(map[int]int)
-	positions := make(map[int][]Position)
-	for _, pos := range sc2 {
-		pos = pos.reduce(red)
-		d := Position{x, y, z}.reduce(red)
-		rotations := d.getAllRotations()
-		for _, rotation := range rotations {
-			p2 := pos.deltaPosition(rotation)
-			if foundRotations, found := contains[p2]; found {
-				for _, r := range foundRotations {
-					sums[r]++
-					positions[r] = append(positions[r], pos)
-				}
-			}
+	//x := 68
+	//y := -1246
+	//z := -43
 
-			for dx := -1; dx <= 1; dx++ {
-				for dy := -1; dy <= 1; dy++ {
-					for dz := -1; dz <= 1; dz++ {
-						if foundRotations, found := contains[p2.delta(dx, dy, dz)]; found {
+	var q []Position
+	for x := -150; x <= 150; x++ {
+		for y := -150; y <= 150; y++ {
+			for z := -150; z <= 150; z++ {
+				sums := make(map[int]int)
+				positions := make(map[int][]Position)
+				for _, pos := range sc2 {
+					pos = pos.reduce(red)
+					d := Position{x, y, z}
+					rotations := d.getAllRotations()
+					for _, rotation := range rotations {
+						p2 := pos.deltaPosition(rotation)
+						if foundRotations, found := contains[p2]; found {
 							for _, r := range foundRotations {
 								sums[r]++
 								positions[r] = append(positions[r], pos)
 							}
 						}
+
+						//for dx := -1; dx <= 1; dx++ {
+						//	for dy := -1; dy <= 1; dy++ {
+						//		for dz := -1; dz <= 1; dz++ {
+						//			if foundRotations, found := contains[p2.delta(dx, dy, dz)]; found {
+						//				for _, r := range foundRotations {
+						//					sums[r]++
+						//					positions[r] = append(positions[r], pos)
+						//				}
+						//			}
+						//		}
+						//	}
+						//}
+					}
+				}
+
+				for _, v := range sums {
+					if v >= 1 {
+						found := Position{x, y, z}
+						//fmt.Println(v, found)
+						q = append(q, found)
 					}
 				}
 			}
 		}
 	}
 
-	fmt.Println(sums)
-	fmt.Println(positions)
+	fmt.Println(len(q))
 
 	return nil
 }
