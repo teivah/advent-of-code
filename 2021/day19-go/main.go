@@ -15,122 +15,265 @@ at least 12 overlapping beacon
 func fs1(input io.Reader) int {
 	groups := aoc.StringGroups(aoc.ReaderToStrings(input))
 
-	m := make(map[int][]Position)
-	for i, group := range groups {
-		m[i] = toPositions(group)
+	var m [][]Position
+	for _, group := range groups {
+		m = append(m, toPositions(group))
 	}
 
-	findIntersections(m[0], m[1])
-
-	return 42
-}
-
-func findIntersections(sc1, sc2 []Position) []Position {
-	const (
-		from  = -1500
-		to    = 1500
-		delta = 100
-	)
-
-	//contains := make(map[Position]bool)
-	//for _, pos := range sc1 {
-	//	contains[pos.reduce(delta)] = true
+	//one := findIntersections(m[0], m[1])
+	//four := findIntersections(m[1], m[4])
+	//for _, p := range four.getAllRotations() {
+	//	fmt.Println(p.deltaPosition(one))
 	//}
-	//
-	////var q []Position
-	//for x := from / delta; x <= to/delta; x++ {
-	//	for y := from / delta; y <= to/delta; y++ {
-	//		for z := from / delta; z <= to/delta; z++ {
-	//			sums := make(map[int]int)
-	//			for _, pos := range sc2 {
-	//				tmp := pos.reduce(delta)
-	//				p2 := tmp.delta(x, y, z)
-	//				for rotation, p := range p2.getAllRotations() {
-	//					if contains[p] {
-	//						sums[rotation]++
-	//					}
-	//				}
-	//			}
-	//			if x == 0 && y == -11 && z == 10 {
-	//				fmt.Println(sums)
-	//			}
-	//
-	//			for k, v := range sums {
-	//				if v >= 12 {
-	//					fmt.Println(k)
-	//				}
-	//			}
+
+	//findIntersections(m[0], m[1])
+	//findIntersections(m[1], m[4])
+	//findIntersections(m[4], m[2])
+	//findIntersections(m[1], m[3])
+
+	one, done := findIntersections(m[0], m[1])
+	four, dfour := findIntersections(m[1], m[4])
+
+	fmt.Println(one, four)
+	fmt.Println(done, dfour)
+
+	fmt.Println(one.deltaPosition(dfour))
+
+	//sum := 0
+	//for i := 0; i < len(m); i++ {
+	//	for j := i + 1; j < len(m); j++ {
+	//		if v := findIntersections(m[i], m[j]); v != -1 {
+	//			sum += v
 	//		}
 	//	}
 	//}
 
-	red := 10
-	contains := make(map[Position][]int)
-	for _, pos := range sc1 {
-		pos = pos.reduce(red)
-		rotations := pos.getAllRotations()
-		for id, rotation := range rotations {
-			contains[rotation] = append(contains[rotation], id)
+	//return sum
+	return 0
+}
+
+type Link struct {
+	p1 Position
+	p2 Position
+}
+
+func findIntersections(sc1, sc2 []Position) (Position, Position) {
+	exists := make(map[Position]bool)
+	distances := make(map[Position][]Position)
+	for i := 0; i < len(sc1); i++ {
+		for j := i + 1; j < len(sc1); j++ {
+			d := sc1[i].distance(sc1[j])
+			exists[d] = true
+			distances[sc1[i]] = append(distances[sc1[i]], d)
+			distances[sc1[j]] = append(distances[sc1[j]], d)
 		}
 	}
-	//x := 68
-	//y := -1246
-	//z := -43
 
-	var q []Position
-	for x := -150; x <= 150; x++ {
-		for y := -150; y <= 150; y++ {
-			for z := -150; z <= 150; z++ {
-				sums := make(map[int]int)
-				positions := make(map[int][]Position)
-				for _, pos := range sc2 {
-					pos = pos.reduce(red)
-					d := Position{x, y, z}
-					rotations := d.getAllRotations()
-					for _, rotation := range rotations {
-						p2 := pos.deltaPosition(rotation)
-						if foundRotations, found := contains[p2]; found {
-							for _, r := range foundRotations {
-								sums[r]++
-								positions[r] = append(positions[r], pos)
-							}
-						}
-
-						//for dx := -1; dx <= 1; dx++ {
-						//	for dy := -1; dy <= 1; dy++ {
-						//		for dz := -1; dz <= 1; dz++ {
-						//			if foundRotations, found := contains[p2.delta(dx, dy, dz)]; found {
-						//				for _, r := range foundRotations {
-						//					sums[r]++
-						//					positions[r] = append(positions[r], pos)
-						//				}
-						//			}
-						//		}
-						//	}
-						//}
-					}
-				}
-
-				for _, v := range sums {
-					if v >= 1 {
-						found := Position{x, y, z}
-						//fmt.Println(v, found)
-						q = append(q, found)
+	sums := make(map[int]int)
+	distances2 := make(map[Position][]Position)
+	for i := 0; i < len(sc2); i++ {
+		for j := i + 1; j < len(sc2); j++ {
+			for _, a := range sc2[i].getAllRotations() {
+				for rotation, b := range sc2[j].getAllRotations() {
+					d := a.distance(b)
+					if exists[d] {
+						sums[rotation]++
+						distances2[sc2[i]] = append(distances[sc2[i]], d)
+						distances2[sc2[j]] = append(distances[sc2[j]], d)
 					}
 				}
 			}
 		}
 	}
 
-	fmt.Println(len(q))
+	for _, v := range sums {
+		if v >= 66 {
+			// Overlap
+			res := make(map[Position]map[Position]int)
+			for from, d1 := range distances {
+				for to, d2 := range distances2 {
+					count := 0
+					for _, d := range d2 {
+						for _, x := range d1 {
+							if d == x {
+								count++
+							}
+						}
+					}
 
-	return nil
+					if count >= 1 {
+						m, found := res[from]
+						if !found {
+							m = make(map[Position]int)
+							res[from] = m
+						}
+						m[to]++
+					}
+				}
+			}
+
+			//unique := make(map[Position]Position)
+			var unique []Link
+			for k, v := range res {
+				if len(v) == 1 {
+					var p Position
+					for k := range v {
+						p = k
+						break
+					}
+					unique = append(unique, Link{k, p})
+					//unique[k] = p
+				}
+			}
+
+			l0 := unique[0]
+			l1 := unique[1]
+
+			/*
+				x y z
+				-x y z
+				-x -y z
+				x -y z
+
+				x -z y
+				-x -z y
+				-x z y
+				x z y
+
+				x -z y
+				-x -z y
+				-x z y
+				x z y
+
+				-y -z x
+				y -z x
+				y z x
+				-y z x
+
+				-x -z -y
+				x -z -y
+				x z -y
+				-x z -y
+
+				y -z -x
+				-y -z -x
+				-y z -x
+				y z -x
+			*/
+
+			x, y, z := 0, 0, 0
+			dx, dy, dz := 0, 0, 0
+
+			if l0.p1.x+l0.p2.x == l1.p1.x+l1.p2.x {
+				x = l0.p1.x + l0.p2.x
+			} else if l0.p1.x-l0.p2.x == l1.p1.x-l1.p2.x {
+				x = l0.p1.x - l0.p2.x
+			} else if l0.p1.x+l0.p2.y == l1.p1.x+l1.p2.y {
+				x = l0.p1.x + l0.p2.y
+			} else if l0.p1.x-l0.p2.y == l1.p1.x-l1.p2.y {
+				x = l0.p1.x - l0.p2.y
+			} else if l0.p1.x+l0.p2.z == l1.p1.x+l1.p2.z {
+				x = l0.p1.x + l0.p2.z
+			} else if l0.p1.x-l0.p2.z == l1.p1.x-l1.p2.z {
+				x = l0.p1.x - l0.p2.z
+			}
+
+			if l0.p1.y+l0.p2.y == l1.p1.y+l1.p2.y {
+				y = l0.p1.y + l0.p2.y
+			} else if l0.p1.y-l0.p2.y == l1.p1.y-l1.p2.y {
+				y = l0.p1.y - l0.p2.y
+			} else if l0.p1.y+l0.p2.x == l1.p1.y+l1.p2.x {
+				y = l0.p1.y + l0.p2.x
+			} else if l0.p1.y-l0.p2.x == l1.p1.y-l1.p2.x {
+				y = l0.p1.y - l0.p2.x
+			} else if l0.p1.y+l0.p2.z == l1.p1.y+l1.p2.z {
+				y = l0.p1.y + l0.p2.z
+			} else if l0.p1.y-l0.p2.z == l1.p1.y-l1.p2.z {
+				y = l0.p1.y - l0.p2.z
+			}
+
+			if l0.p1.z+l0.p2.z == l1.p1.z+l1.p2.z {
+				z = l0.p1.z + l0.p2.z
+			} else if l0.p1.z-l0.p2.z == l1.p1.z-l1.p2.z {
+				z = l0.p1.z - l0.p2.z
+			} else if l0.p1.z+l0.p2.x == l1.p1.z+l1.p2.x {
+				z = l0.p1.z + l0.p2.x
+			} else if l0.p1.z-l0.p2.x == l1.p1.z-l1.p2.x {
+				z = l0.p1.z - l0.p2.x
+			} else if l0.p1.z+l0.p2.y == l1.p1.z+l1.p2.y {
+				z = l0.p1.z + l0.p2.y
+			} else if l0.p1.z-l0.p2.y == l1.p1.z-l1.p2.y {
+				z = l0.p1.z - l0.p2.y
+			}
+
+			// ---
+
+			if l0.p1.x+l0.p2.x == l1.p1.x+l1.p2.x {
+				dx = x
+			} else if l0.p1.x-l0.p2.x == l1.p1.x-l1.p2.x {
+				dx = -x
+			} else if l0.p1.x+l0.p2.y == l1.p1.x+l1.p2.y {
+				dx = y
+			} else if l0.p1.x-l0.p2.y == l1.p1.x-l1.p2.y {
+				dx = -y
+			} else if l0.p1.x+l0.p2.z == l1.p1.x+l1.p2.z {
+				dx = z
+			} else if l0.p1.x-l0.p2.z == l1.p1.x-l1.p2.z {
+				dx = -z
+			}
+
+			if l0.p1.y+l0.p2.y == l1.p1.y+l1.p2.y {
+				dy = y
+			} else if l0.p1.y-l0.p2.y == l1.p1.y-l1.p2.y {
+				dy = -y
+			} else if l0.p1.y+l0.p2.x == l1.p1.y+l1.p2.x {
+				dy = x
+			} else if l0.p1.y-l0.p2.x == l1.p1.y-l1.p2.x {
+				dy = -x
+			} else if l0.p1.y+l0.p2.z == l1.p1.y+l1.p2.z {
+				dy = z
+			} else if l0.p1.y-l0.p2.z == l1.p1.y-l1.p2.z {
+				dy = -z
+			}
+
+			if l0.p1.z+l0.p2.z == l1.p1.z+l1.p2.z {
+				dz = z
+			} else if l0.p1.z-l0.p2.z == l1.p1.z-l1.p2.z {
+				dz = -z
+			} else if l0.p1.z+l0.p2.x == l1.p1.z+l1.p2.x {
+				dz = x
+			} else if l0.p1.z-l0.p2.x == l1.p1.z-l1.p2.x {
+				dz = -x
+			} else if l0.p1.z+l0.p2.y == l1.p1.z+l1.p2.y {
+				dz = y
+			} else if l0.p1.z-l0.p2.y == l1.p1.z-l1.p2.y {
+				dz = -y
+			}
+
+			pos := Position{x, y, z}
+			pos2 := Position{dx, dy, dz}
+
+			return pos, pos2
+		}
+	}
+
+	return Position{}, Position{}
+}
+
+func testDelta(l0, l1 Link, dx, dy, dz int) bool {
+	return l0.p1.x+dx*l0.p2.x == l1.p1.x+dx*l1.p2.x &&
+		l0.p1.y+l0.p2.y == l1.p1.y+dy*l1.p2.y &&
+		l0.p1.z+l0.p2.z == l1.p1.z+dz*l1.p2.z
 }
 
 type Position struct {
 	x int
 	y int
 	z int
+}
+
+func (p Position) distance(p2 Position) Position {
+	return Position{aoc.Abs(p.x - p2.x), aoc.Abs(p.y - p2.y), aoc.Abs(p.z - p2.z)}
 }
 
 func (p Position) getAllRotations() []Position {
