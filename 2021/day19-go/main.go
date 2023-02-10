@@ -39,19 +39,23 @@ func fs1(input io.Reader) int {
 	//fmt.Println(one, four)
 	//fmt.Println(done, dfour)
 
-	overlaps := 0
+	set := make(map[Position]int)
 	for i := 0; i < len(m); i++ {
 		for j := i + 1; j < len(m); j++ {
-			_, _, overlap := findIntersections(m[i], m[j])
-			if overlap {
-				overlaps++
+			positions := findIntersections(m[i], m[j])
+			for _, position := range positions {
+				set[position]++
 			}
 		}
 	}
 
-	fmt.Println(overlaps, sum)
+	fmt.Println(set)
 
-	return sum - 12*overlaps
+	for _, v := range set {
+		sum -= v
+	}
+
+	return sum
 }
 
 type Link struct {
@@ -59,7 +63,7 @@ type Link struct {
 	p2 Position
 }
 
-func findIntersections(sc1, sc2 []Position) (Position, Position, bool) {
+func findIntersections(sc1, sc2 []Position) []Position {
 	exists := make(map[Position]bool)
 	distances := make(map[Position][]Position)
 	for i := 0; i < len(sc1); i++ {
@@ -165,7 +169,7 @@ func findIntersections(sc1, sc2 []Position) (Position, Position, bool) {
 
 			x, y, z := 0, 0, 0
 			dx, dy, dz := 0, 0, 0
-
+			_, _, _ = dx, dy, dz
 			if l0.p1.x+l0.p2.x == l1.p1.x+l1.p2.x {
 				x = l0.p1.x + l0.p2.x
 			} else if l0.p1.x-l0.p2.x == l1.p1.x-l1.p2.x {
@@ -252,14 +256,18 @@ func findIntersections(sc1, sc2 []Position) (Position, Position, bool) {
 				dz = -y
 			}
 
-			pos := Position{x, y, z}
-			pos2 := Position{dx, dy, dz}
+			//pos := Position{x, y, z}
+			//pos2 := Position{dx, dy, dz}
 
-			return pos, pos2, true
+			var vs []Position
+			for k := range res {
+				vs = append(vs, k)
+			}
+			return vs
 		}
 	}
 
-	return Position{}, Position{}, false
+	return nil
 }
 
 func testDelta(l0, l1 Link, dx, dy, dz int) bool {
