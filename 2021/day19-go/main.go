@@ -16,8 +16,11 @@ func fs1(input io.Reader) int {
 	groups := aoc.StringGroups(aoc.ReaderToStrings(input))
 
 	var m [][]Position
+	sum := 0
 	for _, group := range groups {
-		m = append(m, toPositions(group))
+		positions := toPositions(group)
+		m = append(m, positions)
+		sum += len(positions)
 	}
 
 	//one := findIntersections(m[0], m[1])
@@ -31,25 +34,24 @@ func fs1(input io.Reader) int {
 	//findIntersections(m[4], m[2])
 	//findIntersections(m[1], m[3])
 
-	one, done := findIntersections(m[0], m[1])
-	four, dfour := findIntersections(m[1], m[4])
+	//one, done := findIntersections(m[0], m[1])
+	//four, dfour := findIntersections(m[1], m[4])
+	//fmt.Println(one, four)
+	//fmt.Println(done, dfour)
 
-	fmt.Println(one, four)
-	fmt.Println(done, dfour)
+	overlaps := 0
+	for i := 0; i < len(m); i++ {
+		for j := i + 1; j < len(m); j++ {
+			_, _, overlap := findIntersections(m[i], m[j])
+			if overlap {
+				overlaps++
+			}
+		}
+	}
 
-	fmt.Println(one.deltaPosition(dfour))
+	fmt.Println(overlaps, sum)
 
-	//sum := 0
-	//for i := 0; i < len(m); i++ {
-	//	for j := i + 1; j < len(m); j++ {
-	//		if v := findIntersections(m[i], m[j]); v != -1 {
-	//			sum += v
-	//		}
-	//	}
-	//}
-
-	//return sum
-	return 0
+	return sum - 12*overlaps
 }
 
 type Link struct {
@@ -57,7 +59,7 @@ type Link struct {
 	p2 Position
 }
 
-func findIntersections(sc1, sc2 []Position) (Position, Position) {
+func findIntersections(sc1, sc2 []Position) (Position, Position, bool) {
 	exists := make(map[Position]bool)
 	distances := make(map[Position][]Position)
 	for i := 0; i < len(sc1); i++ {
@@ -253,11 +255,11 @@ func findIntersections(sc1, sc2 []Position) (Position, Position) {
 			pos := Position{x, y, z}
 			pos2 := Position{dx, dy, dz}
 
-			return pos, pos2
+			return pos, pos2, true
 		}
 	}
 
-	return Position{}, Position{}
+	return Position{}, Position{}, false
 }
 
 func testDelta(l0, l1 Link, dx, dy, dz int) bool {
