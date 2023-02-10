@@ -64,8 +64,10 @@ func findIntersections(sc1, sc2 []Position) []Position {
 	//	}
 	//}
 
+	red := 10
 	contains := make(map[Position][]int)
 	for _, pos := range sc1 {
+		pos = pos.reduce(red)
 		rotations := pos.getAllRotations()
 		for id, rotation := range rotations {
 			contains[rotation] = append(contains[rotation], id)
@@ -75,20 +77,37 @@ func findIntersections(sc1, sc2 []Position) []Position {
 	y := -1246
 	z := -43
 	sums := make(map[int]int)
+	positions := make(map[int][]Position)
 	for _, pos := range sc2 {
-		d := Position{x, y, z}
+		pos = pos.reduce(red)
+		d := Position{x, y, z}.reduce(red)
 		rotations := d.getAllRotations()
 		for _, rotation := range rotations {
 			p2 := pos.deltaPosition(rotation)
 			if foundRotations, found := contains[p2]; found {
 				for _, r := range foundRotations {
 					sums[r]++
+					positions[r] = append(positions[r], pos)
+				}
+			}
+
+			for dx := -1; dx <= 1; dx++ {
+				for dy := -1; dy <= 1; dy++ {
+					for dz := -1; dz <= 1; dz++ {
+						if foundRotations, found := contains[p2.delta(dx, dy, dz)]; found {
+							for _, r := range foundRotations {
+								sums[r]++
+								positions[r] = append(positions[r], pos)
+							}
+						}
+					}
 				}
 			}
 		}
 	}
 
 	fmt.Println(sums)
+	fmt.Println(positions)
 
 	return nil
 }
