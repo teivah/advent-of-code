@@ -20,40 +20,64 @@ func fs1(input io.Reader) int {
 		m = append(m, toPositions(group))
 	}
 
-	//one := findIntersections(m[0], m[1])
-	//four := findIntersections(m[1], m[4])
-	//for _, p := range four.getAllRotations() {
-	//	fmt.Println(p.deltaPosition(one))
+	visited := make(map[Key]bool)
+	positions := make(map[Position]struct{})
+	for _, pos := range m[0] {
+		positions[pos] = struct{}{}
+	}
+	for i := 0; i < len(m); i++ {
+		dfs(i, m, Position{}, visited, nil, positions)
+	}
+	return len(positions)
+
+	//done, fone := findIntersections(m[0], m[1])
+	//dfour, ffour := findIntersections(m[1], m[4])
+	//
+	//four := done.deltaPosition(fone(dfour))
+	//for _, beacon := range m[4] {
+	//	fmt.Println(four.deltaPosition(fone(ffour(beacon))))
 	//}
-
-	//findIntersections(m[0], m[1])
-	//findIntersections(m[1], m[4])
-	//findIntersections(m[4], m[2])
-	//findIntersections(m[1], m[3])
-
-	one, f := findIntersections(m[0], m[1])
-	four, _ := findIntersections(m[1], m[4])
-
-	fmt.Printf("one: %v, four: %v\n", one, four)
-	fmt.Println(one.deltaPosition(f(four)))
-	//fmt.Printf("done: %v, dfour: %v\n", done, dfour)
-
-	//sum := 0
-	//for i := 0; i < len(m); i++ {
-	//	for j := i + 1; j < len(m); j++ {
-	//		if v := findIntersections(m[i], m[j]); v != -1 {
-	//			sum += v
-	//		}
-	//	}
-	//}
-
-	//return sum
-	return 0
+	//return 0
 }
 
-type Link struct {
-	p1 Position
-	p2 Position
+type Key struct {
+	i int
+	j int
+}
+
+func dfs(idx int, m [][]Position, from Position, visited map[Key]bool, f transform, positions map[Position]struct{}) {
+	for i := idx + 1; i < len(m); i++ {
+		k := Key{idx, i}
+		if visited[k] {
+			continue
+		}
+		dest, g := findIntersections(m[idx], m[i])
+		visited[k] = true
+		if g == nil {
+			continue
+		}
+
+		var pos Position
+		if f == nil {
+			pos = dest
+		} else {
+			pos = from.deltaPosition(f(dest))
+		}
+
+		var cf transform
+		if f == nil {
+			cf = g
+		} else {
+			cf = f.compose(g)
+		}
+
+		for _, beacon := range m[i] {
+			fromZero := pos.deltaPosition(cf(beacon))
+			fmt.Println(idx, i, fromZero)
+			positions[fromZero] = struct{}{}
+		}
+		dfs(i, m, pos, visited, cf, positions)
+	}
 }
 
 func findIntersections(sc1, sc2 []Position) (Position, transform) {
@@ -208,7 +232,7 @@ func findIntersections(sc1, sc2 []Position) (Position, transform) {
 
 			//fmt.Println(getRotation(unique, pos))
 			f := getRotation2(unique, pos)
-			fmt.Println(unique[0].p1, pos.deltaPosition(f(unique[0].p2)))
+			//fmt.Println(unique[0].p1, pos.deltaPosition(f(unique[0].p2)))
 
 			// Gold
 			//for _, v := range unique {
@@ -227,6 +251,11 @@ func findIntersections(sc1, sc2 []Position) (Position, transform) {
 	return Position{}, nil
 }
 
+type Link struct {
+	p1 Position
+	p2 Position
+}
+
 func testDelta(l0, l1 Link, dx, dy, dz int) bool {
 	return l0.p1.x+dx*l0.p2.x == l1.p1.x+dx*l1.p2.x &&
 		l0.p1.y+l0.p2.y == l1.p1.y+dy*l1.p2.y &&
@@ -240,6 +269,12 @@ type Position struct {
 }
 
 type transform func(Position) Position
+
+func (t transform) compose(t2 transform) transform {
+	return func(position Position) Position {
+		return t(t2(position))
+	}
+}
 
 func getRotation2(unique []Link, foundPosition Position) transform {
 	f := func(t transform, p2, initial Position) transform {
