@@ -1,17 +1,11 @@
 package main
 
 import (
-	"bufio"
-	"fmt"
 	"io"
 
 	aoc "github.com/teivah/advent-of-code"
 )
 
-/*
-at least 12 overlapping beacon
-24 directions
-*/
 func fs1(input io.Reader) int {
 	groups := aoc.StringGroups(aoc.ReaderToStrings(input))
 
@@ -25,19 +19,8 @@ func fs1(input io.Reader) int {
 	for _, pos := range m[0] {
 		positions[pos] = struct{}{}
 	}
-	for i := 0; i < len(m); i++ {
-		dfs(i, m, Position{}, visited, nil, positions)
-	}
+	dfs(0, m, Position{}, visited, nil, positions)
 	return len(positions)
-
-	//done, fone := findIntersections(m[0], m[1])
-	//dfour, ffour := findIntersections(m[1], m[4])
-	//
-	//four := done.deltaPosition(fone(dfour))
-	//for _, beacon := range m[4] {
-	//	fmt.Println(four.deltaPosition(fone(ffour(beacon))))
-	//}
-	//return 0
 }
 
 type Key struct {
@@ -46,13 +29,16 @@ type Key struct {
 }
 
 func dfs(idx int, m [][]Position, from Position, visited map[Key]bool, f transform, positions map[Position]struct{}) {
-	for i := idx + 1; i < len(m); i++ {
-		k := Key{idx, i}
-		if visited[k] {
+	for i := 0; i < len(m); i++ {
+		if i == idx {
+			continue
+		}
+		if visited[(Key{idx, i})] || visited[(Key{i, idx})] {
 			continue
 		}
 		dest, g := findIntersections(m[idx], m[i])
-		visited[k] = true
+		visited[Key{idx, i}] = true
+		visited[Key{i, idx}] = true
 		if g == nil {
 			continue
 		}
@@ -73,10 +59,44 @@ func dfs(idx int, m [][]Position, from Position, visited map[Key]bool, f transfo
 
 		for _, beacon := range m[i] {
 			fromZero := pos.deltaPosition(cf(beacon))
-			fmt.Println(idx, i, fromZero)
 			positions[fromZero] = struct{}{}
 		}
 		dfs(i, m, pos, visited, cf, positions)
+	}
+}
+
+func scannerPositions(idx int, m [][]Position, from Position, visited map[Key]bool, f transform, positions map[Position]struct{}) {
+	for i := 0; i < len(m); i++ {
+		if i == idx {
+			continue
+		}
+		if visited[(Key{idx, i})] || visited[(Key{i, idx})] {
+			continue
+		}
+		dest, g := findIntersections(m[idx], m[i])
+		visited[Key{idx, i}] = true
+		visited[Key{i, idx}] = true
+		if g == nil {
+			continue
+		}
+
+		var pos Position
+		if f == nil {
+			pos = dest
+		} else {
+			pos = from.deltaPosition(f(dest))
+		}
+
+		positions[pos] = struct{}{}
+
+		var cf transform
+		if f == nil {
+			cf = g
+		} else {
+			cf = f.compose(g)
+		}
+
+		scannerPositions(i, m, pos, visited, cf, positions)
 	}
 }
 
@@ -135,7 +155,6 @@ func findIntersections(sc1, sc2 []Position) (Position, transform) {
 				}
 			}
 
-			//unique := make(map[Position]Position)
 			var unique []Link
 			for k, v := range res {
 				if len(v) == 1 {
@@ -145,44 +164,11 @@ func findIntersections(sc1, sc2 []Position) (Position, transform) {
 						break
 					}
 					unique = append(unique, Link{k, p})
-					//unique[k] = p
 				}
 			}
 
 			l0 := unique[0]
 			l1 := unique[1]
-
-			/*
-				x y z
-				-x y z
-				-x -y z
-				x -y z
-
-				x -z y
-				-x -z y
-				-x z y
-				x z y
-
-				x -z y
-				-x -z y
-				-x z y
-				x z y
-
-				-y -z x
-				y -z x
-				y z x
-				-y z x
-
-				-x -z -y
-				x -z -y
-				x z -y
-				-x z -y
-
-				y -z -x
-				-y -z -x
-				-y z -x
-				y z -x
-			*/
 
 			x, y, z := 0, 0, 0
 
@@ -230,19 +216,7 @@ func findIntersections(sc1, sc2 []Position) (Position, transform) {
 
 			pos := Position{x, y, z}
 
-			//fmt.Println(getRotation(unique, pos))
 			f := getRotation2(unique, pos)
-			//fmt.Println(unique[0].p1, pos.deltaPosition(f(unique[0].p2)))
-
-			// Gold
-			//for _, v := range unique {
-			//	for i, rotation := range v.p2.getAllRotations() {
-			//		delta := pos.deltaPosition(rotation)
-			//		if delta == v.p1 {
-			//			fmt.Println(delta, i)
-			//		}
-			//	}
-			//}
 
 			return pos, f
 		}
@@ -254,12 +228,6 @@ func findIntersections(sc1, sc2 []Position) (Position, transform) {
 type Link struct {
 	p1 Position
 	p2 Position
-}
-
-func testDelta(l0, l1 Link, dx, dy, dz int) bool {
-	return l0.p1.x+dx*l0.p2.x == l1.p1.x+dx*l1.p2.x &&
-		l0.p1.y+l0.p2.y == l1.p1.y+dy*l1.p2.y &&
-		l0.p1.z+l0.p2.z == l1.p1.z+dz*l1.p2.z
 }
 
 type Position struct {
@@ -339,46 +307,6 @@ func getRotation2(unique []Link, foundPosition Position) transform {
 			return Position{p.y, -p.z, -p.x}
 		}, v.p2, v.p1); h != nil {
 			return h
-		}
-	}
-	panic(unique)
-}
-
-func getRotation(unique []Link, foundPosition Position) (int, int) {
-	f := func(x, y, z int, initial Position) int {
-		if foundPosition.deltaPosition((Position{x, y, z})) == initial {
-			return 0
-		}
-		if foundPosition.deltaPosition((Position{-y, x, z})) == initial {
-			return 1
-		}
-		if foundPosition.deltaPosition((Position{-x, -y, z})) == initial {
-			return 2
-		}
-		if foundPosition.deltaPosition((Position{y, -x, z})) == initial {
-			return 3
-		}
-		return -1
-	}
-
-	for _, v := range unique {
-		if v := f(v.p2.x, v.p2.y, v.p2.z, v.p1); v != -1 {
-			return 0, v
-		}
-		if v := f(v.p2.x, -v.p2.y, -v.p2.z, v.p1); v != -1 {
-			return 1, v // -x +y -z
-		}
-		if v := f(v.p2.x, -v.p2.z, v.p2.y, v.p1); v != -1 {
-			return 2, v
-		}
-		if v := f(-v.p2.y, -v.p2.z, v.p2.x, v.p1); v != -1 {
-			return 3, v
-		}
-		if v := f(-v.p2.x, -v.p2.z, -v.p2.y, v.p1); v != -1 {
-			return 4, v
-		}
-		if v := f(v.p2.y, -v.p2.z, -v.p2.x, v.p1); v != -1 {
-			return 5, v
 		}
 	}
 	panic(unique)
@@ -487,11 +415,28 @@ func toPositions(lines []string) []Position {
 }
 
 func fs2(input io.Reader) int {
-	scanner := bufio.NewScanner(input)
-	for scanner.Scan() {
-		line := scanner.Text()
-		_ = line
+	groups := aoc.StringGroups(aoc.ReaderToStrings(input))
+
+	var m [][]Position
+	for _, group := range groups {
+		m = append(m, toPositions(group))
 	}
 
-	return 42
+	visited := make(map[Key]bool)
+	positions := make(map[Position]struct{})
+	positions[Position{}] = struct{}{}
+	scannerPositions(0, m, Position{}, visited, nil, positions)
+
+	max := aoc.NewMaxer()
+	for k1 := range positions {
+		for k2 := range positions {
+			max.Add(k1.Manhattan(k2))
+		}
+	}
+
+	return max.Get()
+}
+
+func (p Position) Manhattan(p2 Position) int {
+	return aoc.Abs(p.x-p2.x) + aoc.Abs(p.y-p2.y) + aoc.Abs(p.z-p2.z)
 }

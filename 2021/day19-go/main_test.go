@@ -17,17 +17,17 @@ func TestFs1Test(t *testing.T) {
 func TestFs1Input(t *testing.T) {
 	f, err := os.Open("input.txt")
 	require.NoError(t, err)
-	assert.Equal(t, 445, fs1(f))
+	assert.Equal(t, 472, fs1(f))
 }
 
 func TestFs2Test(t *testing.T) {
 	f, err := os.Open("test.txt")
 	require.NoError(t, err)
-	assert.Equal(t, 42, fs2(f))
+	assert.Equal(t, 3621, fs2(f))
 }
 
 func TestFs2Input(t *testing.T) {
 	f, err := os.Open("input.txt")
 	require.NoError(t, err)
-	assert.Equal(t, 42, fs2(f))
+	assert.Equal(t, 12092, fs2(f))
 }
