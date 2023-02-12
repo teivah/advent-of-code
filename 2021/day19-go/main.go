@@ -16,11 +16,8 @@ func fs1(input io.Reader) int {
 	groups := aoc.StringGroups(aoc.ReaderToStrings(input))
 
 	var m [][]Position
-	sum := 0
 	for _, group := range groups {
-		positions := toPositions(group)
-		m = append(m, positions)
-		sum += len(positions)
+		m = append(m, toPositions(group))
 	}
 
 	//one := findIntersections(m[0], m[1])
@@ -34,28 +31,24 @@ func fs1(input io.Reader) int {
 	//findIntersections(m[4], m[2])
 	//findIntersections(m[1], m[3])
 
-	//one, done := findIntersections(m[0], m[1])
-	//four, dfour := findIntersections(m[1], m[4])
-	//fmt.Println(one, four)
-	//fmt.Println(done, dfour)
+	one, f := findIntersections(m[0], m[1])
+	four, _ := findIntersections(m[1], m[4])
 
-	set := make(map[Position]int)
-	for i := 0; i < len(m); i++ {
-		for j := i + 1; j < len(m); j++ {
-			positions := findIntersections(m[i], m[j])
-			for _, position := range positions {
-				set[position]++
-			}
-		}
-	}
+	fmt.Printf("one: %v, four: %v\n", one, four)
+	fmt.Println(one.deltaPosition(f(four)))
+	//fmt.Printf("done: %v, dfour: %v\n", done, dfour)
 
-	fmt.Println(set)
+	//sum := 0
+	//for i := 0; i < len(m); i++ {
+	//	for j := i + 1; j < len(m); j++ {
+	//		if v := findIntersections(m[i], m[j]); v != -1 {
+	//			sum += v
+	//		}
+	//	}
+	//}
 
-	for _, v := range set {
-		sum -= v
-	}
-
-	return sum
+	//return sum
+	return 0
 }
 
 type Link struct {
@@ -63,7 +56,7 @@ type Link struct {
 	p2 Position
 }
 
-func findIntersections(sc1, sc2 []Position) []Position {
+func findIntersections(sc1, sc2 []Position) (Position, transform) {
 	exists := make(map[Position]bool)
 	distances := make(map[Position][]Position)
 	for i := 0; i < len(sc1); i++ {
@@ -168,8 +161,7 @@ func findIntersections(sc1, sc2 []Position) []Position {
 			*/
 
 			x, y, z := 0, 0, 0
-			dx, dy, dz := 0, 0, 0
-			_, _, _ = dx, dy, dz
+
 			if l0.p1.x+l0.p2.x == l1.p1.x+l1.p2.x {
 				x = l0.p1.x + l0.p2.x
 			} else if l0.p1.x-l0.p2.x == l1.p1.x-l1.p2.x {
@@ -212,62 +204,27 @@ func findIntersections(sc1, sc2 []Position) []Position {
 				z = l0.p1.z - l0.p2.y
 			}
 
-			// ---
+			pos := Position{x, y, z}
 
-			if l0.p1.x+l0.p2.x == l1.p1.x+l1.p2.x {
-				dx = x
-			} else if l0.p1.x-l0.p2.x == l1.p1.x-l1.p2.x {
-				dx = -x
-			} else if l0.p1.x+l0.p2.y == l1.p1.x+l1.p2.y {
-				dx = y
-			} else if l0.p1.x-l0.p2.y == l1.p1.x-l1.p2.y {
-				dx = -y
-			} else if l0.p1.x+l0.p2.z == l1.p1.x+l1.p2.z {
-				dx = z
-			} else if l0.p1.x-l0.p2.z == l1.p1.x-l1.p2.z {
-				dx = -z
-			}
+			//fmt.Println(getRotation(unique, pos))
+			f := getRotation2(unique, pos)
+			fmt.Println(unique[0].p1, pos.deltaPosition(f(unique[0].p2)))
 
-			if l0.p1.y+l0.p2.y == l1.p1.y+l1.p2.y {
-				dy = y
-			} else if l0.p1.y-l0.p2.y == l1.p1.y-l1.p2.y {
-				dy = -y
-			} else if l0.p1.y+l0.p2.x == l1.p1.y+l1.p2.x {
-				dy = x
-			} else if l0.p1.y-l0.p2.x == l1.p1.y-l1.p2.x {
-				dy = -x
-			} else if l0.p1.y+l0.p2.z == l1.p1.y+l1.p2.z {
-				dy = z
-			} else if l0.p1.y-l0.p2.z == l1.p1.y-l1.p2.z {
-				dy = -z
-			}
+			// Gold
+			//for _, v := range unique {
+			//	for i, rotation := range v.p2.getAllRotations() {
+			//		delta := pos.deltaPosition(rotation)
+			//		if delta == v.p1 {
+			//			fmt.Println(delta, i)
+			//		}
+			//	}
+			//}
 
-			if l0.p1.z+l0.p2.z == l1.p1.z+l1.p2.z {
-				dz = z
-			} else if l0.p1.z-l0.p2.z == l1.p1.z-l1.p2.z {
-				dz = -z
-			} else if l0.p1.z+l0.p2.x == l1.p1.z+l1.p2.x {
-				dz = x
-			} else if l0.p1.z-l0.p2.x == l1.p1.z-l1.p2.x {
-				dz = -x
-			} else if l0.p1.z+l0.p2.y == l1.p1.z+l1.p2.y {
-				dz = y
-			} else if l0.p1.z-l0.p2.y == l1.p1.z-l1.p2.y {
-				dz = -y
-			}
-
-			//pos := Position{x, y, z}
-			//pos2 := Position{dx, dy, dz}
-
-			var vs []Position
-			for k := range res {
-				vs = append(vs, k)
-			}
-			return vs
+			return pos, f
 		}
 	}
 
-	return nil
+	return Position{}, nil
 }
 
 func testDelta(l0, l1 Link, dx, dy, dz int) bool {
@@ -282,8 +239,156 @@ type Position struct {
 	z int
 }
 
+type transform func(Position) Position
+
+func getRotation2(unique []Link, foundPosition Position) transform {
+	f := func(t transform, p2, initial Position) transform {
+		p2 = t(p2)
+
+		if foundPosition.deltaPosition(Position{p2.x, p2.y, p2.z}) == initial {
+			return func(p Position) Position {
+				return t(p)
+			}
+		}
+
+		if foundPosition.deltaPosition(Position{-p2.y, p2.x, p2.z}) == initial {
+			return func(p Position) Position {
+				p = t(p)
+				return Position{-p.y, p.x, p.z}
+			}
+		}
+
+		if foundPosition.deltaPosition(Position{-p2.x, -p2.y, p2.z}) == initial {
+			return func(p Position) Position {
+				p = t(p)
+				return Position{-p.x, -p.y, p.z}
+			}
+		}
+
+		if foundPosition.deltaPosition(Position{p2.y, -p2.x, p2.z}) == initial {
+			return func(p Position) Position {
+				p = t(p)
+				return Position{p.y, -p.x, p.z}
+			}
+		}
+		return nil
+	}
+
+	for _, v := range unique {
+		if h := f(func(p Position) Position {
+			return p
+		}, v.p2, v.p1); h != nil {
+			return h
+		}
+		if h := f(func(p Position) Position {
+			return Position{p.x, -p.y, -p.z}
+		}, v.p2, v.p1); h != nil {
+			return h
+		}
+		if h := f(func(p Position) Position {
+			return Position{p.x, -p.z, p.y}
+		}, v.p2, v.p1); h != nil {
+			return h
+		}
+		if h := f(func(p Position) Position {
+			return Position{-p.y, -p.z, p.x}
+		}, v.p2, v.p1); h != nil {
+			return h
+		}
+		if h := f(func(p Position) Position {
+			return Position{-p.x, -p.z, -p.y}
+		}, v.p2, v.p1); h != nil {
+			return h
+		}
+		if h := f(func(p Position) Position {
+			return Position{p.y, -p.z, -p.x}
+		}, v.p2, v.p1); h != nil {
+			return h
+		}
+	}
+	panic(unique)
+}
+
+func getRotation(unique []Link, foundPosition Position) (int, int) {
+	f := func(x, y, z int, initial Position) int {
+		if foundPosition.deltaPosition((Position{x, y, z})) == initial {
+			return 0
+		}
+		if foundPosition.deltaPosition((Position{-y, x, z})) == initial {
+			return 1
+		}
+		if foundPosition.deltaPosition((Position{-x, -y, z})) == initial {
+			return 2
+		}
+		if foundPosition.deltaPosition((Position{y, -x, z})) == initial {
+			return 3
+		}
+		return -1
+	}
+
+	for _, v := range unique {
+		if v := f(v.p2.x, v.p2.y, v.p2.z, v.p1); v != -1 {
+			return 0, v
+		}
+		if v := f(v.p2.x, -v.p2.y, -v.p2.z, v.p1); v != -1 {
+			return 1, v // -x +y -z
+		}
+		if v := f(v.p2.x, -v.p2.z, v.p2.y, v.p1); v != -1 {
+			return 2, v
+		}
+		if v := f(-v.p2.y, -v.p2.z, v.p2.x, v.p1); v != -1 {
+			return 3, v
+		}
+		if v := f(-v.p2.x, -v.p2.z, -v.p2.y, v.p1); v != -1 {
+			return 4, v
+		}
+		if v := f(v.p2.y, -v.p2.z, -v.p2.x, v.p1); v != -1 {
+			return 5, v
+		}
+	}
+	panic(unique)
+}
+
 func (p Position) distance(p2 Position) Position {
 	return Position{aoc.Abs(p.x - p2.x), aoc.Abs(p.y - p2.y), aoc.Abs(p.z - p2.z)}
+}
+
+func (p Position) getDirectionRotation(p2 Position) (int, int) {
+	f := func(x, y, z int) int {
+		if (Position{x, y, z}) == p2 {
+			return 0
+		}
+		if (Position{-y, x, z}) == p2 {
+			return 1
+		}
+		if (Position{-x, -y, z}) == p2 {
+			return 2
+		}
+		if (Position{y, -x, z}) == p2 {
+			return 3
+		}
+		return -1
+	}
+
+	if v := f(p.x, p.y, p.z); v != -1 {
+		return 0, v
+	}
+	if v := f(p.x, -p.y, -p.z); v != -1 {
+		return 1, v
+	}
+	if v := f(p.x, -p.z, p.y); v != -1 {
+		return 2, v
+	}
+	if v := f(-p.y, -p.z, p.x); v != -1 {
+		return 3, v
+	}
+	if v := f(-p.x, -p.z, -p.y); v != -1 {
+		return 4, v
+	}
+	if v := f(p.y, -p.z, -p.x); v != -1 {
+		return 5, v
+	}
+	return -1, -1
 }
 
 func (p Position) getAllRotations() []Position {
