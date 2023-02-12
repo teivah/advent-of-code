@@ -15,25 +15,22 @@ func fs1(input io.Reader) int {
 		instructions = append(instructions, toInstruction(line))
 	}
 
-	var cubes []*Cube
-	cubes = append(cubes, newCube(instructions[0].from, instructions[0].to))
-	for i := 1; i < len(instructions); i++ {
-		ins := instructions[i]
-		for _, cube1 := range cubes {
-			cube1 := cube1
-			if ins.on {
-				cube2 := newCube(ins.from, ins.to)
-				cube1.on(cube2)
-				cubes = append(cubes, cube2)
-			} else {
-				cube1.off(cube1)
+	sum := 0
+	for x := -50; x <= 50; x++ {
+		for y := -50; y <= 50; y++ {
+			for z := -50; z <= 50; z++ {
+				for i := len(instructions) - 1; i >= 0; i-- {
+					ins := instructions[i]
+					if !ins.isInside(x, y, z) {
+						continue
+					}
+					if ins.on {
+						sum++
+					}
+					break
+				}
 			}
 		}
-	}
-
-	sum := 0
-	for _, cube := range cubes {
-		sum += cube.count
 	}
 
 	return sum
@@ -48,52 +45,14 @@ type Cube struct {
 }
 
 func newCube(from, to Position) *Cube {
-	return &Cube{
+	c := &Cube{
 		count:  (to.x + 1 - from.x) * (to.y + 1 - from.y) * (to.z + 1 - from.z),
 		from:   from,
 		to:     to,
 		emptys: nil,
 	}
+	return c
 }
-
-func (c *Cube) on(c2 *Cube) {
-	v, over := c.overlap(c2)
-	if !over {
-		return
-	}
-
-	c.count -= v.count
-
-	c.duplicates = append(c.duplicates, v)
-}
-
-func (c *Cube) off(c2 *Cube) {
-	_, over := c.overlap(c2)
-	if !over {
-		return
-	}
-
-	return
-}
-
-//func merge(fromA, toA, fromB, toB int) int {
-//	if fromA == toA && toA == toB {
-//		return toA - fromA + 1
-//	}
-//	if fromB >= fromA && toB >= toA {
-//		return toA - fromB + 1
-//	}
-//	if fromA <= fromB && toA >= toB {
-//		return toB - fromB + 1
-//	}
-//	if fromB <= fromA && toB >= fromA && toB <= toA {
-//		return toB - fromA + 1
-//	}
-//	if fromB <= fromA && toB >= toA {
-//		return toA - fromA + 1
-//	}
-//	panic("not handled")
-//}
 
 func (c *Cube) inside(pos Position) bool {
 	return pos.x >= c.from.x && pos.x <= c.to.x &&
@@ -152,6 +111,12 @@ type Instruction struct {
 	to   Position
 }
 
+func (ins Instruction) isInside(x, y, z int) bool {
+	return x >= ins.from.x && x <= ins.to.x &&
+		y >= ins.from.y && y <= ins.to.y &&
+		z >= ins.from.z && z <= ins.to.z
+}
+
 type Position struct {
 	x int
 	y int
@@ -160,10 +125,85 @@ type Position struct {
 
 func fs2(input io.Reader) int {
 	scanner := bufio.NewScanner(input)
+	var instructions []Instruction
 	for scanner.Scan() {
 		line := scanner.Text()
-		_ = line
+		instructions = append(instructions, toInstruction(line))
 	}
 
-	return 42
+	var cubes []*Cube
+	cubes = append(cubes, newCube(instructions[0].from, instructions[0].to))
+	for i := 1; i < len(instructions); i++ {
+		ins := instructions[i]
+		cube2 := newCube(ins.from, ins.to)
+		for _, cube1 := range cubes {
+			cube1 := cube1
+			if ins.on {
+				cube1.on(cube2)
+			} else {
+				cube1.off(cube2)
+			}
+		}
+		if ins.on {
+			cubes = append(cubes, cube2)
+		}
+	}
+
+	sum := 0
+	for _, cube := range cubes {
+		sum += cube.count
+	}
+	return sum
+}
+
+/*
+----------------
+            ----------
+------------XXXX
+
+*/
+func (c *Cube) on(c2 *Cube) {
+	v, over := c.overlap(c2)
+	if !over {
+		return
+	}
+
+	c.count -= v.count
+
+	for _, c3 := range c.duplicates {
+		v2, over2 := c3.overlap(c2)
+		if !over2 {
+			continue
+		}
+		c.count += v2.count
+	}
+	c.duplicates = append(c.duplicates, v)
+}
+
+/*
+---......---
+*/
+func (c *Cube) off(c2 *Cube) {
+	v, over := c.overlap(c2)
+	if !over {
+		return
+	}
+
+	c.count -= v.count
+
+	for _, c3 := range c.emptys {
+		v2, over2 := c3.overlap(c2)
+		if !over2 {
+			continue
+		}
+		c.count += v2.count
+	}
+	for _, c3 := range c.duplicates {
+		v2, over2 := c3.overlap(c2)
+		if !over2 {
+			continue
+		}
+		c.count += v2.count
+	}
+	c.emptys = append(c.emptys, v)
 }
