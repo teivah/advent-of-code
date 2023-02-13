@@ -38,31 +38,20 @@ func fs1(input io.Reader) int {
 }
 
 type Cube struct {
-	count      int
-	from       Position
-	to         Position
-	emptys     []*Cube
-	duplicates []*Cube
+	on    bool
+	count int
+	from  Position
+	to    Position
 }
 
-func newCube(from, to Position) *Cube {
+func newCube(from, to Position, on bool) *Cube {
 	c := &Cube{
-		count:  (to.x + 1 - from.x) * (to.y + 1 - from.y) * (to.z + 1 - from.z),
-		from:   from,
-		to:     to,
-		emptys: nil,
+		on:    on,
+		count: (to.x + 1 - from.x) * (to.y + 1 - from.y) * (to.z + 1 - from.z),
+		from:  from,
+		to:    to,
 	}
 	return c
-}
-
-func (c *Cube) inside(pos Position) bool {
-	return pos.x >= c.from.x && pos.x <= c.to.x &&
-		pos.y >= c.from.y && pos.y <= c.to.y &&
-		pos.z >= c.from.z && pos.z <= c.to.z
-}
-
-func (c *Cube) area() int {
-	return 0
 }
 
 func (c *Cube) overlap(c2 *Cube) (*Cube, bool) {
@@ -75,6 +64,16 @@ func (c *Cube) overlap(c2 *Cube) (*Cube, bool) {
 	if c.from.z > c2.to.z || c.to.z < c2.from.z {
 		return nil, false
 	}
+
+	on := false
+	if c.on && c2.on {
+		on = false
+	} else if !c.on && !c2.on {
+		on = true
+	} else {
+		on = c2.on
+	}
+
 	return newCube(Position{
 		x: aoc.Max(c.from.x, c2.from.x),
 		y: aoc.Max(c.from.y, c2.from.y),
@@ -83,7 +82,7 @@ func (c *Cube) overlap(c2 *Cube) (*Cube, bool) {
 		x: aoc.Min(c.to.x, c2.to.x),
 		y: aoc.Min(c.to.y, c2.to.y),
 		z: aoc.Min(c.to.z, c2.to.z),
-	}), true
+	}, on), true
 }
 
 func toInstruction(s string) Instruction {
@@ -135,76 +134,38 @@ func fs2(input io.Reader) int {
 	}
 
 	var cubes []*Cube
-	cubes = append(cubes, newCube(instructions[0].from, instructions[0].to))
+	cubes = append(cubes, newCube(instructions[0].from, instructions[0].to, true))
 	for i := 1; i < len(instructions); i++ {
 		ins := instructions[i]
-		cube2 := newCube(ins.from, ins.to)
-		for _, cube1 := range cubes {
-			cube1 := cube1
-			if ins.on {
-				cube1.on(cube2)
-			} else {
-				cube1.off(cube2)
+		if ins.on {
+			cubes = append(cubes, newCube(ins.from, ins.to, true))
+		} else {
+			cubes = append(cubes, newCube(ins.from, ins.to, false))
+		}
+	}
+
+	var uniques []*Cube
+	for _, c := range cubes {
+		var tmp []*Cube
+		for _, c2 := range uniques {
+			if intersection, overlap := c2.overlap(c); overlap {
+				tmp = append(tmp, intersection)
 			}
 		}
-		if ins.on {
-			cubes = append(cubes, cube2)
+		if c.on {
+			tmp = append(tmp, c)
+		}
+		uniques = append(uniques, tmp...)
+	}
+
+	var total int
+	for _, c := range uniques {
+		if c.on {
+			total += c.count
+		} else {
+			total -= c.count
 		}
 	}
 
-	sum := 0
-	for _, cube := range cubes {
-		sum += cube.count
-	}
-	return sum
-}
-
-func (c *Cube) on(c2 *Cube) {
-	v, over := c.overlap(c2)
-	if !over {
-		return
-	}
-
-	c.count -= v.count
-
-	for _, c3 := range c.emptys {
-		v2, over2 := c3.overlap(c2)
-		if !over2 {
-			continue
-		}
-		c.count += v2.count
-	}
-	for _, c3 := range c.duplicates {
-		v2, over2 := c3.overlap(c2)
-		if !over2 {
-			continue
-		}
-		c.count += v2.count
-	}
-	c.duplicates = append(c.duplicates, v)
-}
-
-func (c *Cube) off(c2 *Cube) {
-	v, over := c.overlap(c2)
-	if !over {
-		return
-	}
-
-	c.count -= v.count
-
-	for _, c3 := range c.emptys {
-		v2, over2 := c3.overlap(c2)
-		if !over2 {
-			continue
-		}
-		c.count += v2.count
-	}
-	for _, c3 := range c.duplicates {
-		v2, over2 := c3.overlap(c2)
-		if !over2 {
-			continue
-		}
-		c.count += v2.count
-	}
-	c.emptys = append(c.emptys, v)
+	return total
 }
