@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"io"
+	"strings"
 
 	aoc "github.com/teivah/advent-of-code"
 )
@@ -86,6 +87,8 @@ func (c *Cube) overlap(c2 *Cube) (*Cube, bool) {
 }
 
 func toInstruction(s string) Instruction {
+	s = strings.TrimSpace(s)
+
 	spaces := aoc.NewDelimiter(s, " ")
 	ins := Instruction{}
 	if spaces.GetString(0) == "on" {
@@ -156,12 +159,6 @@ func fs2(input io.Reader) int {
 	return sum
 }
 
-/*
-----------------
-            ----------
-------------XXXX
-
-*/
 func (c *Cube) on(c2 *Cube) {
 	v, over := c.overlap(c2)
 	if !over {
@@ -170,6 +167,13 @@ func (c *Cube) on(c2 *Cube) {
 
 	c.count -= v.count
 
+	for _, c3 := range c.emptys {
+		v2, over2 := c3.overlap(c2)
+		if !over2 {
+			continue
+		}
+		c.count += v2.count
+	}
 	for _, c3 := range c.duplicates {
 		v2, over2 := c3.overlap(c2)
 		if !over2 {
@@ -180,9 +184,6 @@ func (c *Cube) on(c2 *Cube) {
 	c.duplicates = append(c.duplicates, v)
 }
 
-/*
----......---
-*/
 func (c *Cube) off(c2 *Cube) {
 	v, over := c.overlap(c2)
 	if !over {
