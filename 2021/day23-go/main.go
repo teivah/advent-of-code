@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"sort"
+	"strings"
 
 	aoc "github.com/teivah/advent-of-code"
 )
@@ -24,37 +26,60 @@ type State struct {
 	energy int
 }
 
+func newState(board *Board, energy int, from, to aoc.Position) State {
+	pods := make(map[aoc.Position]Pod, len(board.pods))
+	for k, pod := range board.pods {
+		if k == from {
+			pod.pos = to
+			pod.target = (pod.pos.Col == pod.targetCol) && pod.pos.Row != 1
+			pods[to] = pod
+		} else {
+			pods[k] = pod
+		}
+	}
+
+	return State{
+		board: &Board{
+			grid: board.grid,
+			pods: pods,
+		},
+		energy: energy,
+	}
+}
+
 func (s State) over() bool {
+	sum := 0
 	for pos, pod := range s.board.pods {
 		if pos.Col != pod.targetCol {
 			return false
 		}
+		sum++
 	}
 	return true
 }
 
-func (s State) copy() State {
-	pods := make(map[aoc.Position]Pod, len(s.board.pods))
-	for k, v := range s.board.pods {
-		pods[k] = v
-	}
-	board := &Board{
-		grid: s.board.grid,
-		pods: pods,
-	}
-	return State{
-		board:  board,
-		energy: s.energy,
-	}
-}
-
 func key(pods map[aoc.Position]Pod) string {
-	return fmt.Sprintf("%v", pods)
+	s := make([]Pod, 0, len(pods))
+	for _, v := range pods {
+		s = append(s, v)
+	}
+	sort.Slice(s, func(i, j int) bool {
+		a := s[i]
+		b := s[j]
+		return a.id < b.id
+	})
+
+	sb := strings.Builder{}
+	for _, pod := range s {
+		sb.WriteString(fmt.Sprintf("%d:%v;", pod.id, pod.pos))
+	}
+	return sb.String()
 }
 
 func (b *Board) best() int {
 	var q []State
-	best := aoc.NewMaxer()
+	found := false
+	best := aoc.NewMiner()
 	visited := make(map[string]int)
 	q = append(q, State{
 		board:  b,
@@ -65,18 +90,24 @@ func (b *Board) best() int {
 		s := q[0]
 		q = q[1:]
 
-		fmt.Println(len(q))
+		if found && s.energy >= best.Get() {
+			continue
+		}
 
 		k := key(s.board.pods)
 		if v, contains := visited[k]; contains {
-			if v < s.energy {
+			if v <= s.energy {
 				continue
 			}
 		}
 		visited[k] = s.energy
 
+		//fmt.Println(k, s.energy)
+
 		if s.over() {
+			found = true
 			best.Add(s.energy)
+			fmt.Println(s.energy)
 			continue
 		}
 
@@ -84,19 +115,33 @@ func (b *Board) best() int {
 			if pod.target {
 				continue
 			}
-			options := pod.options(s.board)
+			options := pod.bfs(s.board)
 			if len(options) == 0 {
 				continue
 			}
 
-			oldDestination := pod.pos
 			for _, destination := range options {
-				pod.move(s.board, destination)
-				q = append(q, State{
-					board:  s.board,
-					energy: s.energy + oldDestination.Manhattan(destination)*pod.energy,
-				})
-				pod.move(s.board, oldDestination)
+				moves := 0
+				if pod.pos.Row == 1 && destination.Row == 1 {
+					moves = aoc.Abs(destination.Col - pod.pos.Col)
+				} else if pod.pos.Row == 1 && destination.Row == 2 {
+					moves = aoc.Abs(destination.Col-pod.pos.Col) + 1
+				} else if pod.pos.Row == 1 && destination.Row == 3 {
+					moves = aoc.Abs(destination.Col-pod.pos.Col) + 2
+				} else if pod.pos.Row == 2 && destination.Row == 2 {
+					moves = aoc.Abs(destination.Col-pod.pos.Col) + 2
+				} else if pod.pos.Row == 2 && destination.Row == 3 {
+					moves = aoc.Abs(destination.Col-pod.pos.Col) + 3
+				} else if pod.pos.Row == 3 && destination.Row == 3 {
+					moves = aoc.Abs(destination.Col-pod.pos.Col) + 4
+				} else if pod.pos.Row == 2 && destination.Row == 1 {
+					moves = aoc.Abs(destination.Col-pod.pos.Col) + 1
+				} else if pod.pos.Row == 3 && destination.Row == 1 {
+					moves = aoc.Abs(destination.Col-pod.pos.Col) + 2
+				}
+
+				s2 := newState(s.board, s.energy+moves*pod.energy, pod.pos, destination)
+				q = append(q, s2)
 			}
 		}
 	}
@@ -108,7 +153,34 @@ type Board struct {
 	pods map[aoc.Position]Pod
 }
 
-func (b *Board) isEmpty(pos aoc.Position) bool {
+func (b *Board) String() string {
+	s := ""
+
+	for row := 0; row < 5; row++ {
+		for col := 0; col < 13; col++ {
+			pos := aoc.Position{row, col}
+			if v, exists := b.pods[pos]; exists {
+				s += v.name
+				continue
+			}
+			v, exists := b.grid[pos]
+			if !exists {
+				s += " "
+			} else {
+				if v == wall {
+					s += "#"
+				} else {
+					s += "."
+				}
+			}
+		}
+		s += "\n"
+	}
+
+	return s
+}
+
+func (b *Board) isPositionAllowedAndFree(pos aoc.Position) bool {
 	v, exists := b.grid[pos]
 	if !exists {
 		return false
@@ -117,23 +189,16 @@ func (b *Board) isEmpty(pos aoc.Position) bool {
 		return false
 	}
 	_, exists = b.pods[pos]
-	if exists {
-		return false
+	if !exists {
+		return true
 	}
-	return true
-}
-
-func (p *Pod) move(board *Board, pos aoc.Position) {
-	delete(board.pods, pos)
-	p.pos = pos
-	board.pods[pos] = *p
-
-	p.target = p.pos.Col == p.targetCol
+	return false
 }
 
 func toBoard(lines []string) *Board {
 	grid := make(map[aoc.Position]Unit)
 	pods := make(map[aoc.Position]Pod)
+	id := 0
 	for row := 0; row < len(lines); row++ {
 		for col := 0; col < len(lines[row]); col++ {
 			r := lines[row][col]
@@ -145,6 +210,7 @@ func toBoard(lines []string) *Board {
 				grid[pos] = empty
 			case ' ':
 			default:
+				grid[pos] = empty
 				targetCol := 0
 				energy := 0
 				if r == 'A' {
@@ -161,11 +227,13 @@ func toBoard(lines []string) *Board {
 					energy = 1000
 				}
 				pods[pos] = Pod{
+					id:        id,
 					energy:    energy,
 					pos:       pos,
 					targetCol: targetCol,
 					name:      string(r),
 				}
+				id++
 			}
 		}
 	}
@@ -176,6 +244,7 @@ func toBoard(lines []string) *Board {
 }
 
 type Pod struct {
+	id        int
 	pos       aoc.Position
 	targetCol int
 	target    bool
@@ -187,71 +256,103 @@ func (p Pod) isInHallway() bool {
 	return p.pos.Row == 1
 }
 
-func (p Pod) isInTarget() bool {
-	return p.targetCol == p.pos.Col
+func (p Pod) isInTarget(board *Board) bool {
+	if p.targetCol != p.pos.Col {
+		return false
+	}
+	if p.pos.Row == 1 {
+		return false
+	}
+	if p.pos.Row == 2 {
+		if v, exists := board.pods[p.pos.Delta(1, 0)]; exists {
+			return p.name == v.name
+		}
+		return true
+	}
+	return true
 }
 
-func (p Pod) options(board *Board) []aoc.Position {
-	if p.isInTarget() {
+func (p Pod) bfs(board *Board) []aoc.Position {
+	if p.isInTarget(board) {
 		return nil
 	}
 
-	if p.isInHallway() {
-		pos := p.pos
-		if p.pos.Col < p.targetCol {
-			// Right
-			for pos.Col != p.targetCol {
-				pos = pos.Delta(0, 1)
-			}
-		} else {
-			// Left
-			for pos.Col != p.targetCol {
-				pos = pos.Delta(0, -1)
-			}
-		}
-		if v, contains := board.pods[pos.Delta(2, 0)]; !contains {
-			if v.name != p.name {
-				return nil
-			}
-			pos = pos.Delta(2, 0)
-		} else {
-			pos = pos.Delta(1, 0)
-		}
-		return []aoc.Position{pos}
+	var q []aoc.Position
+	visited := make(map[aoc.Position]bool)
+	if p.pos.Row == 1 {
+		q = append(q, p.pos.Delta(0, -1))
+		q = append(q, p.pos.Delta(0, 1))
+		visited[p.pos.Delta(1, 0)] = true
+	} else if p.pos.Row == 2 {
+		q = append(q, p.pos.Delta(-1, 0))
+		visited[p.pos] = true
 	} else {
-		pos := p.pos.Delta(-1, 0)
-		if !board.isEmpty(pos) {
+		if !board.isPositionAllowedAndFree(p.pos.Delta(-1, 0)) {
 			return nil
 		}
-		if pos.Row != 1 {
-			pos = p.pos.Delta(-1, 0)
-			if !board.isEmpty(pos) {
-				return nil
+		q = append(q, p.pos.Delta(-2, 0))
+		visited[p.pos.Delta(-1, 0)] = true
+	}
+	var res []aoc.Position
+	for len(q) != 0 {
+		pos := q[0]
+		q = q[1:]
+		if !board.isPositionAllowedAndFree(pos) {
+			continue
+		}
+		if visited[pos] {
+			continue
+		}
+		visited[pos] = true
+
+		if p.pos.Row == 1 {
+			if pos.Col == p.targetCol {
+				if pos.Row == 2 {
+					if v, exists := board.pods[aoc.Position{3, p.targetCol}]; exists {
+						if p.name == v.name {
+							return []aoc.Position{{2, p.targetCol}}
+						}
+						return nil
+					}
+					return []aoc.Position{{3, p.targetCol}}
+				} else {
+					return []aoc.Position{{3, p.targetCol}}
+				}
+			} else {
+				q = append(q, pos.Delta(0, -1))
+				q = append(q, pos.Delta(0, 1))
+				q = append(q, pos.Delta(1, 0))
+			}
+		} else {
+			if pos.Col == p.targetCol {
+				if pos.Row == 2 {
+					if v, exists := board.pods[aoc.Position{3, p.targetCol}]; exists {
+						if p.name == v.name {
+							res = append(res, aoc.Position{2, p.targetCol})
+						}
+						continue
+					}
+					res = append(res, aoc.Position{3, p.targetCol})
+					continue
+				} else if pos.Row == 3 {
+					res = append(res, pos)
+					continue
+				} else {
+					q = append(q, pos.Delta(0, -1))
+					q = append(q, pos.Delta(0, 1))
+					q = append(q, pos.Delta(1, 0))
+				}
+			} else {
+				if pos.Col != 3 && pos.Col != 5 && pos.Col != 7 && pos.Col != 9 {
+					res = append(res, pos)
+				}
+				q = append(q, pos.Delta(0, -1))
+				q = append(q, pos.Delta(0, 1))
+				q = append(q, pos.Delta(1, 0))
 			}
 		}
-
-		posLeft := pos.Delta(0, -1)
-		posRight := pos.Delta(0, 1)
-		return append(p.findHallwayOptions(board, posLeft, aoc.Left),
-			p.findHallwayOptions(board, posRight, aoc.Right)...)
 	}
-}
-
-func (p Pod) findHallwayOptions(board *Board, pos aoc.Position, direction aoc.Direction) []aoc.Position {
-	v, exists := board.grid[pos]
-	if !exists {
-		return nil
-	}
-	if v == wall {
-		return nil
-	}
-
-	_, contains := board.pods[pos]
-	if contains {
-		return nil
-	}
-
-	return append(p.findHallwayOptions(board, pos.Move(direction, 1), direction), pos)
+	return res
 }
 
 type Unit rune
