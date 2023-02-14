@@ -364,19 +364,7 @@ func (p Pod) bfs(board *Board) []aoc.Position {
 			}
 		} else {
 			if pos.Col == p.targetCol {
-				if pos.Row == 2 {
-					if v, exists := board.pods[aoc.Position{3, p.targetCol}]; exists {
-						if p.name == v.name {
-							res = append(res, aoc.Position{2, p.targetCol})
-						}
-						continue
-					}
-					res = append(res, aoc.Position{3, p.targetCol})
-					continue
-				} else if pos.Row == 3 {
-					res = append(res, pos)
-					continue
-				} else {
+				if pos.Row == 1 {
 					p2 := pos.Delta(0, -1)
 					if !visited[p2] {
 						q = append(q, p2)
@@ -392,6 +380,24 @@ func (p Pod) bfs(board *Board) []aoc.Position {
 					p2 = pos.Delta(-1, 0)
 					if !visited[p2] {
 						q = append(q, p2)
+					}
+				} else {
+					if board.isPositionAllowedAndFree(pos.Delta(1, 0)) {
+						for {
+							pos = pos.Delta(1, 0)
+							if !board.isPositionAllowedAndFree(pos.Delta(1, 0)) {
+								break
+							}
+						}
+					}
+
+					if !board.isPositionAllowed(pos.Delta(1, 0)) {
+						res = append(res, pos)
+					} else {
+						v := board.pods[pos.Delta(1, 0)]
+						if v.name == p.name {
+							res = append(res, pos)
+						}
 					}
 				}
 			} else {
