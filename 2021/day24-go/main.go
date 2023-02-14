@@ -145,17 +145,17 @@ func (ri RegInt) getValue(s *State) int {
 
 func fs1(input io.Reader) int {
 	lines := aoc.ReaderToStrings(input)
-	return max(extractEquations(lines))
+	return max(equations(lines))
 }
 
 func fs2(input io.Reader) int {
 	lines := aoc.ReaderToStrings(input)
-	return min(extractEquations(lines))
+	return min(equations(lines))
 }
 
 type Equation struct {
-	lhs Expression
-	rhs Expression
+	left  Expression
+	right Expression
 }
 
 type Expression struct {
@@ -165,13 +165,13 @@ type Expression struct {
 
 func max(equations []Equation) int {
 	digits := make([]int, 14)
-	for _, equation := range equations {
-		if equation.rhs.value < 0 {
-			digits[equation.lhs.index] = 9 + equation.rhs.value
-			digits[equation.rhs.index] = 9
+	for _, eq := range equations {
+		if eq.right.value < 0 {
+			digits[eq.left.index] = 9 + eq.right.value
+			digits[eq.right.index] = 9
 		} else {
-			digits[equation.lhs.index] = 9
-			digits[equation.rhs.index] = 9 - equation.rhs.value
+			digits[eq.left.index] = 9
+			digits[eq.right.index] = 9 - eq.right.value
 		}
 	}
 	result := 0
@@ -183,13 +183,13 @@ func max(equations []Equation) int {
 
 func min(equations []Equation) int {
 	digits := make([]int, 14)
-	for _, equation := range equations {
-		if equation.rhs.value < 0 {
-			digits[equation.lhs.index] = 1
-			digits[equation.rhs.index] = 1 - equation.rhs.value
+	for _, eq := range equations {
+		if eq.right.value < 0 {
+			digits[eq.left.index] = 1
+			digits[eq.right.index] = 1 - eq.right.value
 		} else {
-			digits[equation.lhs.index] = 1 + equation.rhs.value
-			digits[equation.rhs.index] = 1
+			digits[eq.left.index] = 1 + eq.right.value
+			digits[eq.right.index] = 1
 		}
 	}
 	result := 0
@@ -199,8 +199,8 @@ func min(equations []Equation) int {
 	return result
 }
 
-func extractEquations(input []string) []Equation {
-	equations := make([]Equation, 7)
+func equations(input []string) []Equation {
+	res := make([]Equation, 7)
 	j := 0
 	var s []Expression
 	for i := 0; i < 14; i++ {
@@ -211,9 +211,9 @@ func extractEquations(input []string) []Equation {
 			value := aoc.NewDelimiter(input[18*i+5], " ").GetInt(2)
 			peek := s[len(s)-1]
 			s = s[:len(s)-1]
-			equations[j] = Equation{Expression{i, 0}, Expression{peek.index, peek.value + value}}
+			res[j] = Equation{Expression{i, 0}, Expression{peek.index, peek.value + value}}
 			j++
 		}
 	}
-	return equations
+	return res
 }
