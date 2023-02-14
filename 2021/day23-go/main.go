@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"sort"
 	"strings"
 
 	aoc "github.com/teivah/advent-of-code"
@@ -23,10 +22,9 @@ func fs1(input io.Reader) int {
 type State struct {
 	board  *Board
 	energy int
-	path   string
 }
 
-func newState(path string, board *Board, energy int, from, to aoc.Position) State {
+func newState(board *Board, energy int, from, to aoc.Position) State {
 	pods := make(map[aoc.Position]Pod, len(board.pods))
 	for k, pod := range board.pods {
 		if k == from {
@@ -43,7 +41,6 @@ func newState(path string, board *Board, energy int, from, to aoc.Position) Stat
 			pods: pods,
 		},
 		energy: energy,
-		path:   path + fmt.Sprintf("%v,%v %d\n", from, to, energy),
 	}
 }
 
@@ -59,15 +56,10 @@ func (s State) over() bool {
 }
 
 func key(pods map[aoc.Position]Pod) string {
-	s := make([]Pod, 0, len(pods))
+	s := make([]Pod, len(pods))
 	for _, v := range pods {
-		s = append(s, v)
+		s[v.id] = v
 	}
-	sort.Slice(s, func(i, j int) bool {
-		a := s[i]
-		b := s[j]
-		return a.id < b.id
-	})
 
 	sb := strings.Builder{}
 	for _, pod := range s {
@@ -149,7 +141,7 @@ func (b *Board) best() int {
 					moves = aoc.Abs(destination.Col-pod.pos.Col) + aoc.Abs(1-pod.pos.Row) + aoc.Abs(1-destination.Row)
 				}
 
-				s2 := newState(s.path, s.board, s.energy+moves*pod.energy, pod.pos, destination)
+				s2 := newState(s.board, s.energy+moves*pod.energy, pod.pos, destination)
 				q = append(q, s2)
 			}
 		}
