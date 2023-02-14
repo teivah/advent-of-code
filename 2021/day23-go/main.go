@@ -115,6 +115,7 @@ func (b *Board) best() int {
 
 		if s.over() {
 			fmt.Println(s.energy)
+			fmt.Println(s.board)
 			found = true
 			best.Add(s.energy)
 			continue
@@ -133,12 +134,22 @@ func (b *Board) best() int {
 				if pod.pos.Row == 1 && destination.Row == 1 {
 					continue
 				}
+				//if pod.pos.Col == destination.Col {
+				//	continue
+				//}
+				//if destination.Row != 1 && destination.Col != pod.targetCol {
+				//	continue
+				//}
 
 				moves := 0
 				if pod.pos.Row == 1 && destination.Row == 1 {
 					moves = aoc.Abs(destination.Col - pod.pos.Col)
 				} else {
-					moves = aoc.Abs(destination.Col-pod.pos.Col) + aoc.Abs(1-pod.pos.Row) + aoc.Abs(1-destination.Row)
+					if pod.pos.Col == destination.Col {
+						moves = aoc.Abs(destination.Col-pod.pos.Col) + aoc.Abs(destination.Row-pod.pos.Row)
+					} else {
+						moves = aoc.Abs(destination.Col-pod.pos.Col) + aoc.Abs(1-pod.pos.Row) + aoc.Abs(1-destination.Row)
+					}
 				}
 
 				s2 := newState(s.board, s.energy+moves*pod.energy, pod.pos, destination)
