@@ -1,3 +1,7 @@
+# Advent of Code
+
+My solution to the [Advent of Code](https://adventofcode.com/), from 2015 to 2022 (400 total ⭐).
+
 ## 2022
 
 * [Day 1](https://adventofcode.com/2022/day/1): [Rust](2022/day1-rust/src/lib.rs)

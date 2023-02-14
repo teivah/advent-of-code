@@ -9,12 +9,6 @@ import (
 	"strings"
 )
 
-/*
-1. Push
-2. go get github.com/teivah/advent-of-code@main
-3. Run IntelliJ "Go Mod Tidy"
-*/
-
 // ---------- Parsing inputs ----------
 
 func ReaderToString(input io.Reader) string {
