@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 	"sort"
@@ -120,8 +119,10 @@ func (b *Board) best() int {
 		visited[k] = s.energy
 
 		//fmt.Println(k, s.energy)
+		//fmt.Println(s.board)
 
 		if s.over() {
+			fmt.Println(s.energy)
 			found = true
 			best.Add(s.energy)
 			continue
@@ -140,24 +141,8 @@ func (b *Board) best() int {
 				moves := 0
 				if pod.pos.Row == 1 && destination.Row == 1 {
 					moves = aoc.Abs(destination.Col - pod.pos.Col)
-				} else if pod.pos.Row == 1 && destination.Row == 2 {
-					moves = aoc.Abs(destination.Col-pod.pos.Col) + 1
-				} else if pod.pos.Row == 1 && destination.Row == 3 {
-					moves = aoc.Abs(destination.Col-pod.pos.Col) + 2
-				} else if pod.pos.Row == 2 && destination.Row == 2 {
-					moves = aoc.Abs(destination.Col-pod.pos.Col) + 2
-				} else if pod.pos.Row == 2 && destination.Row == 3 {
-					moves = aoc.Abs(destination.Col-pod.pos.Col) + 3
-				} else if pod.pos.Row == 3 && destination.Row == 3 {
-					moves = aoc.Abs(destination.Col-pod.pos.Col) + 4
-				} else if pod.pos.Row == 2 && destination.Row == 1 {
-					moves = aoc.Abs(destination.Col-pod.pos.Col) + 1
-				} else if pod.pos.Row == 3 && destination.Row == 1 {
-					moves = aoc.Abs(destination.Col-pod.pos.Col) + 2
-				} else if pod.pos.Row == 3 && destination.Row == 2 {
-					moves = aoc.Abs(destination.Col-pod.pos.Col) + 3
 				} else {
-					panic("")
+					moves = aoc.Abs(destination.Col-pod.pos.Col) + aoc.Abs(1-pod.pos.Row) + aoc.Abs(1-destination.Row)
 				}
 
 				s2 := newState(s.path, s.board, s.energy+moves*pod.energy, pod.pos, destination)
@@ -176,7 +161,7 @@ type Board struct {
 func (b *Board) String() string {
 	s := ""
 
-	for row := 0; row < 5; row++ {
+	for row := 0; row < 7; row++ {
 		for col := 0; col < 13; col++ {
 			pos := aoc.Position{row, col}
 			if v, exists := b.pods[pos]; exists {
@@ -213,6 +198,14 @@ func (b *Board) isPositionAllowedAndFree(pos aoc.Position) bool {
 		return true
 	}
 	return false
+}
+
+func (b *Board) isPositionAllowed(pos aoc.Position) bool {
+	v, exists := b.grid[pos]
+	if !exists {
+		return false
+	}
+	return v == empty
 }
 
 func toBoard(lines []string) *Board {
@@ -282,11 +275,19 @@ func (p Pod) isInTarget(board *Board) bool {
 	if p.pos.Row == 1 {
 		return false
 	}
-	if p.pos.Row == 2 {
-		if v, exists := board.pods[p.pos.Delta(1, 0)]; exists {
-			return p.name == v.name
+
+	pos := p.pos
+	for {
+		pos = pos.Delta(1, 0)
+		if !board.isPositionAllowed(pos) {
+			break
 		}
-		return true
+		if v, exists := board.pods[pos]; exists {
+			if p.name != v.name {
+				return false
+			}
+		}
+
 	}
 	return true
 }
@@ -386,11 +387,7 @@ const (
 )
 
 func fs2(input io.Reader) int {
-	scanner := bufio.NewScanner(input)
-	for scanner.Scan() {
-		line := scanner.Text()
-		_ = line
-	}
-
-	return 42
+	lines := aoc.ReaderToStrings(input)
+	board := toBoard(lines)
+	return board.best()
 }
