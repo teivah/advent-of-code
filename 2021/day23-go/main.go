@@ -8,17 +8,12 @@ import (
 	aoc "github.com/teivah/advent-of-code"
 )
 
-func fs1(input io.Reader) int {
+func fs(input io.Reader) int {
 	lines := aoc.ReaderToStrings(input)
 	board := toBoard(lines)
 	return board.best()
 }
 
-/*
-- never stop on space outside room
-- can't move into a room unless it's their destination and remaining pod in this room is the correct one
-- stop in hallway: stay in that spot until it can move into a room
-*/
 type State struct {
 	board  *Board
 	energy int
@@ -68,22 +63,6 @@ func key(pods map[aoc.Position]Pod) string {
 	return sb.String()
 }
 
-/*
-
-
-#############
-#...B.....A.#
-###B#.#C#.###
-  #A#D#C#D#
-  #########
-
-row=1, col=8,row=3, col=9 5443
-row=3, col=5,row=2, col=9 5443 <-- issue
-row=1, col=4,row=3, col=5 5473
-row=2, col=3,row=2, col=5 5513
-row=1, col=10,row=2, col=3 5521
-
-*/
 func (b *Board) best() int {
 	var q []State
 	found := false
@@ -110,12 +89,7 @@ func (b *Board) best() int {
 		}
 		visited[k] = s.energy
 
-		//fmt.Println(k, s.energy)
-		//fmt.Println(s.board)
-
 		if s.over() {
-			fmt.Println(s.energy)
-			fmt.Println(s.board)
 			found = true
 			best.Add(s.energy)
 			continue
@@ -134,12 +108,6 @@ func (b *Board) best() int {
 				if pod.pos.Row == 1 && destination.Row == 1 {
 					continue
 				}
-				//if pod.pos.Col == destination.Col {
-				//	continue
-				//}
-				//if destination.Row != 1 && destination.Col != pod.targetCol {
-				//	continue
-				//}
 
 				moves := 0
 				if pod.pos.Row == 1 && destination.Row == 1 {
@@ -443,9 +411,3 @@ const (
 	wall  = '#'
 	empty = '.'
 )
-
-func fs2(input io.Reader) int {
-	lines := aoc.ReaderToStrings(input)
-	board := toBoard(lines)
-	return board.best()
-}
