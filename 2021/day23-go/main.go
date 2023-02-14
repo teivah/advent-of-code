@@ -138,6 +138,10 @@ func (b *Board) best() int {
 			}
 
 			for _, destination := range options {
+				if pod.pos.Row == 1 && destination.Row == 1 {
+					continue
+				}
+
 				moves := 0
 				if pod.pos.Row == 1 && destination.Row == 1 {
 					moves = aoc.Abs(destination.Col - pod.pos.Col)
@@ -328,9 +332,18 @@ func (p Pod) bfs(board *Board) []aoc.Position {
 		if p.pos.Row == 1 {
 			if pos.Col == p.targetCol {
 				if pos.Row == 1 {
-					q = append(q, pos.Delta(0, -1))
-					q = append(q, pos.Delta(0, 1))
-					q = append(q, pos.Delta(1, 0))
+					p2 := pos.Delta(0, -1)
+					if !visited[p2] {
+						q = append(q, p2)
+					}
+					p2 = pos.Delta(0, 1)
+					if !visited[p2] {
+						q = append(q, p2)
+					}
+					p2 = pos.Delta(1, 0)
+					if !visited[p2] {
+						q = append(q, p2)
+					}
 				} else if pos.Row == 2 {
 					if v, exists := board.pods[aoc.Position{3, p.targetCol}]; exists {
 						if p.name == v.name {
@@ -343,9 +356,18 @@ func (p Pod) bfs(board *Board) []aoc.Position {
 					return []aoc.Position{{3, p.targetCol}}
 				}
 			} else {
-				q = append(q, pos.Delta(0, -1))
-				q = append(q, pos.Delta(0, 1))
-				q = append(q, pos.Delta(1, 0))
+				p2 := pos.Delta(0, -1)
+				if !visited[p2] {
+					q = append(q, p2)
+				}
+				p2 = pos.Delta(0, 1)
+				if !visited[p2] {
+					q = append(q, p2)
+				}
+				p2 = pos.Delta(1, 0)
+				if !visited[p2] {
+					q = append(q, p2)
+				}
 			}
 		} else {
 			if pos.Col == p.targetCol {
@@ -362,17 +384,35 @@ func (p Pod) bfs(board *Board) []aoc.Position {
 					res = append(res, pos)
 					continue
 				} else {
-					q = append(q, pos.Delta(0, -1))
-					q = append(q, pos.Delta(0, 1))
-					q = append(q, pos.Delta(1, 0))
+					p2 := pos.Delta(0, -1)
+					if !visited[p2] {
+						q = append(q, p2)
+					}
+					p2 = pos.Delta(0, 1)
+					if !visited[p2] {
+						q = append(q, p2)
+					}
+					p2 = pos.Delta(1, 0)
+					if !visited[p2] {
+						q = append(q, p2)
+					}
 				}
 			} else {
 				if pos.Col != 3 && pos.Col != 5 && pos.Col != 7 && pos.Col != 9 {
 					res = append(res, pos)
 				}
-				q = append(q, pos.Delta(0, -1))
-				q = append(q, pos.Delta(0, 1))
-				q = append(q, pos.Delta(1, 0))
+				p2 := pos.Delta(0, -1)
+				if !visited[p2] {
+					q = append(q, p2)
+				}
+				p2 = pos.Delta(0, 1)
+				if !visited[p2] {
+					q = append(q, p2)
+				}
+				p2 = pos.Delta(1, 0)
+				if !visited[p2] {
+					q = append(q, p2)
+				}
 			}
 		}
 	}
