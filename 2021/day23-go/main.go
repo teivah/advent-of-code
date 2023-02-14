@@ -283,7 +283,6 @@ func (p Pod) isInTarget(board *Board) bool {
 				return false
 			}
 		}
-
 	}
 	return true
 }
@@ -299,15 +298,9 @@ func (p Pod) bfs(board *Board) []aoc.Position {
 		q = append(q, p.pos.Delta(0, -1))
 		q = append(q, p.pos.Delta(0, 1))
 		visited[p.pos.Delta(1, 0)] = true
-	} else if p.pos.Row == 2 {
+	} else {
 		q = append(q, p.pos.Delta(-1, 0))
 		visited[p.pos] = true
-	} else {
-		if !board.isPositionAllowedAndFree(p.pos.Delta(-1, 0)) {
-			return nil
-		}
-		q = append(q, p.pos.Delta(-2, 0))
-		visited[p.pos.Delta(-1, 0)] = true
 	}
 	var res []aoc.Position
 	for len(q) != 0 {
@@ -336,16 +329,24 @@ func (p Pod) bfs(board *Board) []aoc.Position {
 					if !visited[p2] {
 						q = append(q, p2)
 					}
-				} else if pos.Row == 2 {
-					if v, exists := board.pods[aoc.Position{3, p.targetCol}]; exists {
-						if p.name == v.name {
-							return []aoc.Position{{2, p.targetCol}}
-						}
-						return nil
-					}
-					return []aoc.Position{{3, p.targetCol}}
 				} else {
-					return []aoc.Position{{3, p.targetCol}}
+					if board.isPositionAllowedAndFree(pos.Delta(1, 0)) {
+						for {
+							pos = pos.Delta(1, 0)
+							if !board.isPositionAllowedAndFree(pos.Delta(1, 0)) {
+								break
+							}
+						}
+					}
+
+					if !board.isPositionAllowed(pos.Delta(1, 0)) {
+						res = append(res, pos)
+					} else {
+						v := board.pods[pos.Delta(1, 0)]
+						if v.name == p.name {
+							res = append(res, pos)
+						}
+					}
 				}
 			} else {
 				p2 := pos.Delta(0, -1)
@@ -388,6 +389,10 @@ func (p Pod) bfs(board *Board) []aoc.Position {
 					if !visited[p2] {
 						q = append(q, p2)
 					}
+					p2 = pos.Delta(-1, 0)
+					if !visited[p2] {
+						q = append(q, p2)
+					}
 				}
 			} else {
 				if pos.Col != 3 && pos.Col != 5 && pos.Col != 7 && pos.Col != 9 {
@@ -402,6 +407,10 @@ func (p Pod) bfs(board *Board) []aoc.Position {
 					q = append(q, p2)
 				}
 				p2 = pos.Delta(1, 0)
+				if !visited[p2] {
+					q = append(q, p2)
+				}
+				p2 = pos.Delta(-1, 0)
 				if !visited[p2] {
 					q = append(q, p2)
 				}
