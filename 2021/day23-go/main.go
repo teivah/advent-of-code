@@ -24,14 +24,14 @@ func fs1(input io.Reader) int {
 type State struct {
 	board  *Board
 	energy int
+	path   string
 }
 
-func newState(board *Board, energy int, from, to aoc.Position) State {
+func newState(path string, board *Board, energy int, from, to aoc.Position) State {
 	pods := make(map[aoc.Position]Pod, len(board.pods))
 	for k, pod := range board.pods {
 		if k == from {
 			pod.pos = to
-			pod.target = (pod.pos.Col == pod.targetCol) && pod.pos.Row != 1
 			pods[to] = pod
 		} else {
 			pods[k] = pod
@@ -44,6 +44,7 @@ func newState(board *Board, energy int, from, to aoc.Position) State {
 			pods: pods,
 		},
 		energy: energy,
+		path:   path + fmt.Sprintf("%v,%v %d\n", from, to, energy),
 	}
 }
 
@@ -76,6 +77,22 @@ func key(pods map[aoc.Position]Pod) string {
 	return sb.String()
 }
 
+/*
+
+
+#############
+#...B.....A.#
+###B#.#C#.###
+  #A#D#C#D#
+  #########
+
+row=1, col=8,row=3, col=9 5443
+row=3, col=5,row=2, col=9 5443 <-- issue
+row=1, col=4,row=3, col=5 5473
+row=2, col=3,row=2, col=5 5513
+row=1, col=10,row=2, col=3 5521
+
+*/
 func (b *Board) best() int {
 	var q []State
 	found := false
@@ -107,12 +124,11 @@ func (b *Board) best() int {
 		if s.over() {
 			found = true
 			best.Add(s.energy)
-			fmt.Println(s.energy)
 			continue
 		}
 
 		for _, pod := range s.board.pods {
-			if pod.target {
+			if pod.isInTarget(s.board) {
 				continue
 			}
 			options := pod.bfs(s.board)
@@ -138,9 +154,13 @@ func (b *Board) best() int {
 					moves = aoc.Abs(destination.Col-pod.pos.Col) + 1
 				} else if pod.pos.Row == 3 && destination.Row == 1 {
 					moves = aoc.Abs(destination.Col-pod.pos.Col) + 2
+				} else if pod.pos.Row == 3 && destination.Row == 2 {
+					moves = aoc.Abs(destination.Col-pod.pos.Col) + 3
+				} else {
+					panic("")
 				}
 
-				s2 := newState(s.board, s.energy+moves*pod.energy, pod.pos, destination)
+				s2 := newState(s.path, s.board, s.energy+moves*pod.energy, pod.pos, destination)
 				q = append(q, s2)
 			}
 		}
@@ -247,7 +267,6 @@ type Pod struct {
 	id        int
 	pos       aoc.Position
 	targetCol int
-	target    bool
 	name      string
 	energy    int
 }
@@ -307,7 +326,11 @@ func (p Pod) bfs(board *Board) []aoc.Position {
 
 		if p.pos.Row == 1 {
 			if pos.Col == p.targetCol {
-				if pos.Row == 2 {
+				if pos.Row == 1 {
+					q = append(q, pos.Delta(0, -1))
+					q = append(q, pos.Delta(0, 1))
+					q = append(q, pos.Delta(1, 0))
+				} else if pos.Row == 2 {
 					if v, exists := board.pods[aoc.Position{3, p.targetCol}]; exists {
 						if p.name == v.name {
 							return []aoc.Position{{2, p.targetCol}}
