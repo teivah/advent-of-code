@@ -8,16 +8,6 @@ import (
 	"strings"
 )
 
-/*
-generator + chip => shield
-if chip + other generator => fried
-
-chip: either connected to generator or with no other generator
-
-bring to level 4
-
-elevator: at most 2 stuff, at least 1
-*/
 func fs1(input io.Reader) (int, error) {
 	scanner := bufio.NewScanner(input)
 	var items []Item
@@ -198,7 +188,7 @@ func best(elevator int, items []Item, cur int, elevatorMoves int) int {
 		return min
 	}
 
-	panic(false)
+	panic(elevatorLen)
 }
 
 func updateElevatorLevel(elevator int, items []Item) {
