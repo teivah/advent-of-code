@@ -9,6 +9,8 @@ import (
 	"strings"
 )
 
+// go get github.com/teivah/advent-of-code@v0.0.27
+
 // ---------- Parsing inputs ----------
 
 func ReaderToString(input io.Reader) string {
