@@ -1,8 +1,29 @@
 # Advent of Code
 
-My solution to the [Advent of Code](https://adventofcode.com/), from 2015 to 2022 (400 total ⭐).
+My solutions to the [Advents of Code](https://adventofcode.com/), from 2015 to 2022 (400 total ⭐).
 
-## 2022
+I also shared my experience on my blog: [I Completed All 8 Advents of Code in One Go: Here Are the Lessons I Learned.](https://teivah.medium.com/advent-of-code-b5bf35a6d115).
+
+## Common Go Library
+
+I made a shared [Go library](https://github.com/teivah/advent-of-code/blob/main/lib.go) to help me solve unimportant topics (e.g., puzzle input parsing) as quickly as possible to focus on the actual problems:
+
+```shell
+go get github.com/teivah/advent-of-code@v0.0.27
+```
+
+## Solutions
+
+* [2022](#2022)
+* [2021](#2021)
+* [2020](#2020)
+* [2019](#2019)
+* [2018](#2018)
+* [2017](#2017)
+* [2016](#2016)
+* [2015](#2015)
+
+### 2022
 
 * [Day 1](https://adventofcode.com/2022/day/1): [Rust](2022/day1-rust/src/lib.rs)
 * [Day 2](https://adventofcode.com/2022/day/2): [Rust](2022/day2-rust/src/lib.rs)
@@ -30,7 +51,7 @@ My solution to the [Advent of Code](https://adventofcode.com/), from 2015 to 202
 * [Day 24](https://adventofcode.com/2022/day/24): [Go](2022/day24-go/main.go)
 * [Day 25](https://adventofcode.com/2022/day/25): [Go](2022/day25-go/main.go)
 
-## 2021
+### 2021
 
 * [Day 1](https://adventofcode.com/2021/day/1): [Go](2021/day1-go/main.go)
 * [Day 2](https://adventofcode.com/2021/day/2): [Go](2021/day2-go/main.go)
@@ -58,7 +79,7 @@ My solution to the [Advent of Code](https://adventofcode.com/), from 2015 to 202
 * [Day 24](https://adventofcode.com/2021/day/24): [Go](2021/day24-go/main.go)
 * [Day 25](https://adventofcode.com/2021/day/25): [Go](2021/day25-go/main.go)
 
-## 2020
+### 2020
 
 * [Day 1](https://adventofcode.com/2020/day/1): [Go](2020/day1-go/main.go)
 * [Day 2](https://adventofcode.com/2020/day/2): [Go](2020/day2-go/main.go)
@@ -86,7 +107,7 @@ My solution to the [Advent of Code](https://adventofcode.com/), from 2015 to 202
 * [Day 24](https://adventofcode.com/2020/day/24): [Go](2020/day24-go/main.go)
 * [Day 25](https://adventofcode.com/2020/day/25): [Rust](2020/day25-rust/src/lib.rs)
 
-## 2019
+### 2019
 
 * [Day 1](https://adventofcode.com/2019/day/1): [Go](2019/day1-go/main.go)
 * [Day 2](https://adventofcode.com/2019/day/2): [Go](2019/day2-go/main.go)
@@ -114,7 +135,7 @@ My solution to the [Advent of Code](https://adventofcode.com/), from 2015 to 202
 * [Day 24](https://adventofcode.com/2019/day/24): [Go](2019/day24-go/main.go)
 * [Day 25](https://adventofcode.com/2019/day/25): [Go](2019/day25-go/main.go)
 
-## 2018
+### 2018
 
 * [Day 1](https://adventofcode.com/2018/day/1): [Go](2018/day1-go/main.go)
 * [Day 2](https://adventofcode.com/2018/day/2): [Go](2018/day2-go/main.go)
@@ -141,7 +162,7 @@ My solution to the [Advent of Code](https://adventofcode.com/), from 2015 to 202
 * [Day 24](https://adventofcode.com/2018/day/24): [Go](2018/day24-go/main.go)
 * [Day 25](https://adventofcode.com/2018/day/25): [Go](2018/day25-go/main.go)
 
-## 2017
+### 2017
 
 * [Day 1](https://adventofcode.com/2017/day/1): [Rust](2017/day1-rust/src/lib.rs)
 * [Day 2](https://adventofcode.com/2017/day/2): [Rust](2017/day2-rust/src/lib.rs)
@@ -169,7 +190,7 @@ My solution to the [Advent of Code](https://adventofcode.com/), from 2015 to 202
 * [Day 24](https://adventofcode.com/2017/day/24): [Go](2017/day24-go/main.go)
 * [Day 25](https://adventofcode.com/2017/day/25): [Go](2017/day25-go/main.go)
 
-## 2016
+### 2016
 
 * [Day 1](https://adventofcode.com/2016/day/1): [Rust](2016/day1-rust/src/lib.rs)
 * [Day 2](https://adventofcode.com/2016/day/2): [Go](2016/day2-go/main.go)
@@ -197,7 +218,7 @@ My solution to the [Advent of Code](https://adventofcode.com/), from 2015 to 202
 * [Day 24](https://adventofcode.com/2016/day/24): [Go](2016/day24-go/main.go)
 * [Day 25](https://adventofcode.com/2016/day/25): [Go](2016/day25-go/main.go)
 
-## 2015
+### 2015
 
 * [Day 1](https://adventofcode.com/2015/day/1): [Rust](2015/day1-rust/src/lib.rs)
 * [Day 2](https://adventofcode.com/2015/day/2): [Rust](2015/day2-rust/src/lib.rs)
