@@ -48,10 +48,6 @@ pub fn fn1(salt: &str, nth_key: i64, length: i64) -> i64 {
         }
     }
 
-    /*
-    3 of the same character in a row (first triplet to consider only) => 777
-    One of the next 1000 hashes contains the same character 5 times => 77777
-     */
     1
 }
 
@@ -151,11 +147,6 @@ pub fn fn2(salt: &str, nth_key: i64, length: i64, additional_hashings: i64) -> i
         }
     }
 
-    /*
-    3 of the same character in a row (first triplet to consider only) => 777
-    One of the next 1000 hashes contains the same character 5 times => 77777
-     */
-    1
 }
 
 #[cfg(test)]

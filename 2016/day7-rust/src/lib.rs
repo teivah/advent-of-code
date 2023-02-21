@@ -119,12 +119,6 @@ pub fn fn2(input: &str) -> i32 {
         .count() as i32
 }
 
-/*
-SSL: ABA (outside) AND a BAB (inside)
-
-ABA: 3-char sequence xyx (x != y)
-BAB: yxy
- */
 fn abas(s: &str) -> Vec<String> {
     let mut res = Vec::new();
     for i in 0..s.len() {

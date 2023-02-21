@@ -4,11 +4,6 @@ import (
 	"math"
 )
 
-/*
-at least one damage
-if can't afford to cast a spell => loss
-least amount of mana to still win a fight
-*/
 func fs1(playerHitPoints, playerMana, bossHitPoints, bossDamage int, abilities map[string]Spell) int {
 	player := Player{
 		hitPoints: playerHitPoints,

@@ -47,12 +47,6 @@ func toInt(s string) int {
 	return sum
 }
 
-/*
-4890
-2
-12
-62
-*/
 func toSnafu(pow, target, current int, s []rune) (int, []rune) {
 	n := 2*int(math.Pow(5, float64(pow))) + current
 	s = append(s, '2')

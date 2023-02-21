@@ -28,10 +28,6 @@ type Play interface {
 }
 
 type RockHorizontal struct {
-	/*
-		>####
-		 ^
-	*/
 	col int
 	row int
 }
@@ -96,12 +92,6 @@ func (r *RockHorizontal) Down(t *Tunnel) bool {
 }
 
 type RockPlus struct {
-	/*
-		  #
-		>###
-		  #
-		  ^
-	*/
 	col int
 	row int
 }
@@ -171,12 +161,6 @@ func (r *RockPlus) Down(t *Tunnel) bool {
 }
 
 type RockL struct {
-	/*
-			 #
-			 #
-		   ###<
-			 ^
-	*/
 	col int
 	row int
 }
@@ -248,13 +232,6 @@ func (r *RockL) Down(t *Tunnel) bool {
 }
 
 type RockVertical struct {
-	/*
-	 #
-	 #
-	 #
-	 #<
-	 ^
-	*/
 	col int
 	row int
 }
@@ -325,11 +302,6 @@ func (r *RockVertical) Down(t *Tunnel) bool {
 }
 
 type RockSquare struct {
-	/*
-			##
-		   >##
-		    ^
-	*/
 	col int
 	row int
 }

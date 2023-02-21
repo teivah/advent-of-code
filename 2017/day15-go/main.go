@@ -1,11 +1,5 @@
 package main
 
-/*
-next = (previous * factor) % 2147483647
-
-factor a = 16807
-factor b = 48271
-*/
 const (
 	factorA   = 16807
 	factorB   = 48271
@@ -24,10 +18,6 @@ func fs1(repeat, a, b int) int {
 	return sum
 }
 
-/*
-a % 4 == 0
-b % 8 == 0
-*/
 func fs2(repeat, a, b int) int {
 	sum := 0
 	for i := 0; i < repeat; i++ {

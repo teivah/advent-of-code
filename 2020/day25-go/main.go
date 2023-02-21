@@ -6,18 +6,6 @@ import (
 	"io"
 )
 
-/*
-handshake:
-start with v=1
-repeat 0 .. loop size:
-	v *= subject number
-	v %= 20201227
-
-card: cardPK = sn(7)
-door: doorPK = sn(Y)
-
-
-*/
 func fs1(cardPK, doorPK int) int {
 	cardLoopSize := 0
 	for ; ; cardLoopSize++ {

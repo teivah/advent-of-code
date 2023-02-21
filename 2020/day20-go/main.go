@@ -305,11 +305,6 @@ func fs2(input io.Reader) int {
 	return 0
 }
 
-/*
-                  #
-#    ##    ##    ###
- #  #  #  #  #  #
-*/
 func findSeaMonster(board [][]bool) int {
 	found := false
 	for row := 0; row < len(board)-2; row++ {

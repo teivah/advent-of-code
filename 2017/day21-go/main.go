@@ -8,19 +8,6 @@ import (
 	lib "github.com/teivah/advent-of-code"
 )
 
-/*
-.#.
-..#
-###
-
-size % 2 == 0
-=> convert each 2x2 into 3x3 using the corresponding enhancement rule
-
-size % 3 == 0
-=> convert 3x3 into 4x4
-
-input: rotate or flip
-*/
 func fs1(input io.Reader, iterations int) int {
 	scanner := bufio.NewScanner(input)
 	options := make(map[string]string)
