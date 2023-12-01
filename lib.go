@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"math"
 	"strconv"
 	"strings"
 )
@@ -141,103 +140,6 @@ func IsRuneDecimal(r rune) bool {
 }
 
 // ---------- Math ----------
-
-type Maxer struct {
-	max int
-}
-
-func NewMaxer() *Maxer {
-	return &Maxer{
-		max: math.MinInt,
-	}
-}
-
-func (m *Maxer) Add(values ...int) {
-	for _, v := range values {
-		m.max = Max(m.max, v)
-	}
-}
-
-func (m *Maxer) Get() int {
-	return m.max
-}
-
-type Miner struct {
-	min int
-}
-
-func NewMiner() *Miner {
-	return &Miner{
-		min: math.MaxInt,
-	}
-}
-
-func (m *Miner) Add(values ...int) {
-	for _, v := range values {
-		m.min = Min(m.min, v)
-	}
-}
-
-func (m *Miner) Get() int {
-	return m.min
-}
-
-type MinerMaxer struct {
-	min *Miner
-	max *Maxer
-}
-
-func NewMinerMaxer() *MinerMaxer {
-	return &MinerMaxer{
-		min: NewMiner(),
-		max: NewMaxer(),
-	}
-}
-
-func (m *MinerMaxer) Add(values ...int) {
-	for _, v := range values {
-		m.min.Add(v)
-		m.max.Add(v)
-	}
-}
-
-func (m *MinerMaxer) GetMin() int {
-	return m.min.Get()
-}
-
-func (m *MinerMaxer) GetMax() int {
-	return m.max.Get()
-}
-
-func Min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
-
-func Max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
-func MaxInts(values []int) int {
-	max := math.MinInt
-	for _, v := range values {
-		max = Max(max, v)
-	}
-	return max
-}
-
-func MinInts(values []int) int {
-	min := math.MaxInt
-	for _, v := range values {
-		min = Min(min, v)
-	}
-	return min
-}
 
 func Mod(d, m int) int {
 	res := d % m
