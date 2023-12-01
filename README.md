@@ -14,6 +14,7 @@ go get github.com/teivah/advent-of-code@v0.0.27
 
 ## Solutions
 
+* [2023](#2023)
 * [2022](#2022)
 * [2021](#2021)
 * [2020](#2020)
@@ -22,6 +23,10 @@ go get github.com/teivah/advent-of-code@v0.0.27
 * [2017](#2017)
 * [2016](#2016)
 * [2015](#2015)
+
+### 2023
+
+* [Day 1](https://adventofcode.com/2023/day/1): [Rust](2023/day1-rust/src/lib.rs)
 
 ### 2022
 
