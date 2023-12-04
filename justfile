@@ -25,13 +25,13 @@ gen LANGUAGE YEAR DAY:
   fi
 
   if [ "{{LANGUAGE}}" = "rust" ]; then
-    sed -i '' '31i\
+    sed -i '' '37i\
   * [Day {{DAY}}](https://adventofcode.com/{{YEAR}}/day/{{DAY}}): [Rust]({{YEAR}}/day{{DAY}}-rust/src/lib.rs)\
   ' README.md
   fi
 
   if [ "{{LANGUAGE}}" = "python" ]; then
-    sed -i '' '31i\
+    sed -i '' '37i\
   * [Day {{DAY}}](https://adventofcode.com/{{YEAR}}/day/{{DAY}}): [Python]({{YEAR}}/day{{DAY}}-python/main.py)\
   ' README.md
   fi
