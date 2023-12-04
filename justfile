@@ -2,7 +2,7 @@ gen LANGUAGE YEAR DAY:
   #!/bin/bash
   [[ -s "$GVM_ROOT/scripts/gvm" ]] && source "$GVM_ROOT/scripts/gvm"
   gvm use go1.21.4
-  cp -R template-{{LANGUAGE}} {{YEAR}}/day{{DAY}}-{{LANGUAGE}}
+  cp -R templates/{{LANGUAGE}} {{YEAR}}/day{{DAY}}-{{LANGUAGE}}
   curl --cookie "session=$ADVENT_OF_CODE_COOKIE" https://adventofcode.com/{{YEAR}}/day/{{DAY}}/input -o {{YEAR}}/day{{DAY}}-{{LANGUAGE}}/input.txt
   perl -i -pe 'chomp if eof' {{YEAR}}/day{{DAY}}-{{LANGUAGE}}/input.txt
   if [ "{{LANGUAGE}}" = "go" ]; then

@@ -5,3 +5,11 @@
 *.pack linguist-detectable=false
 *.o linguist-detectable=false
 *.md linguist-detectable=false
+*.sum linguist-detectable=false
+*.sample linguist-detectable=false
+*.lock linguist-detectable=false
+*.iml linguist-detectable=false
+*.idx linguist-detectable=false
+*.d linguist-detectable=false
+*.cargo-lock linguist-detectable=false
+*.bin linguist-detectable=false
