@@ -1,0 +1,8 @@
+*.xml linguist-detectable=false
+*.txt linguist-detectable=false
+*.toml linguist-detectable=false
+*.timestamp linguist-detectable=false
+*.rs linguist-detectable=false
+*.pack linguist-detectable=false
+*.o linguist-detectable=false
+*.md linguist-detectable=false
