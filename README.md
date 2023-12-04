@@ -34,12 +34,14 @@ go get github.com/teivah/advent-of-code@v1.0.0
 
 ### 2023
 
-* [Day 4](https://adventofcode.com/2023/day/4): [Go](2023/day4-go/main.go)
-* [Day 3](https://adventofcode.com/2023/day/3): [Go](2023/day3-go/main.go)
-* [Day 2](https://adventofcode.com/2023/day/2): [Python (part 1)](2023/day2-python/main.py), [Go](2023/day2-go/main.go)
 * [Day 1](https://adventofcode.com/2023/day/1): [Rust](2023/day1-rust/src/lib.rs)
+* [Day 2](https://adventofcode.com/2023/day/2): [Python (part 1)](2023/day2-python/main.py), [Go](2023/day2-go/main.go)
+* [Day 3](https://adventofcode.com/2023/day/3): [Go](2023/day3-go/main.go)
+* [Day 4](https://adventofcode.com/2023/day/4): [Go](2023/day4-go/main.go)
 
 ### 2022
+
+Stats: Rust (56%), Go (44%)
 
 * [Day 1](https://adventofcode.com/2022/day/1): [Rust](2022/day1-rust/src/lib.rs)
 * [Day 2](https://adventofcode.com/2022/day/2): [Rust](2022/day2-rust/src/lib.rs)
@@ -69,6 +71,8 @@ go get github.com/teivah/advent-of-code@v1.0.0
 
 ### 2021
 
+Stats: Go (100%)
+
 * [Day 1](https://adventofcode.com/2021/day/1): [Go](2021/day1-go/main.go)
 * [Day 2](https://adventofcode.com/2021/day/2): [Go](2021/day2-go/main.go)
 * [Day 3](https://adventofcode.com/2021/day/3): [Go](2021/day3-go/main.go)
@@ -96,6 +100,8 @@ go get github.com/teivah/advent-of-code@v1.0.0
 * [Day 25](https://adventofcode.com/2021/day/25): [Go](2021/day25-go/main.go)
 
 ### 2020
+
+Stats: Go (96%), Rust (4%)
 
 * [Day 1](https://adventofcode.com/2020/day/1): [Go](2020/day1-go/main.go)
 * [Day 2](https://adventofcode.com/2020/day/2): [Go](2020/day2-go/main.go)
@@ -125,6 +131,8 @@ go get github.com/teivah/advent-of-code@v1.0.0
 
 ### 2019
 
+Stats: Go (100%)
+
 * [Day 1](https://adventofcode.com/2019/day/1): [Go](2019/day1-go/main.go)
 * [Day 2](https://adventofcode.com/2019/day/2): [Go](2019/day2-go/main.go)
 * [Day 3](https://adventofcode.com/2019/day/3): [Go](2019/day3-go/main.go)
@@ -153,6 +161,8 @@ go get github.com/teivah/advent-of-code@v1.0.0
 
 ### 2018
 
+Stats: Go (100%)
+
 * [Day 1](https://adventofcode.com/2018/day/1): [Go](2018/day1-go/main.go)
 * [Day 2](https://adventofcode.com/2018/day/2): [Go](2018/day2-go/main.go)
 * [Day 3](https://adventofcode.com/2018/day/3): [Go](2018/day3-go/main.go)
@@ -179,6 +189,8 @@ go get github.com/teivah/advent-of-code@v1.0.0
 * [Day 25](https://adventofcode.com/2018/day/25): [Go](2018/day25-go/main.go)
 
 ### 2017
+
+Stats: Go (80%), Rust (20%)
 
 * [Day 1](https://adventofcode.com/2017/day/1): [Rust](2017/day1-rust/src/lib.rs)
 * [Day 2](https://adventofcode.com/2017/day/2): [Rust](2017/day2-rust/src/lib.rs)
@@ -208,6 +220,8 @@ go get github.com/teivah/advent-of-code@v1.0.0
 
 ### 2016
 
+Stats: Go (76%), Rust (24%)
+
 * [Day 1](https://adventofcode.com/2016/day/1): [Rust](2016/day1-rust/src/lib.rs)
 * [Day 2](https://adventofcode.com/2016/day/2): [Go](2016/day2-go/main.go)
 * [Day 3](https://adventofcode.com/2016/day/3): [Go](2016/day3-go/main.go)
@@ -235,6 +249,8 @@ go get github.com/teivah/advent-of-code@v1.0.0
 * [Day 25](https://adventofcode.com/2016/day/25): [Go](2016/day25-go/main.go)
 
 ### 2015
+
+Stats: Go (68%), Rust (32%)
 
 * [Day 1](https://adventofcode.com/2015/day/1): [Rust](2015/day1-rust/src/lib.rs)
 * [Day 2](https://adventofcode.com/2015/day/2): [Rust](2015/day2-rust/src/lib.rs)
