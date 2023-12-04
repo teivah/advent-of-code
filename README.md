@@ -26,6 +26,9 @@ go get github.com/teivah/advent-of-code@v0.0.27
 
 ### 2023
 
+* [Day 4](https://adventofcode.com/2023/day/4): [Go](2023/day4-go/main.go)
+* [Day 3](https://adventofcode.com/2023/day/3): [Go](2023/day3-go/main.go)
+* [Day 2](https://adventofcode.com/2023/day/2): [Go](2023/day2-go/main.go)
 * [Day 1](https://adventofcode.com/2023/day/1): [Rust](2023/day1-rust/src/lib.rs)
 
 ### 2022
