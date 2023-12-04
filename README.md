@@ -1,16 +1,18 @@
 # Advent of Code
 
-My solutions to the [Advents of Code](https://adventofcode.com/), from 2015 to 2022 (400 total ⭐).
+My solutions to the [Advents of Code](https://adventofcode.com/), from 2015 to 2023 (400 total ⭐).
 
-I also shared my experience on my blog: [I Completed All 8 Advents of Code in One Go: Here Are the Lessons I Learned](https://teivah.medium.com/advent-of-code-b5bf35a6d115).
+In 2023, I also shared my experience on my blog: [I Completed All 8 Advents of Code in One Go: Here Are the Lessons I Learned](https://teivah.medium.com/advent-of-code-b5bf35a6d115).
 
 ## Common Go Library
 
 I made a shared [Go library](https://github.com/teivah/advent-of-code/blob/main/lib.go) to help me solve unimportant topics (e.g., puzzle input parsing) as quickly as possible to focus on the actual problems:
 
 ```shell
-go get github.com/teivah/advent-of-code@v0.0.27
+go get github.com/teivah/advent-of-code@v1.0.0
 ```
+
+[Documentation](https://pkg.go.dev/github.com/teivah/advent-of-code)
 
 ## Solutions
 
