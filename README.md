@@ -10,15 +10,23 @@ In 2023, I also shared my experience on my blog:
 
 ## AoC Library
 
+### Templates
+
+I created a [justfile](justfile) ([casey/just](https://github.com/casey/just)) that:
+* Downloads the input of the day (to authenticate, you have to set up a `ADVENT_OF_CODE_COOKIE` environment variable, see [this issue](https://github.com/wimglenn/advent-of-code-wim/issues/1) to understand how to extract your session cookie)
+* Generates a skeleton project (Go, Rust, or Python)
+* Configures the required dependencies (Go only)
+
 ### Go
 
-I made a shared [Go library](https://github.com/teivah/advent-of-code/blob/main/lib.go) to help me solve unimportant topics (e.g., puzzle input parsing) as quickly as possible to focus on the actual problems:
+I developed a [Go library](https://github.com/teivah/advent-of-code/blob/main/lib.go) to help solve unimportant topics (e.g., puzzle input parsing) as quickly as possible to focus on the actual problems:
+
+* [Source: lib branch](https://github.com/teivah/advent-of-code/tree/lib)
+* [Documentation](https://pkg.go.dev/github.com/teivah/advent-of-code)
 
 ```shell
-go get github.com/teivah/advent-of-code@v1.0.0
+go get github.com/teivah/advent-of-code@v1.0.1
 ```
-
-[Documentation](https://pkg.go.dev/github.com/teivah/advent-of-code)
 
 ## Solutions
 
