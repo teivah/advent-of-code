@@ -30,4 +30,11 @@ gen LANGUAGE YEAR DAY:
   ' README.md
   fi
 
+  if [ "{{LANGUAGE}}" = "python" ]; then
+    sed -i '' '31i\
+  * [Day {{DAY}}](https://adventofcode.com/{{YEAR}}/day/{{DAY}}): [Python]({{YEAR}}/day{{DAY}}-python/main.py)\
+  ' README.md
+  fi
+
+
   idea {{YEAR}}/day{{DAY}}-{{LANGUAGE}}
