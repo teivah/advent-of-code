@@ -4,9 +4,9 @@
 
 My solutions to the [Advents of Code](https://adventofcode.com/), from 2015 to 2023 (400 total ⭐, 2023 ongoing).
 
-In 2023, I also shared my experience on my blog: [I Completed All 8 Advents of Code in One Go: Here Are the Lessons I Learned](https://teivah.medium.com/advent-of-code-b5bf35a6d115).
+In 2023, I also shared my experience on my blog:
 
-![](post.png)
+[<img src="post.png">](https://teivah.medium.com/advent-of-code-b5bf35a6d115)
 
 ## AoC Library
 
