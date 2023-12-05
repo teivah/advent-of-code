@@ -106,13 +106,12 @@ func fs2(input io.Reader) int {
 	mu := sync.Mutex{}
 	lowest := math.MaxInt
 	wg, _ := errgroup.WithContext(context.Background())
-	for _, v := range seeds {
-		v := v
+	for _, seed := range seeds {
+		seed := seed
 		wg.Go(func() error {
 			local := math.MaxInt
-			for i := 0; i < v[1]; i++ {
-				n := transform(v[0]+i, maps)
-				local = min(local, n)
+			for i := 0; i < seed[1]; i++ {
+				local = min(local, transform(seed[0]+i, maps))
 			}
 			mu.Lock()
 			lowest = min(lowest, local)
