@@ -89,11 +89,10 @@ func fs2(input io.Reader) int {
 
 	lowest := math.MaxInt
 	for _, v := range seeds {
-		n := transform(v[0], maps)
-		lowest = min(lowest, n)
-
-		n = transform(v[0]+v[1]-1, maps)
-		lowest = min(lowest, n)
+		for i := 0; i < v[1]; i++ {
+			n := transform(v[0]+i, maps)
+			lowest = min(lowest, n)
+		}
 	}
 
 	return lowest
