@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
 	"io"
 	"math"
 	"sort"
+	"sync"
 
 	aoc "github.com/teivah/advent-of-code"
+	"golang.org/x/sync/errgroup"
 )
 
 func fs1(input io.Reader) int {
@@ -100,14 +103,25 @@ func fs2(input io.Reader) int {
 		maps = append(maps, parseMap(groups[i]))
 	}
 
+	mu := sync.Mutex{}
 	lowest := math.MaxInt
+	wg, _ := errgroup.WithContext(context.Background())
 	for _, v := range seeds {
-		for i := 0; i < v[1]; i++ {
-			n := transform(v[0]+i, maps)
-			lowest = min(lowest, n)
-		}
+		v := v
+		wg.Go(func() error {
+			local := math.MaxInt
+			for i := 0; i < v[1]; i++ {
+				n := transform(v[0]+i, maps)
+				local = min(local, n)
+			}
+			mu.Lock()
+			lowest = min(lowest, local)
+			mu.Unlock()
+			return nil
+		})
 	}
 
+	_ = wg.Wait()
 	return lowest
 }
 
