@@ -3,6 +3,7 @@ package main
 import (
 	"io"
 	"math"
+	"sort"
 
 	aoc "github.com/teivah/advent-of-code"
 )
@@ -48,11 +49,20 @@ type Map struct {
 }
 
 func (m Map) get(v int) (int, bool) {
-	for _, r := range m.ranges {
-		if v >= r.from && v <= r.to {
-			return v + r.transfo, true
+	l := 0
+	r := len(m.ranges) - 1
+	for l <= r {
+		mid := l + (r-l)/2
+		rng := m.ranges[mid]
+		if v > rng.to {
+			l = mid + 1
+		} else if v < rng.from {
+			r = mid - 1
+		} else {
+			return v + rng.transfo, true
 		}
 	}
+
 	return 0, false
 }
 
@@ -75,6 +85,9 @@ func parseMap(lines []string) Map {
 			transfo: dstRange - srcRange,
 		})
 	}
+	sort.Slice(ranges, func(i, j int) bool {
+		return ranges[i].from < ranges[j].from
+	})
 	return Map{ranges: ranges}
 }
 
