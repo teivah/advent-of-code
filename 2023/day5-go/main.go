@@ -94,7 +94,6 @@ func parseMap(lines []string) Map {
 	return Map{ranges: ranges}
 }
 
-// First version, brute force using concurrency (~14s)
 func fs2(input io.Reader) int {
 	groups := aoc.StringGroups(aoc.ReaderToStrings(input))
 
