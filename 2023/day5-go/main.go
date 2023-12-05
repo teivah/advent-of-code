@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"io"
 	"math"
 
@@ -12,19 +11,19 @@ func fs1(input io.Reader) int {
 	groups := aoc.StringGroups(aoc.ReaderToStrings(input))
 
 	seeds := parseSeeds(groups[0][0])
-	var maps []map[int]int
+	var maps []Map
 	for i := 1; i < len(groups); i++ {
 		maps = append(maps, parseMap(groups[i]))
 	}
 
 	lowest := math.MaxInt
-	for _, seed := range seeds {
+	for _, v := range seeds {
 		for _, m := range maps {
-			if v, exists := m[seed]; exists {
-				seed = v
+			if dst, contains := m.get(v); contains {
+				v = dst
 			}
 		}
-		lowest = min(lowest, seed)
+		lowest = min(lowest, v)
 	}
 
 	return lowest
@@ -36,8 +35,29 @@ func parseSeeds(line string) []int {
 	return del.GetInts()
 }
 
-func parseMap(lines []string) map[int]int {
-	res := make(map[int]int)
+type Range struct {
+	// Included
+	from int
+	// Included
+	to      int
+	transfo int
+}
+
+type Map struct {
+	ranges []Range
+}
+
+func (m Map) get(v int) (int, bool) {
+	for _, r := range m.ranges {
+		if v >= r.from && v <= r.to {
+			return v + r.transfo, true
+		}
+	}
+	return 0, false
+}
+
+func parseMap(lines []string) Map {
+	var ranges []Range
 	for i := 0; i < len(lines); i++ {
 		if i == 0 {
 			// Discard header
@@ -48,19 +68,53 @@ func parseMap(lines []string) map[int]int {
 		dstRange := ints[0]
 		srcRange := ints[1]
 		rangeLength := ints[2]
-		for j := 0; j < rangeLength; j++ {
-			res[srcRange+j] = dstRange + j
-		}
+
+		ranges = append(ranges, Range{
+			from:    srcRange,
+			to:      srcRange + rangeLength - 1,
+			transfo: dstRange - srcRange,
+		})
 	}
-	return res
+	return Map{ranges: ranges}
 }
 
 func fs2(input io.Reader) int {
-	scanner := bufio.NewScanner(input)
-	for scanner.Scan() {
-		line := scanner.Text()
-		_ = line
+	groups := aoc.StringGroups(aoc.ReaderToStrings(input))
+
+	seeds := parseSeedsRange(groups[0][0])
+	var maps []Map
+	for i := 1; i < len(groups); i++ {
+		maps = append(maps, parseMap(groups[i]))
 	}
 
-	return 42
+	lowest := math.MaxInt
+	for _, v := range seeds {
+		n := transform(v[0], maps)
+		lowest = min(lowest, n)
+
+		n = transform(v[0]+v[1]-1, maps)
+		lowest = min(lowest, n)
+	}
+
+	return lowest
+}
+
+func transform(v int, maps []Map) int {
+	for _, m := range maps {
+		if dst, contains := m.get(v); contains {
+			v = dst
+		}
+	}
+	return v
+}
+
+func parseSeedsRange(line string) [][2]int {
+	line = aoc.Substring(line, ": ")
+	del := aoc.NewDelimiter(line, " ")
+	ints := del.GetInts()
+	var res [][2]int
+	for i := 0; i < len(ints); i += 2 {
+		res = append(res, [2]int{ints[i], ints[i+1]})
+	}
+	return res
 }
