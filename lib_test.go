@@ -7,7 +7,7 @@ import (
 	aoc "github.com/teivah/advent-of-code"
 )
 
-func TestDelimiter_GetStrings(t *testing.T) {
+func TestDelimiter(t *testing.T) {
 	del := aoc.NewDelimiter("a b c", " ")
 	assert.Equal(t, []string{"a", "b", "c"}, del.GetStrings())
 
@@ -21,6 +21,9 @@ func TestDelimiter_GetStrings(t *testing.T) {
 	assert.Equal(t, []string{"a"}, del.GetStrings())
 
 	del = aoc.NewDelimiter("0;1; 2", ";", aoc.WithTrimSpace())
+	assert.Equal(t, []int{0, 1, 2}, del.GetInts())
+
+	del = aoc.NewDelimiter("0   1 2  ", " ", aoc.WithTrimSpace())
 	assert.Equal(t, []int{0, 1, 2}, del.GetInts())
 }
 

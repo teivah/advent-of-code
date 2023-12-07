@@ -86,7 +86,11 @@ func (d Delimiter) GetStrings() []string {
 
 	var res []string
 	for i := 0; i <= len(d.Ind); i++ {
-		res = append(res, d.GetString(i))
+		s := d.GetString(i)
+		if s == "" {
+			continue
+		}
+		res = append(res, s)
 	}
 
 	return res
