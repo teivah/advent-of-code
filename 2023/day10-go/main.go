@@ -19,6 +19,8 @@ const (
 	bendF
 	ground
 	startingPosition
+	outside
+	inside
 )
 
 func fs1(input io.Reader) int {
@@ -226,82 +228,168 @@ func fs2(input io.Reader) int {
 			panic(c)
 		}
 	}
+	replaceStart(board, start)
 
-	found := make(map[aoc.Position]bool)
-	for pos := range board {
-		if loopPositions[pos] {
-			continue
-		}
-		for inside := range isInsideLoop(board, loopPositions, pos) {
-			found[inside] = true
+	count := 0
+	for row := 0; row < len(lines); row++ {
+		for col := 0; col < len(lines[0]); col++ {
+			pos := aoc.Position{Row: row, Col: col}
+			if isInsideHorizontal(board, loopPositions, pos, aoc.Right) {
+				//if (isInsideHorizontal(board, loopPositions, pos, aoc.Right) ||
+				//	isInsideHorizontal(board, loopPositions, pos, aoc.Left)) &&
+				//	(isInsideVertical(board, loopPositions, pos, aoc.Up) ||
+				//		isInsideVertical(board, loopPositions, pos, aoc.Down)) {
+				board[pos] = inside
+				count++
+			}
 		}
 	}
 
+	//count := 0
+	//for row := 0; row < len(lines); row++ {
+	//	pos := aoc.Position{Row: row, Col: 0}
+	//}
+
 	for row := 0; row < len(lines); row++ {
 		for col := 0; col < len(lines[0]); col++ {
-			if loopPositions[aoc.Position{row, col}] {
-				fmt.Print("X")
+			pos := aoc.Position{Row: row, Col: col}
+			if loopPositions[pos] {
+				fmt.Printf("%s", string([]uint8{lines[row][col]}))
+			} else if board[pos] == inside {
+				fmt.Print("I")
 			} else {
-				if found[aoc.Position{row, col}] {
-					fmt.Print("I")
-				} else {
-					fmt.Print(" ")
-				}
+				fmt.Print("X")
 			}
 		}
 		fmt.Println()
 	}
 
-	return len(found)
+	return count
 }
 
-func isInsideLoop(board map[aoc.Position]tileType, loopPositions map[aoc.Position]bool, start aoc.Position) map[aoc.Position]bool {
-	q := []aoc.Position{start}
-	visited := make(map[aoc.Position]bool)
-	for len(q) != 0 {
-		pos := q[0]
-		q = q[1:]
-		if visited[pos] {
-			continue
+func replaceStart(board map[aoc.Position]tileType, start aoc.Position) {
+	var (
+		tileUp    = board[start.Delta(-1, 0)]
+		tileDown  = board[start.Delta(1, 0)]
+		tileLeft  = board[start.Delta(0, -1)]
+		tileRight = board[start.Delta(0, 1)]
+		up        = false
+		down      = false
+		left      = false
+		right     = false
+	)
+
+	switch tileUp {
+	case bend7, bendF, vertical:
+		up = true
+	}
+	switch tileDown {
+	case bendL, bendJ, vertical:
+		down = true
+	}
+	switch tileLeft {
+	case bendL, bendF, horizontal:
+		left = true
+	}
+	switch tileRight {
+	case bendJ, bend7, horizontal:
+		right = true
+	}
+
+	var t tileType
+	if up {
+		if down {
+			t = vertical
+		} else if left {
+			t = bendJ
+		} else if right {
+			t = bendL
 		}
+	} else if down {
+		if up {
+			t = vertical
+		} else if left {
+			t = bend7
+		} else if right {
+			t = bendF
+		}
+	} else if left {
+		if up {
+			t = bendJ
+		} else if down {
+			t = bend7
+		} else if right {
+			t = horizontal
+		}
+	}
+	if t == none {
+		panic(start)
+	}
+	board[start] = t
+}
+
+func isInsideHorizontal(board map[aoc.Position]tileType, loopPositions map[aoc.Position]bool, pos aoc.Position, dir aoc.Direction) bool {
+	if loopPositions[pos] {
+		return false
+	}
+
+	count := 0
+	latestFigure := none
+	for {
+		pos = pos.Move(dir, 1)
 		if board[pos] == none {
-			return nil
+			return count%2 != 0
 		}
-		if loopPositions[pos] {
-			continue
-		}
-		visited[pos] = true
-		q = append(q, pos.Move(aoc.Left, 1))
-		q = append(q, pos.Move(aoc.Right, 1))
-		q = append(q, pos.Move(aoc.Up, 1))
-		q = append(q, pos.Move(aoc.Down, 1))
-		q = append(q, pos.Move(aoc.UpLeft, 1))
-		q = append(q, pos.Move(aoc.UpRight, 1))
-		q = append(q, pos.Move(aoc.DownLeft, 1))
-		q = append(q, pos.Move(aoc.DownRight, 1))
-	}
 
-	// At this point, we know a position is surrounded by the loop.
-	// Yet, we can still be outside the loop.
-	if countLoop(board, loopPositions, start, aoc.Left)%2 == 0 &&
-			countLoop(board, loopPositions, start, aoc.Right)%2 == 0 &&
-			countLoop(board, loopPositions, start, aoc.Up)%2 == 0 &&
-			countLoop(board, loopPositions, start, aoc.Down)%2 == 0 {
-		return nil
+		if loopPositions[pos] {
+			switch board[pos] {
+			case bendL, bendF, bendJ, bend7:
+				if latestFigure == none {
+					count++
+					latestFigure = board[pos]
+				} else {
+					switch latestFigure {
+					case bendL:
+						if board[pos] != bend7 {
+							count++
+						}
+					case bendF:
+						if board[pos] != bendJ {
+							count++
+						}
+					}
+					latestFigure = none
+				}
+			case vertical:
+				count++
+			case horizontal:
+			default:
+				panic(pos)
+			}
+		}
 	}
-	//fmt.Println(start)
-	return visited
 }
 
-func countLoop(board map[aoc.Position]tileType, loopPositions map[aoc.Position]bool, pos aoc.Position, dir aoc.Direction) int {
+func isInsideVertical(board map[aoc.Position]tileType, loopPositions map[aoc.Position]bool, pos aoc.Position, dir aoc.Direction) bool {
+	if loopPositions[pos] {
+		return false
+	}
+
 	count := 0
 	for {
 		pos = pos.Move(dir, 1)
 		if board[pos] == none {
-			return count
+			return count%2 != 0
 		}
+
 		if loopPositions[pos] {
-			count++
+			switch board[pos] {
+			case horizontal, bendL, bendJ, bend7, bendF:
+				count++
+			case vertical:
+			default:
+				panic(pos)
+			}
 		}
 	}
 }
