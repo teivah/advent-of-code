@@ -325,10 +325,12 @@ func isInsideHorizontal(board map[aoc.Position]tileType, loopPositions map[aoc.P
 				} else {
 					switch latestFigure {
 					case bendL:
+						// A 7 cancels an L
 						if board[pos] != bend7 {
 							count++
 						}
 					case bendF:
+						// A J cancel an F
 						if board[pos] != bendJ {
 							count++
 						}
