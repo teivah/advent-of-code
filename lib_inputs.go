@@ -36,8 +36,8 @@ func ReaderToInts(input io.Reader) []int {
 
 // Delimiter implementation.
 type Delimiter struct {
-	Ind       []int
-	s         string
+	ind []int
+	s   string
 	del       string
 	trimSpace bool
 }
@@ -64,7 +64,7 @@ func NewDelimiter(s, del string, opts ...DelimiterOption) Delimiter {
 	}
 
 	return Delimiter{
-		Ind:       IndexAll(s, del),
+		ind:       IndexAll(s, del),
 		s:         s,
 		del:       del,
 		trimSpace: options.trimSpace,
@@ -73,7 +73,7 @@ func NewDelimiter(s, del string, opts ...DelimiterOption) Delimiter {
 
 // GetStrings returns all the strings found.
 func (d Delimiter) GetStrings() []string {
-	if len(d.Ind) == 0 {
+	if len(d.ind) == 0 {
 		if d.s == "" {
 			return nil
 		}
@@ -85,7 +85,7 @@ func (d Delimiter) GetStrings() []string {
 	}
 
 	var res []string
-	for i := 0; i <= len(d.Ind); i++ {
+	for i := 0; i <= len(d.ind); i++ {
 		s := d.GetString(i)
 		if s == "" {
 			continue
@@ -105,11 +105,11 @@ func (d Delimiter) GetInts() []int {
 func (d Delimiter) GetString(i int) string {
 	s := ""
 	if i == 0 {
-		s = d.s[:d.Ind[0]]
-	} else if i == len(d.Ind) {
-		s = d.s[d.Ind[len(d.Ind)-1]+len(d.del):]
+		s = d.s[:d.ind[0]]
+	} else if i == len(d.ind) {
+		s = d.s[d.ind[len(d.ind)-1]+len(d.del):]
 	} else {
-		s = d.s[d.Ind[i-1]+len(d.del) : d.Ind[i]]
+		s = d.s[d.ind[i-1]+len(d.del) : d.ind[i]]
 	}
 
 	if d.trimSpace {
