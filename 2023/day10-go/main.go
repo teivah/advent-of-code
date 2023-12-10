@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io"
 
 	aoc "github.com/teivah/advent-of-code"
@@ -19,7 +18,6 @@ const (
 	bendF
 	ground
 	startingPosition
-	outside
 	inside
 )
 
@@ -235,33 +233,10 @@ func fs2(input io.Reader) int {
 		for col := 0; col < len(lines[0]); col++ {
 			pos := aoc.Position{Row: row, Col: col}
 			if isInsideHorizontal(board, loopPositions, pos, aoc.Right) {
-				//if (isInsideHorizontal(board, loopPositions, pos, aoc.Right) ||
-				//	isInsideHorizontal(board, loopPositions, pos, aoc.Left)) &&
-				//	(isInsideVertical(board, loopPositions, pos, aoc.Up) ||
-				//		isInsideVertical(board, loopPositions, pos, aoc.Down)) {
 				board[pos] = inside
 				count++
 			}
 		}
-	}
-
-	//count := 0
-	//for row := 0; row < len(lines); row++ {
-	//	pos := aoc.Position{Row: row, Col: 0}
-	//}
-
-	for row := 0; row < len(lines); row++ {
-		for col := 0; col < len(lines[0]); col++ {
-			pos := aoc.Position{Row: row, Col: col}
-			if loopPositions[pos] {
-				fmt.Printf("%s", string([]uint8{lines[row][col]}))
-			} else if board[pos] == inside {
-				fmt.Print("I")
-			} else {
-				fmt.Print("X")
-			}
-		}
-		fmt.Println()
 	}
 
 	return count
@@ -363,30 +338,6 @@ func isInsideHorizontal(board map[aoc.Position]tileType, loopPositions map[aoc.P
 			case vertical:
 				count++
 			case horizontal:
-			default:
-				panic(pos)
-			}
-		}
-	}
-}
-
-func isInsideVertical(board map[aoc.Position]tileType, loopPositions map[aoc.Position]bool, pos aoc.Position, dir aoc.Direction) bool {
-	if loopPositions[pos] {
-		return false
-	}
-
-	count := 0
-	for {
-		pos = pos.Move(dir, 1)
-		if board[pos] == none {
-			return count%2 != 0
-		}
-
-		if loopPositions[pos] {
-			switch board[pos] {
-			case horizontal, bendL, bendJ, bend7, bendF:
-				count++
-			case vertical:
 			default:
 				panic(pos)
 			}

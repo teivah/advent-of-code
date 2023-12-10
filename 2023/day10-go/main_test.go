@@ -72,5 +72,5 @@ L7JLJL-JLJLJL--JLJ.L`)))
 func TestFs2Input(t *testing.T) {
 	f, err := os.Open("input.txt")
 	require.NoError(t, err)
-	assert.Equal(t, 502, fs2(f))
+	assert.Equal(t, 491, fs2(f))
 }
