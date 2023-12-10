@@ -120,7 +120,7 @@ func toBoard(lines []string) (map[aoc.Position]tileType, aoc.Position) {
 				board[pos] = startingPosition
 				start = pos
 			default:
-				panic(line)
+				panic(string(c))
 			}
 		}
 	}
@@ -227,22 +227,35 @@ func fs2(input io.Reader) int {
 		}
 	}
 
-	res := 0
+	found := make(map[aoc.Position]bool)
 	for pos := range board {
 		if loopPositions[pos] {
 			continue
 		}
-		if board[pos] != ground {
-			continue
-		}
-		if isInsideLoop(board, loopPositions, pos) {
-			res++
+		for inside := range isInsideLoop(board, loopPositions, pos) {
+			found[inside] = true
 		}
 	}
-	return res
+
+	for row := 0; row < len(lines); row++ {
+		for col := 0; col < len(lines[0]); col++ {
+			if loopPositions[aoc.Position{row, col}] {
+				fmt.Print("X")
+			} else {
+				if found[aoc.Position{row, col}] {
+					fmt.Print("I")
+				} else {
+					fmt.Print(" ")
+				}
+			}
+		}
+		fmt.Println()
+	}
+
+	return len(found)
 }
 
-func isInsideLoop(board map[aoc.Position]tileType, loopPositions map[aoc.Position]bool, start aoc.Position) bool {
+func isInsideLoop(board map[aoc.Position]tileType, loopPositions map[aoc.Position]bool, start aoc.Position) map[aoc.Position]bool {
 	q := []aoc.Position{start}
 	visited := make(map[aoc.Position]bool)
 	for len(q) != 0 {
@@ -252,7 +265,7 @@ func isInsideLoop(board map[aoc.Position]tileType, loopPositions map[aoc.Positio
 			continue
 		}
 		if board[pos] == none {
-			return false
+			return nil
 		}
 		if loopPositions[pos] {
 			continue
@@ -267,6 +280,28 @@ func isInsideLoop(board map[aoc.Position]tileType, loopPositions map[aoc.Positio
 		q = append(q, pos.Move(aoc.DownLeft, 1))
 		q = append(q, pos.Move(aoc.DownRight, 1))
 	}
-	fmt.Println(start)
-	return true
+
+	// At this point, we know a position is surrounded by the loop.
+	// Yet, we can still be outside the loop.
+	if countLoop(board, loopPositions, start, aoc.Left)%2 == 0 &&
+			countLoop(board, loopPositions, start, aoc.Right)%2 == 0 &&
+			countLoop(board, loopPositions, start, aoc.Up)%2 == 0 &&
+			countLoop(board, loopPositions, start, aoc.Down)%2 == 0 {
+		return nil
+	}
+	//fmt.Println(start)
+	return visited
+}
+
+func countLoop(board map[aoc.Position]tileType, loopPositions map[aoc.Position]bool, pos aoc.Position, dir aoc.Direction) int {
+	count := 0
+	for {
+		pos = pos.Move(dir, 1)
+		if board[pos] == none {
+			return count
+		}
+		if loopPositions[pos] {
+			count++
+		}
+	}
 }
