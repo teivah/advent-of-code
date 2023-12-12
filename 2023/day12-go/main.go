@@ -16,9 +16,9 @@ const (
 )
 
 type Entry struct {
-	idx       int
-	idxNumber int
-	remaining int
+	springTypesLength int
+	numbersLength     int
+	remaining         int
 }
 
 func fs1(input io.Reader) int {
@@ -27,7 +27,7 @@ func fs1(input io.Reader) int {
 	for scanner.Scan() {
 		springTypes, numbers := parse(scanner.Text())
 		res += counter{cache: make(map[Entry]int)}.
-			countArrangements(springTypes, numbers, 0, 0, -1)
+			countArrangements(springTypes, numbers, -1)
 	}
 	return res
 }
@@ -57,60 +57,61 @@ type counter struct {
 	cache map[Entry]int
 }
 
-func (c counter) countArrangements(springTypes []SpringType, numbers []int, idx, idxNumber, remaining int) int {
-	if idx == len(springTypes) {
-		if idxNumber == len(numbers) ||
-			(idxNumber == len(numbers)-1 && remaining == 0) {
+func (c counter) countArrangements(springTypes []SpringType, numbers []int, remaining int) int {
+	if len(springTypes) == 0 {
+		if len(numbers) == 0 ||
+				(len(numbers) == 1 && remaining == 0) {
 			return 1
 		}
 		return 0
 	}
 
-	if v, exists := c.cache[Entry{idx: idx, idxNumber: idxNumber, remaining: remaining}]; exists {
+	entry := Entry{springTypesLength: len(springTypes), numbersLength: len(numbers), remaining: remaining}
+	if v, exists := c.cache[entry]; exists {
 		return v
 	}
 
-	springType := springTypes[idx]
+	springType := springTypes[0]
 	res := 0
 	switch springType {
 	case springTypeUnknown:
 		switch remaining {
 		case -1:
 			with := 0
-			if idxNumber != len(numbers) {
-				with = c.countArrangements(springTypes, numbers, idx+1, idxNumber, numbers[idxNumber]-1)
+			if len(numbers) != 0 {
+				with = c.countArrangements(springTypes[1:], numbers, numbers[0]-1)
 			}
-			without := c.countArrangements(springTypes, numbers, idx+1, idxNumber, -1)
+			without := c.countArrangements(springTypes[1:], numbers, -1)
 			res = with + without
 		case 0:
-			res = c.countArrangements(springTypes, numbers, idx+1, idxNumber+1, -1)
+			res = c.countArrangements(springTypes[1:], numbers[1:], -1)
 		default:
-			res = c.countArrangements(springTypes, numbers, idx+1, idxNumber, remaining-1)
+			res = c.countArrangements(springTypes[1:], numbers, remaining-1)
 		}
 	case springTypeOperational:
 		switch remaining {
 		case -1:
-			res = c.countArrangements(springTypes, numbers, idx+1, idxNumber, remaining)
+			res = c.countArrangements(springTypes[1:], numbers, remaining)
 		case 0:
-			res = c.countArrangements(springTypes, numbers, idx+1, idxNumber+1, -1)
+			res = c.countArrangements(springTypes[1:], numbers[1:], -1)
 		default:
 		}
 	case springTypeDamaged:
 		switch remaining {
 		case -1:
-			if idxNumber == len(numbers) {
+			if len(numbers) == 0 {
 				break
 			}
-			res = c.countArrangements(springTypes, numbers, idx+1, idxNumber, numbers[idxNumber]-1)
+			res = c.countArrangements(springTypes[1:], numbers, numbers[0]-1)
 		case 0:
 		default:
-			res = c.countArrangements(springTypes, numbers, idx+1, idxNumber, remaining-1)
+			res = c.countArrangements(springTypes[1:], numbers, remaining-1)
 		}
 	default:
 		panic(springType)
 	}
 
-	c.cache[Entry{idx: idx, idxNumber: idxNumber, remaining: remaining}] = res
+	c.cache[entry] = res
 	return res
 }
 
@@ -121,7 +122,7 @@ func fs2(input io.Reader) int {
 		springTypes, numbers := parse(scanner.Text())
 		springTypes, numbers = unfold(springTypes, numbers, 5)
 		res += counter{cache: make(map[Entry]int)}.
-			countArrangements(springTypes, numbers, 0, 0, -1)
+			countArrangements(springTypes, numbers, -1)
 	}
 
 	return res
