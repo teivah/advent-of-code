@@ -1,0 +1,151 @@
+package main
+
+import (
+	"bufio"
+	"io"
+
+	aoc "github.com/teivah/advent-of-code"
+)
+
+type SpringType int
+
+const (
+	springTypeUnknown SpringType = iota
+	springTypeOperational
+	springTypeDamaged
+)
+
+type Entry struct {
+	idx       int
+	idxNumber int
+	remaining int
+}
+
+var cache map[Entry]int
+
+func fs1(input io.Reader) int {
+	scanner := bufio.NewScanner(input)
+	res := 0
+	for scanner.Scan() {
+		line := scanner.Text()
+		springTypes, numbers := parse(line)
+		cache = make(map[Entry]int)
+		v := countArrangements(springTypes, numbers, 0, 0, -1)
+		res += v
+	}
+
+	return res
+}
+
+func parse(line string) ([]SpringType, []int) {
+	del := aoc.NewDelimiter(line, " ")
+	var springs []SpringType
+	s := del.GetString(0)
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		switch c {
+		case '?':
+			springs = append(springs, springTypeUnknown)
+		case '.':
+			springs = append(springs, springTypeOperational)
+		case '#':
+			springs = append(springs, springTypeDamaged)
+		default:
+			panic(string(c))
+		}
+	}
+
+	return springs, aoc.NewDelimiter(del.GetString(1), ",").GetInts()
+}
+
+func countArrangements(springTypes []SpringType, numbers []int, idx, idxNumber, remaining int) int {
+	if idx == len(springTypes) {
+		// Finished
+		if idxNumber == len(numbers) {
+			return 1
+		}
+		if idxNumber == len(numbers)-1 && remaining == 0 {
+			return 1
+		}
+		return 0
+	}
+
+	if v, exists := cache[Entry{idx: idx, idxNumber: idxNumber, remaining: remaining}]; exists {
+		return v
+	}
+
+	springType := springTypes[idx]
+	res := 0
+	switch springType {
+	case springTypeUnknown:
+		switch remaining {
+		case -1:
+			with := 0
+			if idxNumber != len(numbers) {
+				with = countArrangements(springTypes, numbers, idx+1, idxNumber, numbers[idxNumber]-1)
+			}
+			without := countArrangements(springTypes, numbers, idx+1, idxNumber, -1)
+			res = with + without
+		case 0:
+			res = countArrangements(springTypes, numbers, idx+1, idxNumber+1, -1)
+		default:
+			res = countArrangements(springTypes, numbers, idx+1, idxNumber, remaining-1)
+		}
+	case springTypeOperational:
+		switch remaining {
+		case -1:
+			res = countArrangements(springTypes, numbers, idx+1, idxNumber, remaining)
+		case 0:
+			res = countArrangements(springTypes, numbers, idx+1, idxNumber+1, -1)
+		default:
+			res = 0
+		}
+	case springTypeDamaged:
+		switch remaining {
+		case -1:
+			if idxNumber == len(numbers) {
+				res = 0
+				break
+			}
+			res = countArrangements(springTypes, numbers, idx+1, idxNumber, numbers[idxNumber]-1)
+		case 0:
+			res = 0
+		default:
+			res = countArrangements(springTypes, numbers, idx+1, idxNumber, remaining-1)
+		}
+	default:
+		panic(springType)
+	}
+
+	cache[Entry{idx: idx, idxNumber: idxNumber, remaining: remaining}] = res
+	return res
+}
+
+func fs2(input io.Reader) int {
+	scanner := bufio.NewScanner(input)
+	res := 0
+	for scanner.Scan() {
+		line := scanner.Text()
+		springTypes, numbers := parse(line)
+		springTypes, numbers = unfold(springTypes, numbers)
+
+		cache = make(map[Entry]int)
+		v := countArrangements(springTypes, numbers, 0, 0, -1)
+		res += v
+	}
+
+	return res
+}
+
+func unfold(springTypes []SpringType, numbers []int) ([]SpringType, []int) {
+	var res []SpringType
+	var resNumbers []int
+	for i := 0; i < 5; i++ {
+		res = append(res, springTypes...)
+		if i != 4 {
+			res = append(res, springTypeUnknown)
+		}
+		resNumbers = append(resNumbers, numbers...)
+	}
+	return res, resNumbers
+}
