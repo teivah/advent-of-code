@@ -21,19 +21,14 @@ type Entry struct {
 	remaining int
 }
 
-var cache map[Entry]int
-
 func fs1(input io.Reader) int {
 	scanner := bufio.NewScanner(input)
 	res := 0
 	for scanner.Scan() {
-		line := scanner.Text()
-		springTypes, numbers := parse(line)
-		cache = make(map[Entry]int)
-		v := countArrangements(springTypes, numbers, 0, 0, -1)
-		res += v
+		springTypes, numbers := parse(scanner.Text())
+		res += counter{cache: make(map[Entry]int)}.
+			countArrangements(springTypes, numbers, 0, 0, -1)
 	}
-
 	return res
 }
 
@@ -58,19 +53,20 @@ func parse(line string) ([]SpringType, []int) {
 	return springs, aoc.NewDelimiter(del.GetString(1), ",").GetInts()
 }
 
-func countArrangements(springTypes []SpringType, numbers []int, idx, idxNumber, remaining int) int {
+type counter struct {
+	cache map[Entry]int
+}
+
+func (c counter) countArrangements(springTypes []SpringType, numbers []int, idx, idxNumber, remaining int) int {
 	if idx == len(springTypes) {
-		// Finished
-		if idxNumber == len(numbers) {
-			return 1
-		}
-		if idxNumber == len(numbers)-1 && remaining == 0 {
+		if idxNumber == len(numbers) ||
+			(idxNumber == len(numbers)-1 && remaining == 0) {
 			return 1
 		}
 		return 0
 	}
 
-	if v, exists := cache[Entry{idx: idx, idxNumber: idxNumber, remaining: remaining}]; exists {
+	if v, exists := c.cache[Entry{idx: idx, idxNumber: idxNumber, remaining: remaining}]; exists {
 		return v
 	}
 
@@ -82,42 +78,39 @@ func countArrangements(springTypes []SpringType, numbers []int, idx, idxNumber, 
 		case -1:
 			with := 0
 			if idxNumber != len(numbers) {
-				with = countArrangements(springTypes, numbers, idx+1, idxNumber, numbers[idxNumber]-1)
+				with = c.countArrangements(springTypes, numbers, idx+1, idxNumber, numbers[idxNumber]-1)
 			}
-			without := countArrangements(springTypes, numbers, idx+1, idxNumber, -1)
+			without := c.countArrangements(springTypes, numbers, idx+1, idxNumber, -1)
 			res = with + without
 		case 0:
-			res = countArrangements(springTypes, numbers, idx+1, idxNumber+1, -1)
+			res = c.countArrangements(springTypes, numbers, idx+1, idxNumber+1, -1)
 		default:
-			res = countArrangements(springTypes, numbers, idx+1, idxNumber, remaining-1)
+			res = c.countArrangements(springTypes, numbers, idx+1, idxNumber, remaining-1)
 		}
 	case springTypeOperational:
 		switch remaining {
 		case -1:
-			res = countArrangements(springTypes, numbers, idx+1, idxNumber, remaining)
+			res = c.countArrangements(springTypes, numbers, idx+1, idxNumber, remaining)
 		case 0:
-			res = countArrangements(springTypes, numbers, idx+1, idxNumber+1, -1)
+			res = c.countArrangements(springTypes, numbers, idx+1, idxNumber+1, -1)
 		default:
-			res = 0
 		}
 	case springTypeDamaged:
 		switch remaining {
 		case -1:
 			if idxNumber == len(numbers) {
-				res = 0
 				break
 			}
-			res = countArrangements(springTypes, numbers, idx+1, idxNumber, numbers[idxNumber]-1)
+			res = c.countArrangements(springTypes, numbers, idx+1, idxNumber, numbers[idxNumber]-1)
 		case 0:
-			res = 0
 		default:
-			res = countArrangements(springTypes, numbers, idx+1, idxNumber, remaining-1)
+			res = c.countArrangements(springTypes, numbers, idx+1, idxNumber, remaining-1)
 		}
 	default:
 		panic(springType)
 	}
 
-	cache[Entry{idx: idx, idxNumber: idxNumber, remaining: remaining}] = res
+	c.cache[Entry{idx: idx, idxNumber: idxNumber, remaining: remaining}] = res
 	return res
 }
 
@@ -125,27 +118,24 @@ func fs2(input io.Reader) int {
 	scanner := bufio.NewScanner(input)
 	res := 0
 	for scanner.Scan() {
-		line := scanner.Text()
-		springTypes, numbers := parse(line)
-		springTypes, numbers = unfold(springTypes, numbers)
-
-		cache = make(map[Entry]int)
-		v := countArrangements(springTypes, numbers, 0, 0, -1)
-		res += v
+		springTypes, numbers := parse(scanner.Text())
+		springTypes, numbers = unfold(springTypes, numbers, 5)
+		res += counter{cache: make(map[Entry]int)}.
+			countArrangements(springTypes, numbers, 0, 0, -1)
 	}
 
 	return res
 }
 
-func unfold(springTypes []SpringType, numbers []int) ([]SpringType, []int) {
-	var res []SpringType
+func unfold(springTypes []SpringType, numbers []int, count int) ([]SpringType, []int) {
+	var resSpringTypes []SpringType
 	var resNumbers []int
-	for i := 0; i < 5; i++ {
-		res = append(res, springTypes...)
-		if i != 4 {
-			res = append(res, springTypeUnknown)
+	for i := 0; i < count; i++ {
+		resSpringTypes = append(resSpringTypes, springTypes...)
+		if i != count-1 {
+			resSpringTypes = append(resSpringTypes, springTypeUnknown)
 		}
 		resNumbers = append(resNumbers, numbers...)
 	}
-	return res, resNumbers
+	return resSpringTypes, resNumbers
 }
