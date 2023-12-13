@@ -41,7 +41,7 @@ func findVertical(lines []string, maxSmudge int) (int, bool) {
 	variations := make([][]int, len(lines[0]))
 	for i := 0; i < len(lines[0]); i++ {
 		sb := strings.Builder{}
-		sb.Grow(len(lines[0]))
+		sb.Grow(len(lines))
 		for row := 0; row < len(lines); row++ {
 			sb.WriteRune(rune(lines[row][i]))
 		}
@@ -63,46 +63,40 @@ func toHashAndVariations(s string) (int, []int) {
 
 	var variations []int
 	for i := 0; i < len(s); i++ {
+		v := 0
 		if s[i] == '#' {
-			v := hash & ^(1 << i)
-			variations = append(variations, v)
+			v = hash & ^(1 << i)
 		} else {
-			v := hash + 1<<i
-			variations = append(variations, v)
+			v = hash + 1<<i
 		}
+		variations = append(variations, v)
 	}
 
 	return hash, variations
 }
 
 func find(hashes []int, variations [][]int, max int, maxSmudge int) (int, bool) {
-outer:
+nextLine:
 	for i := 1; i < len(hashes); i++ {
 		smudges := 0
-		for idx1, idx2 := i-1, i; ; idx1, idx2 = idx1-1, idx2+1 {
-			if idx1 < 0 || idx2 >= len(hashes) {
-				break
-			}
+
+	nextHash:
+		for idx1, idx2 := i-1, i; idx1 >= 0 && idx2 < len(hashes); idx1, idx2 = idx1-1, idx2+1 {
 			if hashes[idx1] == hashes[idx2] {
 				continue
 			}
-
 			if smudges == maxSmudge {
-				continue outer
+				continue nextLine
 			}
 
 			// If the hashes do not match, we check the variations.
-			found := false
 			for j := 0; j < max; j++ {
 				if hashes[idx1] == variations[idx2][j] || variations[idx1][j] == hashes[idx2] {
 					smudges++
-					found = true
-					break
+					continue nextHash
 				}
 			}
-			if !found {
-				continue outer
-			}
+			continue nextLine
 		}
 		if smudges == maxSmudge {
 			return i, true
