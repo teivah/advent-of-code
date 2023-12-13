@@ -7,6 +7,8 @@ import (
 	aoc "github.com/teivah/advent-of-code"
 )
 
+const rock = '#'
+
 func fs(input io.Reader, maxSmudge int) int {
 	res := 0
 	for _, group := range aoc.StringGroups(aoc.ReaderToStrings(input)) {
@@ -27,10 +29,8 @@ func fs(input io.Reader, maxSmudge int) int {
 func findHorizontal(lines []string, maxSmudge int) (int, bool) {
 	rows := make([]int, len(lines))
 	variations := make([][]int, len(lines))
-	for i, line := range lines {
-		h, v := toHashAndVariations(line)
-		rows[i] = h
-		variations[i] = v
+	for row, line := range lines {
+		rows[row], variations[row] = toHashAndVariations(line)
 	}
 
 	return find(rows, variations, len(lines[0]), maxSmudge)
@@ -39,37 +39,39 @@ func findHorizontal(lines []string, maxSmudge int) (int, bool) {
 func findVertical(lines []string, maxSmudge int) (int, bool) {
 	cols := make([]int, len(lines[0]))
 	variations := make([][]int, len(lines[0]))
-	for i := 0; i < len(lines[0]); i++ {
-		sb := strings.Builder{}
-		sb.Grow(len(lines))
-		for row := 0; row < len(lines); row++ {
-			sb.WriteRune(rune(lines[row][i]))
-		}
-		h, v := toHashAndVariations(sb.String())
-		cols[i] = h
-		variations[i] = v
+	for col := range lines[0] {
+		cols[col], variations[col] = toHashAndVariations(getColString(lines, col))
 	}
 
 	return find(cols, variations, len(lines), maxSmudge)
 }
 
+func getColString(lines []string, col int) string {
+	sb := strings.Builder{}
+	sb.Grow(len(lines))
+	for row := 0; row < len(lines); row++ {
+		sb.WriteRune(rune(lines[row][col]))
+	}
+	return sb.String()
+}
+
 func toHashAndVariations(s string) (int, []int) {
 	hash := 0
 	for i := 0; i < len(s); i++ {
-		if s[i] == '#' {
+		if s[i] == rock {
 			hash += 1 << i
 		}
 	}
 
-	var variations []int
+	variations := make([]int, len(s))
 	for i := 0; i < len(s); i++ {
 		v := 0
-		if s[i] == '#' {
+		if s[i] == rock {
 			v = hash & ^(1 << i)
 		} else {
 			v = hash + 1<<i
 		}
-		variations = append(variations, v)
+		variations[i] = v
 	}
 
 	return hash, variations
