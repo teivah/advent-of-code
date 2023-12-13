@@ -59,8 +59,7 @@ type counter struct {
 
 func (c counter) countArrangements(springTypes []SpringType, numbers []int, remaining int) int {
 	if len(springTypes) == 0 {
-		if len(numbers) == 0 ||
-				(len(numbers) == 1 && remaining == 0) {
+		if len(numbers) == 0 || (len(numbers) == 1 && remaining == 0) {
 			return 1
 		}
 		return 0
