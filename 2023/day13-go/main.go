@@ -8,10 +8,8 @@ import (
 )
 
 func fs(input io.Reader, maxSmudge int) int {
-	groups := aoc.StringGroups(aoc.ReaderToStrings(input))
-
 	res := 0
-	for _, group := range groups {
+	for _, group := range aoc.StringGroups(aoc.ReaderToStrings(input)) {
 		if v, found := findHorizontal(group, maxSmudge); found {
 			res += 100 * v
 			continue
@@ -27,61 +25,60 @@ func fs(input io.Reader, maxSmudge int) int {
 }
 
 func findHorizontal(lines []string, maxSmudge int) (int, bool) {
-	hashes := make([]int, 0, len(lines))
-	variations := make([][]int, 0, len(lines))
-	for _, line := range lines {
-		h, v := getHashAndVariations(line)
-		hashes = append(hashes, h)
-		variations = append(variations, v)
+	rows := make([]int, len(lines))
+	variations := make([][]int, len(lines))
+	for i, line := range lines {
+		h, v := toHashAndVariations(line)
+		rows[i] = h
+		variations[i] = v
 	}
 
-	return find(hashes, variations, len(lines[0]), maxSmudge)
+	return find(rows, variations, len(lines[0]), maxSmudge)
 }
 
 func findVertical(lines []string, maxSmudge int) (int, bool) {
-	hashes := make([]int, 0, len(lines))
-	variations := make([][]int, 0, len(lines))
-
-	for col := 0; col < len(lines[0]); col++ {
+	cols := make([]int, len(lines[0]))
+	variations := make([][]int, len(lines[0]))
+	for i := 0; i < len(lines[0]); i++ {
 		sb := strings.Builder{}
 		sb.Grow(len(lines[0]))
 		for row := 0; row < len(lines); row++ {
-			sb.WriteRune(rune(lines[row][col]))
+			sb.WriteRune(rune(lines[row][i]))
 		}
-		h, v := getHashAndVariations(sb.String())
-		hashes = append(hashes, h)
-		variations = append(variations, v)
+		h, v := toHashAndVariations(sb.String())
+		cols[i] = h
+		variations[i] = v
 	}
 
-	return find(hashes, variations, len(lines), maxSmudge)
+	return find(cols, variations, len(lines), maxSmudge)
 }
 
-func getHashAndVariations(s string) (int, []int) {
-	res := 0
+func toHashAndVariations(s string) (int, []int) {
+	hash := 0
 	for i := 0; i < len(s); i++ {
 		if s[i] == '#' {
-			res += 1 << i
+			hash += 1 << i
 		}
 	}
 
 	var variations []int
 	for i := 0; i < len(s); i++ {
 		if s[i] == '#' {
-			v := res & ^(1 << i)
+			v := hash & ^(1 << i)
 			variations = append(variations, v)
 		} else {
-			v := res + 1<<i
+			v := hash + 1<<i
 			variations = append(variations, v)
 		}
 	}
 
-	return res, variations
+	return hash, variations
 }
 
 func find(hashes []int, variations [][]int, max int, maxSmudge int) (int, bool) {
 outer:
 	for i := 1; i < len(hashes); i++ {
-		smudge := 0
+		smudges := 0
 		for idx1, idx2 := i-1, i; ; idx1, idx2 = idx1-1, idx2+1 {
 			if idx1 < 0 || idx2 >= len(hashes) {
 				break
@@ -90,7 +87,7 @@ outer:
 				continue
 			}
 
-			if smudge == maxSmudge {
+			if smudges == maxSmudge {
 				continue outer
 			}
 
@@ -98,7 +95,7 @@ outer:
 			found := false
 			for j := 0; j < max; j++ {
 				if hashes[idx1] == variations[idx2][j] || variations[idx1][j] == hashes[idx2] {
-					smudge++
+					smudges++
 					found = true
 					break
 				}
@@ -107,7 +104,7 @@ outer:
 				continue outer
 			}
 		}
-		if smudge == maxSmudge {
+		if smudges == maxSmudge {
 			return i, true
 		}
 	}
