@@ -52,14 +52,17 @@ func move(pos aoc.Position, board map[aoc.Position]cellType, dir aoc.Direction) 
 		return
 	}
 
-	next := pos.Move(dir, 1)
-	t, exists := board[next]
-	if !exists || t != empty {
+	cur := pos
+	for {
+		next := cur.Move(dir, 1)
+		if t, exists := board[next]; exists && t == empty {
+			cur = next
+			continue
+		}
+
+		board[pos], board[cur] = board[cur], board[pos]
 		return
 	}
-
-	board[pos], board[next] = board[next], board[pos]
-	move(next, board, dir)
 }
 
 func getResult(board map[aoc.Position]cellType, rows int) int {
@@ -84,21 +87,18 @@ func fs2(input io.Reader, count int) int {
 				move(aoc.Position{Row: row, Col: col}, board, aoc.Up)
 			}
 		}
-
 		// West (left)
 		for col := 1; col < cols; col++ {
 			for row := 0; row < rows; row++ {
 				move(aoc.Position{Row: row, Col: col}, board, aoc.Left)
 			}
 		}
-
 		// South
 		for row := rows - 2; row >= 0; row-- {
 			for col := 0; col < cols; col++ {
 				move(aoc.Position{Row: row, Col: col}, board, aoc.Down)
 			}
 		}
-
 		// East (right)
 		for col := cols - 2; col >= 0; col-- {
 			for row := 0; row < rows; row++ {
@@ -125,12 +125,10 @@ func hashPosition(board map[aoc.Position]cellType, rows int, cols int) string {
 	for row := 0; row < rows; row++ {
 		for col := 0; col < cols; col++ {
 			switch board[aoc.Position{Row: row, Col: col}] {
-			case empty:
-				sb.WriteRune('.')
+			case empty, cubeRock:
+				sb.WriteRune('0')
 			case roundRock:
-				sb.WriteRune('O')
-			case cubeRock:
-				sb.WriteRune('#')
+				sb.WriteRune('1')
 			}
 		}
 	}
