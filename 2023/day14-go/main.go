@@ -110,9 +110,8 @@ func fs2(input io.Reader, count int) int {
 		h := hashPosition(board, rows, cols)
 		if v, exists := existingPositions[h]; exists {
 			delta := i - v
-			// Speed up the computation by jumping close to count.
-			for ; i < (count - delta); i += delta {
-			}
+			// Speed up the computation by jumping as close as possible to count.
+			i += (count - i) / delta * delta
 		} else {
 			existingPositions[h] = i
 		}
