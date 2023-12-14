@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"strings"
 
@@ -121,14 +120,20 @@ func fs2(input io.Reader, count int) int {
 }
 
 func hashPosition(board map[aoc.Position]cellType, rows int, cols int) string {
-	var res []string
+	sb := strings.Builder{}
+	sb.Grow(rows * cols)
 	for row := 0; row < rows; row++ {
 		for col := 0; col < cols; col++ {
-			pos := aoc.Position{Row: row, Col: col}
-			if board[pos] == roundRock {
-				res = append(res, fmt.Sprintf("%v", pos))
+			switch board[aoc.Position{Row: row, Col: col}] {
+			case empty:
+				sb.WriteRune('.')
+			case roundRock:
+				sb.WriteRune('O')
+			case cubeRock:
+				sb.WriteRune('#')
 			}
 		}
 	}
-	return strings.Join(res, ";")
+
+	return sb.String()
 }
