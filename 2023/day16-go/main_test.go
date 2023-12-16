@@ -31,3 +31,9 @@ func TestFs2Input(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 8246, fs2(f))
 }
+
+func TestFs2ConcurrencyInput(t *testing.T) {
+	f, err := os.Open("input.txt")
+	require.NoError(t, err)
+	assert.Equal(t, 8246, fs2Concurrency(f))
+}

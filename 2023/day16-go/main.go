@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
 	"io"
+	"sync"
 
 	aoc "github.com/teivah/advent-of-code"
+	"golang.org/x/sync/errgroup"
 )
 
 type TileType int
@@ -167,5 +170,62 @@ func fs2(input io.Reader) int {
 			dir: aoc.Up,
 		}))
 	}
+	return res
+}
+
+func fs2Concurrency(input io.Reader) int {
+	lines := aoc.ReaderToStrings(input)
+	board := parse(lines)
+	res := 0
+	eg, _ := errgroup.WithContext(context.Background())
+	mu := sync.Mutex{}
+
+	updateMax := func(v int) {
+		mu.Lock()
+		defer mu.Unlock()
+		res = max(v, res)
+	}
+
+	for row := 0; row < len(lines); row++ {
+		row := row
+		eg.Go(func() error {
+			v := fire(board, Beam{
+				pos: aoc.Position{Row: row, Col: 0},
+				dir: aoc.Right,
+			})
+			updateMax(v)
+			return nil
+		})
+		eg.Go(func() error {
+			v := fire(board, Beam{
+				pos: aoc.Position{Row: row, Col: len(lines[0]) - 1},
+				dir: aoc.Left,
+			})
+			updateMax(v)
+			return nil
+		})
+	}
+
+	for col := 0; col < len(lines[0]); col++ {
+		col := col
+		eg.Go(func() error {
+			v := fire(board, Beam{
+				pos: aoc.Position{Row: 0, Col: col},
+				dir: aoc.Down,
+			})
+			updateMax(v)
+			return nil
+		})
+		eg.Go(func() error {
+			v := fire(board, Beam{
+				pos: aoc.Position{Row: len(lines) - 1, Col: col},
+				dir: aoc.Up,
+			})
+			updateMax(v)
+			return nil
+		})
+	}
+
+	_ = eg.Wait()
 	return res
 }
