@@ -190,19 +190,17 @@ func fs2Concurrency(input io.Reader) int {
 	for row := 0; row < len(lines); row++ {
 		row := row
 		eg.Go(func() error {
-			v := fire(board, Beam{
+			updateMax(fire(board, Beam{
 				pos: aoc.Position{Row: row, Col: 0},
 				dir: aoc.Right,
-			})
-			updateMax(v)
+			}))
 			return nil
 		})
 		eg.Go(func() error {
-			v := fire(board, Beam{
+			updateMax(fire(board, Beam{
 				pos: aoc.Position{Row: row, Col: len(lines[0]) - 1},
 				dir: aoc.Left,
-			})
-			updateMax(v)
+			}))
 			return nil
 		})
 	}
@@ -210,19 +208,17 @@ func fs2Concurrency(input io.Reader) int {
 	for col := 0; col < len(lines[0]); col++ {
 		col := col
 		eg.Go(func() error {
-			v := fire(board, Beam{
+			updateMax(fire(board, Beam{
 				pos: aoc.Position{Row: 0, Col: col},
 				dir: aoc.Down,
-			})
-			updateMax(v)
+			}))
 			return nil
 		})
 		eg.Go(func() error {
-			v := fire(board, Beam{
+			updateMax(fire(board, Beam{
 				pos: aoc.Position{Row: len(lines) - 1, Col: col},
 				dir: aoc.Up,
-			})
-			updateMax(v)
+			}))
 			return nil
 		})
 	}
