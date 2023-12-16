@@ -173,6 +173,7 @@ func fs2(input io.Reader) int {
 	return res
 }
 
+// Created for the sake of https://www.reddit.com/r/adventofcode/comments/18k1q32/2023_day16_part_12_golang/
 func fs2Concurrency(input io.Reader) int {
 	lines := aoc.ReaderToStrings(input)
 	board := parse(lines)
