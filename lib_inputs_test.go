@@ -1,6 +1,7 @@
 package aoc_test
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -33,4 +34,18 @@ func TestSubstring(t *testing.T) {
 
 func TestStringGroups(t *testing.T) {
 	assert.Equal(t, [][]string{{"foo"}, {"bar", "baz"}}, aoc.StringGroups([]string{"foo", "", "bar", "baz"}))
+}
+
+func TestParseBoard(t *testing.T) {
+	reader := strings.NewReader(`01
+23`)
+	board, rows, cols := aoc.ParseBoard[int](aoc.ReaderToStrings(reader), func(r rune) int {
+		return int(r - '0')
+	})
+	assert.Equal(t, 0, board[aoc.NewPosition(0, 0)])
+	assert.Equal(t, 1, board[aoc.NewPosition(0, 1)])
+	assert.Equal(t, 2, board[aoc.NewPosition(1, 0)])
+	assert.Equal(t, 3, board[aoc.NewPosition(1, 1)])
+	assert.Equal(t, 2, rows)
+	assert.Equal(t, 2, cols)
 }
