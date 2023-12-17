@@ -1,55 +1,86 @@
 package aoc
 
-import (
-	pq "github.com/emirpasic/gods/queues/priorityqueue"
-)
-
 // PriorityQueue is a priority queue implementation.
 type PriorityQueue[T comparable] struct {
-	queue *pq.Queue
+	items      []T
+	comparator func(a, b T) int
 }
 
 // NewPriorityQueue creates a new PriorityQueue using a comparator.
 func NewPriorityQueue[T comparable](comparator func(a, b T) int) PriorityQueue[T] {
-	queue := pq.NewWith(func(a, b any) int {
-		return comparator(a.(T), b.(T))
-	})
-	return PriorityQueue[T]{
-		queue: queue,
-	}
+	return PriorityQueue[T]{comparator: comparator}
 }
 
 // Push pushes a new item.
-func (p PriorityQueue[T]) Push(t T) {
-	p.queue.Enqueue(t)
+func (pq *PriorityQueue[T]) Push(item T) {
+	pq.items = append(pq.items, item)
+	pq.heapifyUp(len(pq.items) - 1)
 }
 
-// Pop pops a new item.
-func (p PriorityQueue[T]) Pop() (T, bool) {
-	v, ok := p.queue.Dequeue()
-	if ok {
-		return v.(T), ok
+// Pop removes and returns the top element from the priority queue.
+func (pq *PriorityQueue[T]) Pop() (T, bool) {
+	if len(pq.items) == 0 {
+		var zero T
+		return zero, false
 	}
-	var zero T
-	return zero, false
+	top := pq.items[0]
+	lastIndex := len(pq.items) - 1
+	pq.items[0], pq.items[lastIndex] = pq.items[lastIndex], pq.items[0]
+	pq.items = pq.items[:lastIndex]
+	pq.heapifyDown(0)
+	return top, true
 }
 
-// Peek peeks a new item (do not remove from the queue).
-func (p PriorityQueue[T]) Peek() (T, bool) {
-	v, ok := p.queue.Peek()
-	if ok {
-		return v.(T), ok
+// Peek returns the top element of the priority queue without removing it.
+func (pq *PriorityQueue[T]) Peek() (T, bool) {
+	if len(pq.items) == 0 {
+		var zero T
+		return zero, false
 	}
-	var zero T
-	return zero, false
+	return pq.items[0], true
+}
+
+// Len returns the number of elements in the priority queue.
+func (pq *PriorityQueue[T]) Len() int {
+	return len(pq.items)
 }
 
 // IsEmpty checks if the priority queue is empty.
-func (p PriorityQueue[T]) IsEmpty() bool {
-	return p.queue.Empty()
+func (pq *PriorityQueue[T]) IsEmpty() bool {
+	return len(pq.items) == 0
 }
 
-// Size returns the priority queue size.
-func (p PriorityQueue[T]) Size() int {
-	return p.queue.Size()
+func (pq *PriorityQueue[T]) heapifyUp(index int) {
+	for index > 0 {
+		parentIndex := (index - 1) / 2
+		if pq.comparator(pq.items[index], pq.items[parentIndex]) < 0 {
+			pq.items[index], pq.items[parentIndex] = pq.items[parentIndex], pq.items[index]
+			index = parentIndex
+		} else {
+			break
+		}
+	}
+}
+
+func (pq *PriorityQueue[T]) heapifyDown(index int) {
+	for {
+		leftChild := 2*index + 1
+		rightChild := 2*index + 2
+		smallest := index
+
+		if leftChild < len(pq.items) && pq.comparator(pq.items[leftChild], pq.items[smallest]) < 0 {
+			smallest = leftChild
+		}
+
+		if rightChild < len(pq.items) && pq.comparator(pq.items[rightChild], pq.items[smallest]) < 0 {
+			smallest = rightChild
+		}
+
+		if smallest != index {
+			pq.items[index], pq.items[smallest] = pq.items[smallest], pq.items[index]
+			index = smallest
+		} else {
+			break
+		}
+	}
 }

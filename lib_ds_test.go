@@ -18,7 +18,7 @@ func TestNewPriorityQueue(t *testing.T) {
 	pq.Push(person{age: 2})
 	pq.Push(person{age: 1})
 
-	assert.Equal(t, 2, pq.Size())
+	assert.Equal(t, 2, pq.Len())
 	assert.Equal(t, false, pq.IsEmpty())
 
 	p, contains := pq.Pop()
