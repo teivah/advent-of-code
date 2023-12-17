@@ -195,9 +195,7 @@ func ParseBoard[T any](lines []string, fn func(r rune) T) Board[T] {
 	}
 }
 
-func (b Board[T]) IsInside(p Position) bool {
-	return p.Row >= 0 &&
-		p.Row < b.Rows &&
-		p.Col >= 0 &&
-		p.Col < b.Cols
+// Get returns the value at a give position.
+func (b Board[T]) Get(pos Position) T {
+	return b.Positions[pos]
 }
