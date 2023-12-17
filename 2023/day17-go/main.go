@@ -49,6 +49,9 @@ func shortest(board aoc.Board[int], minStraight, maxStraight int) int {
 
 		heat := board.Get(pos) + e.heatLoss
 		if pos == target {
+			if e.straight < minStraight {
+				continue
+			}
 			// Thanks to the priority queue, at this stage we already know this is the
 			// shortest path.
 			return heat
