@@ -7,7 +7,7 @@ import (
 )
 
 func fs(input io.Reader, minStraight, maxStraight int) int {
-	board, rows, cols := aoc.ParseBoard[int](input, aoc.RuneToInt)
+	board, rows, cols := aoc.ParseBoard[int](aoc.ReaderToStrings(input), aoc.RuneToInt)
 	return shortest(board, aoc.NewPosition(rows-1, cols-1), minStraight, maxStraight)
 }
 
