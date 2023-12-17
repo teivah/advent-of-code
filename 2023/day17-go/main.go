@@ -8,7 +8,7 @@ import (
 	aoc "github.com/teivah/advent-of-code"
 )
 
-const singleDirection = 3
+const singleDirectionMax = 3
 
 func fs1(input io.Reader) int {
 	lines := aoc.ReaderToStrings(input)
@@ -32,23 +32,26 @@ func parse(lines []string) (map[aoc.Position]int, aoc.Position) {
 func bfs(board map[aoc.Position]int, target aoc.Position) int {
 	type queueEntry struct {
 		pos                      aoc.Position
-		dir aoc.Direction
+		dir                      aoc.Direction
 		heatLoss                 int
 		singleDirectionRemaining int
 	}
 	type cacheEntry struct {
-		pos aoc.Position
-		dir aoc.Direction
+		pos                      aoc.Position
+		dir                      aoc.Direction
+		singleDirectionRemaining int
 	}
 
 	q := []queueEntry{
 		{
 			pos:                      aoc.Position{Row: 0, Col: 1},
-			singleDirectionRemaining: singleDirection - 1,
+			singleDirectionRemaining: singleDirectionMax - 1,
+			dir:                      aoc.Right,
 		},
 		{
 			pos:                      aoc.Position{Row: 1, Col: 0},
-			singleDirectionRemaining: singleDirection - 1,
+			singleDirectionRemaining: singleDirectionMax - 1,
+			dir:                      aoc.Down,
 		},
 	}
 	cache := make(map[cacheEntry]int)
@@ -58,23 +61,51 @@ func bfs(board map[aoc.Position]int, target aoc.Position) int {
 		e := q[0]
 		q = q[1:]
 
-		if e.pos == target {
-			best = min(best, e.heatLoss)
+		if _, exists := board[e.pos]; !exists {
 			continue
 		}
 
-		ce := cacheEntry{pos: e.pos, dir:e.dir}
+		heat := board[e.pos] + e.heatLoss
+		if e.pos == target {
+			best = min(best, heat)
+			continue
+		}
+
+		ce := cacheEntry{pos: e.pos, dir: e.dir, singleDirectionRemaining: e.singleDirectionRemaining}
 		if v, exists := cache[ce]; exists {
-			if v <= e.heatLoss {
+			if v <= heat {
 				continue
 			}
 		}
-		cache[ce] = e.heatLoss
+		cache[ce] = heat
 
 		// Left
-		e.dir.
+		left := e.dir.Turn(aoc.Left)
+		q = append(q, queueEntry{
+			pos:                      e.pos.Move(left, 1),
+			dir:                      left,
+			heatLoss:                 heat,
+			singleDirectionRemaining: singleDirectionMax - 1,
+		})
+		// Right
+		right := e.dir.Turn(aoc.Right)
+		q = append(q, queueEntry{
+			pos:                      e.pos.Move(right, 1),
+			dir:                      right,
+			heatLoss:                 heat,
+			singleDirectionRemaining: singleDirectionMax - 1,
+		})
+		// Straight
+		if e.singleDirectionRemaining > 0 {
+			q = append(q, queueEntry{
+				pos:                      e.pos.Move(e.dir, 1),
+				dir:                      e.dir,
+				heatLoss:                 heat,
+				singleDirectionRemaining: e.singleDirectionRemaining - 1,
+			})
+		}
 	}
-	panic("no result found")
+	return best
 }
 
 func fs2(input io.Reader) int {
