@@ -10,7 +10,7 @@ import (
 func fs(input io.Reader, minStraight, maxStraight int) int {
 	lines := aoc.ReaderToStrings(input)
 	board, target := parse(lines)
-	return bfs(board, target, minStraight, maxStraight)
+	return shortest(board, target, minStraight, maxStraight)
 }
 
 func parse(lines []string) (map[aoc.Position]int, aoc.Position) {
@@ -26,7 +26,7 @@ func parse(lines []string) (map[aoc.Position]int, aoc.Position) {
 	}
 }
 
-func bfs(board map[aoc.Position]int, target aoc.Position, minStraight, maxStraight int) int {
+func shortest(board map[aoc.Position]int, target aoc.Position, minStraight, maxStraight int) int {
 	type state struct {
 		pos      aoc.Position
 		dir      aoc.Direction
