@@ -3,7 +3,6 @@ package main
 import (
 	"io"
 
-	pq "github.com/emirpasic/gods/queues/priorityqueue"
 	aoc "github.com/teivah/advent-of-code"
 )
 
@@ -22,19 +21,17 @@ func shortest(board map[aoc.Position]int, target aoc.Position, minStraight, maxS
 		heatLoss int
 	}
 
-	q := pq.NewWith(func(a, b any) int {
-		p1 := a.(entry).heatLoss
-		p2 := b.(entry).heatLoss
-		return p1 - p2
+	q := aoc.NewPriorityQueue[entry](func(a, b entry) int {
+		return a.heatLoss - b.heatLoss
 	})
 
-	q.Enqueue(entry{
+	q.Push(entry{
 		state: state{
 			loc:      aoc.NewLocation(0, 1, aoc.Right),
 			straight: 1,
 		},
 	})
-	q.Enqueue(entry{
+	q.Push(entry{
 		state: state{
 			loc:      aoc.NewLocation(1, 0, aoc.Down),
 			straight: 1,
@@ -42,9 +39,8 @@ func shortest(board map[aoc.Position]int, target aoc.Position, minStraight, maxS
 	})
 	visited := make(map[state]int)
 
-	for !q.Empty() {
-		t, _ := q.Dequeue()
-		e := t.(entry)
+	for !q.IsEmpty() {
+		e, _ := q.Pop()
 		pos := e.loc.Pos
 
 		if _, exists := board[pos]; !exists {
@@ -66,7 +62,7 @@ func shortest(board map[aoc.Position]int, target aoc.Position, minStraight, maxS
 		visited[e.state] = heat
 
 		if e.straight >= minStraight {
-			q.Enqueue(entry{
+			q.Push(entry{
 				state: state{
 					loc:      e.loc.Turn(aoc.Left, 1),
 					straight: 1,
@@ -74,7 +70,7 @@ func shortest(board map[aoc.Position]int, target aoc.Position, minStraight, maxS
 				heatLoss: heat,
 			})
 
-			q.Enqueue(entry{
+			q.Push(entry{
 				state: state{
 					loc:      e.loc.Turn(aoc.Right, 1),
 					straight: 1,
@@ -84,7 +80,7 @@ func shortest(board map[aoc.Position]int, target aoc.Position, minStraight, maxS
 		}
 
 		if e.straight < maxStraight {
-			q.Enqueue(entry{
+			q.Push(entry{
 				state: state{
 					loc:      e.loc.Straight(1),
 					straight: e.straight + 1,
