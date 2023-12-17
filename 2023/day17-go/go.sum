@@ -31,6 +31,8 @@ github.com/teivah/advent-of-code v1.5.2 h1:uFMhG5zfbNQUfnSpuYqJBm8F8UFTe9EiViMsh
 github.com/teivah/advent-of-code v1.5.2/go.mod h1:dZT0EVZPNMMtAhzwxTHuo3foK9eLwvbvbWgi6aS8KD4=
 github.com/teivah/advent-of-code v1.5.3 h1:0wVIEjQzZjZZgrYFPPMdMmdIenDBgsytt/zsuDjIu4A=
 github.com/teivah/advent-of-code v1.5.3/go.mod h1:dZT0EVZPNMMtAhzwxTHuo3foK9eLwvbvbWgi6aS8KD4=
+github.com/teivah/advent-of-code v1.6.2 h1:G6cmtDdxZBWZ/ZlqZ5+Q1rpwH0oM0MwTV7wb3swZbss=
+github.com/teivah/advent-of-code v1.6.2/go.mod h1:dZT0EVZPNMMtAhzwxTHuo3foK9eLwvbvbWgi6aS8KD4=
 golang.org/x/exp v0.0.0-20231214170342-aacd6d4b4611 h1:qCEDpW1G+vcj3Y7Fy52pEM1AWm3abj8WimGYejI3SC4=
 golang.org/x/exp v0.0.0-20231214170342-aacd6d4b4611/go.mod h1:iRJReGqOEeBhDZGkGbynYwcHlctCvnjTYIamk7uXpHI=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=

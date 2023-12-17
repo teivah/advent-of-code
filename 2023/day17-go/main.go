@@ -7,11 +7,11 @@ import (
 )
 
 func fs(input io.Reader, minStraight, maxStraight int) int {
-	board, rows, cols := aoc.ParseBoard[int](aoc.ReaderToStrings(input), aoc.RuneToInt)
-	return shortest(board, aoc.NewPosition(rows-1, cols-1), minStraight, maxStraight)
+	board := aoc.ParseBoard[int](aoc.ReaderToStrings(input), aoc.RuneToInt)
+	return shortest(board, minStraight, maxStraight)
 }
 
-func shortest(board map[aoc.Position]int, target aoc.Position, minStraight, maxStraight int) int {
+func shortest(board aoc.Board[int], minStraight, maxStraight int) int {
 	type state struct {
 		loc      aoc.Location
 		straight int
@@ -21,6 +21,7 @@ func shortest(board map[aoc.Position]int, target aoc.Position, minStraight, maxS
 		heatLoss int
 	}
 
+	target := aoc.NewPosition(board.Rows-1, board.Cols-1)
 	visited := make(map[state]int)
 	q := aoc.NewPriorityQueue[entry](func(a, b entry) int {
 		return a.heatLoss - b.heatLoss
@@ -42,11 +43,11 @@ func shortest(board map[aoc.Position]int, target aoc.Position, minStraight, maxS
 		e := q.Pop()
 		pos := e.loc.Pos
 
-		if _, exists := board[pos]; !exists {
+		if !pos.IsInside(board) {
 			continue
 		}
 
-		heat := board[pos] + e.heatLoss
+		heat := board.Get(pos) + e.heatLoss
 		if pos == target {
 			// Thanks to the priority queue, at this stage we already know this is the
 			// shortest path.
