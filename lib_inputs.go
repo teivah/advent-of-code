@@ -173,14 +173,31 @@ func StringGroups(lines []string) [][]string {
 	return res
 }
 
+type Board[T any] struct {
+	Positions map[Position]T
+	Rows      int
+	Cols      int
+}
+
 // ParseBoard parses a board and maps it to a map of Position.
-func ParseBoard[T any](lines []string, fn func(r rune) T) (board map[Position]T, rows int, cols int) {
-	board = make(map[Position]T, len(lines)*len(lines[0]))
+func ParseBoard[T any](lines []string, fn func(r rune) T) Board[T] {
+	positions := make(map[Position]T, len(lines)*len(lines[0]))
 	for row, line := range lines {
 		runes := []rune(line)
 		for col, c := range runes {
-			board[NewPosition(row, col)] = fn(c)
+			positions[NewPosition(row, col)] = fn(c)
 		}
 	}
-	return board, len(lines), len(lines[0])
+	return Board[T]{
+		Positions: positions,
+		Rows:      len(lines),
+		Cols:      len(lines[0]),
+	}
+}
+
+func (b Board[T]) IsInside(p Position) bool {
+	return p.Row >= 0 &&
+		p.Row < b.Rows &&
+		p.Col >= 0 &&
+		p.Col < b.Cols
 }
