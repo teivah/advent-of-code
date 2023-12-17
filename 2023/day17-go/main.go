@@ -40,7 +40,7 @@ func shortest(board map[aoc.Position]int, target aoc.Position, minStraight, maxS
 	visited := make(map[state]int)
 
 	for !q.IsEmpty() {
-		e, _ := q.Pop()
+		e := q.Pop()
 		pos := e.loc.Pos
 
 		if _, exists := board[pos]; !exists {
