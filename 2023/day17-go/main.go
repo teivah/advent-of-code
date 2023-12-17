@@ -28,8 +28,7 @@ func parse(lines []string) (map[aoc.Position]int, aoc.Position) {
 
 func shortest(board map[aoc.Position]int, target aoc.Position, minStraight, maxStraight int) int {
 	type state struct {
-		pos      aoc.Position
-		dir      aoc.Direction
+		loc      aoc.Location
 		straight int
 	}
 	type entry struct {
@@ -45,16 +44,20 @@ func shortest(board map[aoc.Position]int, target aoc.Position, minStraight, maxS
 
 	q.Enqueue(entry{
 		state: state{
-			pos:      aoc.Position{Row: 0, Col: 1},
+			loc: aoc.Location{
+				Pos: aoc.Position{Row: 0, Col: 1},
+				Dir: aoc.Right,
+			},
 			straight: 1,
-			dir:      aoc.Right,
 		},
 	})
 	q.Enqueue(entry{
 		state: state{
-			pos:      aoc.Position{Row: 1, Col: 0},
+			loc: aoc.Location{
+				Pos: aoc.Position{Row: 1, Col: 0},
+				Dir: aoc.Down,
+			},
 			straight: 1,
-			dir:      aoc.Down,
 		},
 	})
 	visited := make(map[state]int)
@@ -62,13 +65,14 @@ func shortest(board map[aoc.Position]int, target aoc.Position, minStraight, maxS
 	for !q.Empty() {
 		t, _ := q.Dequeue()
 		e := t.(entry)
+		pos := e.loc.Pos
 
-		if _, exists := board[e.pos]; !exists {
+		if _, exists := board[pos]; !exists {
 			continue
 		}
 
-		heat := board[e.pos] + e.heatLoss
-		if e.pos == target {
+		heat := board[pos] + e.heatLoss
+		if pos == target {
 			// Thanks to the priority queue, at this stage we already know this is the
 			// shortest path.
 			return heat
@@ -82,21 +86,17 @@ func shortest(board map[aoc.Position]int, target aoc.Position, minStraight, maxS
 		visited[e.state] = heat
 
 		if e.straight >= minStraight {
-			left := e.dir.Turn(aoc.Left)
 			q.Enqueue(entry{
 				state: state{
-					pos:      e.pos.Move(left, 1),
-					dir:      left,
+					loc:      e.loc.Turn(aoc.Left, 1),
 					straight: 1,
 				},
 				heatLoss: heat,
 			})
 
-			right := e.dir.Turn(aoc.Right)
 			q.Enqueue(entry{
 				state: state{
-					pos:      e.pos.Move(right, 1),
-					dir:      right,
+					loc:      e.loc.Turn(aoc.Right, 1),
 					straight: 1,
 				},
 				heatLoss: heat,
@@ -106,8 +106,7 @@ func shortest(board map[aoc.Position]int, target aoc.Position, minStraight, maxS
 		if e.straight < maxStraight {
 			q.Enqueue(entry{
 				state: state{
-					pos:      e.pos.Move(e.dir, 1),
-					dir:      e.dir,
+					loc:      e.loc.Straight(1),
 					straight: e.straight + 1,
 				},
 				heatLoss: heat,
