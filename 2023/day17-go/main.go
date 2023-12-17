@@ -57,7 +57,7 @@ func shortest(board map[aoc.Position]int, target aoc.Position, minStraight, maxS
 			dir:      aoc.Down,
 		},
 	})
-	cache := make(map[state]int)
+	visited := make(map[state]int)
 
 	for !q.Empty() {
 		t, _ := q.Dequeue()
@@ -74,12 +74,12 @@ func shortest(board map[aoc.Position]int, target aoc.Position, minStraight, maxS
 			return heat
 		}
 
-		if v, exists := cache[e.state]; exists {
+		if v, exists := visited[e.state]; exists {
 			if v <= heat {
 				continue
 			}
 		}
-		cache[e.state] = heat
+		visited[e.state] = heat
 
 		if e.straight >= minStraight {
 			left := e.dir.Turn(aoc.Left)
