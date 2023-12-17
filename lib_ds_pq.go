@@ -18,26 +18,18 @@ func (pq *PriorityQueue[T]) Push(item T) {
 }
 
 // Pop removes and returns the top element from the priority queue.
-func (pq *PriorityQueue[T]) Pop() (T, bool) {
-	if len(pq.items) == 0 {
-		var zero T
-		return zero, false
-	}
+func (pq *PriorityQueue[T]) Pop() T {
 	top := pq.items[0]
 	lastIndex := len(pq.items) - 1
 	pq.items[0], pq.items[lastIndex] = pq.items[lastIndex], pq.items[0]
 	pq.items = pq.items[:lastIndex]
 	pq.heapifyDown(0)
-	return top, true
+	return top
 }
 
 // Peek returns the top element of the priority queue without removing it.
-func (pq *PriorityQueue[T]) Peek() (T, bool) {
-	if len(pq.items) == 0 {
-		var zero T
-		return zero, false
-	}
-	return pq.items[0], true
+func (pq *PriorityQueue[T]) Peek() T {
+	return pq.items[0]
 }
 
 // Len returns the number of elements in the priority queue.
