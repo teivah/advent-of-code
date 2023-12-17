@@ -27,39 +27,41 @@ func parse(lines []string) (map[aoc.Position]int, aoc.Position) {
 }
 
 func bfs(board map[aoc.Position]int, target aoc.Position, minStraight, maxStraight int) int {
-	type queueEntry struct {
+	type state struct {
 		pos      aoc.Position
 		dir      aoc.Direction
-		heatLoss int
 		straight int
 	}
-	type cacheEntry struct {
-		pos      aoc.Position
-		dir      aoc.Direction
-		straight int
+	type entry struct {
+		state
+		heatLoss int
 	}
 
 	q := pq.NewWith(func(a, b any) int {
-		p1 := a.(queueEntry).heatLoss
-		p2 := b.(queueEntry).heatLoss
+		p1 := a.(entry).heatLoss
+		p2 := b.(entry).heatLoss
 		return p1 - p2
 	})
 
-	q.Enqueue(queueEntry{
-		pos:      aoc.Position{Row: 0, Col: 1},
-		straight: 1,
-		dir:      aoc.Right,
+	q.Enqueue(entry{
+		state: state{
+			pos:      aoc.Position{Row: 0, Col: 1},
+			straight: 1,
+			dir:      aoc.Right,
+		},
 	})
-	q.Enqueue(queueEntry{
-		pos:      aoc.Position{Row: 1, Col: 0},
-		straight: 1,
-		dir:      aoc.Down,
+	q.Enqueue(entry{
+		state: state{
+			pos:      aoc.Position{Row: 1, Col: 0},
+			straight: 1,
+			dir:      aoc.Down,
+		},
 	})
-	cache := make(map[cacheEntry]int)
+	cache := make(map[state]int)
 
 	for !q.Empty() {
 		t, _ := q.Dequeue()
-		e := t.(queueEntry)
+		e := t.(entry)
 
 		if _, exists := board[e.pos]; !exists {
 			continue
@@ -67,41 +69,48 @@ func bfs(board map[aoc.Position]int, target aoc.Position, minStraight, maxStraig
 
 		heat := board[e.pos] + e.heatLoss
 		if e.pos == target {
+			// Thanks to the priority queue, at this stage we already know this is the
+			// shortest path.
 			return heat
 		}
 
-		ce := cacheEntry{pos: e.pos, dir: e.dir, straight: e.straight}
-		if v, exists := cache[ce]; exists {
+		if v, exists := cache[e.state]; exists {
 			if v <= heat {
 				continue
 			}
 		}
-		cache[ce] = heat
+		cache[e.state] = heat
 
 		if e.straight >= minStraight {
 			left := e.dir.Turn(aoc.Left)
-			q.Enqueue(queueEntry{
-				pos:      e.pos.Move(left, 1),
-				dir:      left,
+			q.Enqueue(entry{
+				state: state{
+					pos:      e.pos.Move(left, 1),
+					dir:      left,
+					straight: 1,
+				},
 				heatLoss: heat,
-				straight: 1,
 			})
 
 			right := e.dir.Turn(aoc.Right)
-			q.Enqueue(queueEntry{
-				pos:      e.pos.Move(right, 1),
-				dir:      right,
+			q.Enqueue(entry{
+				state: state{
+					pos:      e.pos.Move(right, 1),
+					dir:      right,
+					straight: 1,
+				},
 				heatLoss: heat,
-				straight: 1,
 			})
 		}
 
 		if e.straight < maxStraight {
-			q.Enqueue(queueEntry{
-				pos:      e.pos.Move(e.dir, 1),
-				dir:      e.dir,
+			q.Enqueue(entry{
+				state: state{
+					pos:      e.pos.Move(e.dir, 1),
+					dir:      e.dir,
+					straight: e.straight + 1,
+				},
 				heatLoss: heat,
-				straight: e.straight + 1,
 			})
 		}
 	}
