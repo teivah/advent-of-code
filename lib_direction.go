@@ -17,8 +17,8 @@ const (
 	DownRight
 )
 
-// Opposite returns the opposite direction.
-func (d Direction) Opposite() Direction {
+// Rev reverses the current direction.
+func (d Direction) Rev() Direction {
 	switch d {
 	case Up:
 		return Down
@@ -40,10 +40,10 @@ func (d Direction) Opposite() Direction {
 	panic("not handled")
 }
 
-// Turn turns into a given direction.
+// Turn turns left or right.
 func (d Direction) Turn(turn Direction) Direction {
-	if turn == Up || turn == Down {
-		return turn
+	if turn != Left && turn != Right {
+		panic("should be left or right")
 	}
 
 	switch d {
@@ -73,6 +73,30 @@ func (d Direction) Turn(turn Direction) Direction {
 	}
 
 	panic("not handled")
+}
+
+// String implements strings.Stringer.
+func (d Direction) String() string {
+	switch d {
+	case Up:
+		return "up"
+	case Down:
+		return "down"
+	case Left:
+		return "left"
+	case Right:
+		return "right"
+	case UpLeft:
+		return "up left"
+	case UpRight:
+		return "up right"
+	case DownLeft:
+		return "down left"
+	case DownRight:
+		return "down right"
+	default:
+		panic(fmt.Sprintf("unknown direction %d", d))
+	}
 }
 
 // Position represents a given position (row/col)
@@ -126,4 +150,40 @@ func (p Position) Move(direction Direction, moves int) Position {
 	}
 
 	panic("not handled")
+}
+
+// Location represents a given position and direction.
+type Location struct {
+	Pos Position
+	Dir Direction
+}
+
+// Turn turns left or right.
+func (l Location) Turn(d Direction, moves int) Location {
+	dir := l.Dir.Turn(d)
+	pos := l.Pos.Move(dir, moves)
+	return Location{Pos: pos, Dir: dir}
+}
+
+// Rev moves in the reverse direction.
+func (l Location) Rev(moves int) Location {
+	dir := l.Dir.Rev()
+	pos := l.Pos.Move(dir, moves)
+	return Location{Pos: pos, Dir: dir}
+}
+
+// Straight moves in the current direction.
+func (l Location) Straight(moves int) Location {
+	pos := l.Pos.Move(l.Dir, moves)
+	return Location{Pos: pos, Dir: l.Dir}
+}
+
+// Move moves in a given direction.
+func (l Location) Move(d Direction, moves int) Location {
+	return Location{Pos: l.Pos.Move(d, moves), Dir: d}
+}
+
+// String implements strings.Stringer.
+func (l Location) String() string {
+	return fmt.Sprintf("dir=%s, pos=%s", l.Dir, l.Pos)
 }
