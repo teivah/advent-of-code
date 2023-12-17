@@ -44,19 +44,13 @@ func shortest(board map[aoc.Position]int, target aoc.Position, minStraight, maxS
 
 	q.Enqueue(entry{
 		state: state{
-			loc: aoc.Location{
-				Pos: aoc.Position{Row: 0, Col: 1},
-				Dir: aoc.Right,
-			},
+			loc:      aoc.NewLocation(0, 1, aoc.Right),
 			straight: 1,
 		},
 	})
 	q.Enqueue(entry{
 		state: state{
-			loc: aoc.Location{
-				Pos: aoc.Position{Row: 1, Col: 0},
-				Dir: aoc.Down,
-			},
+			loc:      aoc.NewLocation(1, 0, aoc.Down),
 			straight: 1,
 		},
 	})

@@ -14,7 +14,7 @@ gen LANGUAGE YEAR DAY:
     go mod init day{{YEAR}}-{{DAY}}
     go mod tidy
     go get github.com/stretchr/testify
-    go get github.com/teivah/advent-of-code@v1.2.0
+    go get github.com/teivah/advent-of-code@v1.3.0
     go get golang.org/x/exp
 
     # Temporary workaround as the Go version is generated with 3 digits for some reason
