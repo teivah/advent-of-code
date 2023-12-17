@@ -21,10 +21,10 @@ func shortest(board map[aoc.Position]int, target aoc.Position, minStraight, maxS
 		heatLoss int
 	}
 
+	visited := make(map[state]int)
 	q := aoc.NewPriorityQueue[entry](func(a, b entry) int {
 		return a.heatLoss - b.heatLoss
 	})
-
 	q.Push(entry{
 		state: state{
 			loc:      aoc.NewLocation(0, 1, aoc.Right),
@@ -37,7 +37,6 @@ func shortest(board map[aoc.Position]int, target aoc.Position, minStraight, maxS
 			straight: 1,
 		},
 	})
-	visited := make(map[state]int)
 
 	for !q.IsEmpty() {
 		e := q.Pop()
