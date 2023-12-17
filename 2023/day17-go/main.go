@@ -8,26 +8,10 @@ import (
 )
 
 func fs(input io.Reader, minStraight, maxStraight int) int {
-	lines := aoc.ReaderToStrings(input)
 	board, rows, cols := aoc.ParseBoard[int](input, func(r rune) int {
 		return int(r - '0')
 	})
-
-	board, target := parse(lines)
-	return shortest(board, target, minStraight, maxStraight)
-}
-
-func parse(lines []string) (map[aoc.Position]int, aoc.Position) {
-	board := make(map[aoc.Position]int)
-	for row, line := range lines {
-		for col, c := range line {
-			board[aoc.Position{Row: row, Col: col}] = int(c - '0')
-		}
-	}
-	return board, aoc.Position{
-		Row: len(lines) - 1,
-		Col: len(lines[0]) - 1,
-	}
+	return shortest(board, aoc.NewPosition(rows-1, cols-1), minStraight, maxStraight)
 }
 
 func shortest(board map[aoc.Position]int, target aoc.Position, minStraight, maxStraight int) int {
