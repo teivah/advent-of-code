@@ -2,8 +2,8 @@ package main
 
 import (
 	"io"
-	"math"
 
+	pq "github.com/emirpasic/gods/queues/priorityqueue"
 	aoc "github.com/teivah/advent-of-code"
 )
 
@@ -39,24 +39,27 @@ func bfs(board map[aoc.Position]int, target aoc.Position, minStraight, maxStraig
 		straight int
 	}
 
-	q := []queueEntry{
-		{
-			pos:      aoc.Position{Row: 0, Col: 1},
-			straight: 1,
-			dir:      aoc.Right,
-		},
-		{
-			pos:      aoc.Position{Row: 1, Col: 0},
-			straight: 1,
-			dir:      aoc.Down,
-		},
-	}
-	cache := make(map[cacheEntry]int)
-	best := math.MaxInt
+	q := pq.NewWith(func(a, b any) int {
+		p1 := a.(queueEntry).heatLoss
+		p2 := b.(queueEntry).heatLoss
+		return p1 - p2
+	})
 
-	for len(q) != 0 {
-		e := q[0]
-		q = q[1:]
+	q.Enqueue(queueEntry{
+		pos:      aoc.Position{Row: 0, Col: 1},
+		straight: 1,
+		dir:      aoc.Right,
+	})
+	q.Enqueue(queueEntry{
+		pos:      aoc.Position{Row: 1, Col: 0},
+		straight: 1,
+		dir:      aoc.Down,
+	})
+	cache := make(map[cacheEntry]int)
+
+	for !q.Empty() {
+		t, _ := q.Dequeue()
+		e := t.(queueEntry)
 
 		if _, exists := board[e.pos]; !exists {
 			continue
@@ -64,8 +67,7 @@ func bfs(board map[aoc.Position]int, target aoc.Position, minStraight, maxStraig
 
 		heat := board[e.pos] + e.heatLoss
 		if e.pos == target {
-			best = min(best, heat)
-			continue
+			return heat
 		}
 
 		ce := cacheEntry{pos: e.pos, dir: e.dir, straight: e.straight}
@@ -78,7 +80,7 @@ func bfs(board map[aoc.Position]int, target aoc.Position, minStraight, maxStraig
 
 		if e.straight >= minStraight {
 			left := e.dir.Turn(aoc.Left)
-			q = append(q, queueEntry{
+			q.Enqueue(queueEntry{
 				pos:      e.pos.Move(left, 1),
 				dir:      left,
 				heatLoss: heat,
@@ -86,7 +88,7 @@ func bfs(board map[aoc.Position]int, target aoc.Position, minStraight, maxStraig
 			})
 
 			right := e.dir.Turn(aoc.Right)
-			q = append(q, queueEntry{
+			q.Enqueue(queueEntry{
 				pos:      e.pos.Move(right, 1),
 				dir:      right,
 				heatLoss: heat,
@@ -95,7 +97,7 @@ func bfs(board map[aoc.Position]int, target aoc.Position, minStraight, maxStraig
 		}
 
 		if e.straight < maxStraight {
-			q = append(q, queueEntry{
+			q.Enqueue(queueEntry{
 				pos:      e.pos.Move(e.dir, 1),
 				dir:      e.dir,
 				heatLoss: heat,
@@ -103,5 +105,5 @@ func bfs(board map[aoc.Position]int, target aoc.Position, minStraight, maxStraig
 			})
 		}
 	}
-	return best
+	panic("no result found")
 }
