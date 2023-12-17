@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/stretchr/testify v1.8.4
-	github.com/teivah/advent-of-code v1.1.1
+	github.com/teivah/advent-of-code v1.5.3
 	golang.org/x/sync v0.5.0
 )
 

@@ -25,11 +25,28 @@ type Beam struct {
 }
 
 func fs1(input io.Reader) int {
-	board := parse(aoc.ReaderToStrings(input))
+	board, _, _ := aoc.ParseBoard[TileType](aoc.ReaderToStrings(input), toTileType)
 	return fire(board, Beam{
 		pos: aoc.Position{Row: 0, Col: 0},
 		dir: aoc.Right,
 	})
+}
+
+func toTileType(r rune) TileType {
+	switch r {
+	case '.':
+		return empty
+	case '/':
+		return mirrorRight
+	case '\\':
+		return mirrorLeft
+	case '|':
+		return splitterVertical
+	case '-':
+		return splitterHorizontal
+	default:
+		panic(r)
+	}
 }
 
 func fire(board map[aoc.Position]TileType, first Beam) int {
@@ -122,51 +139,26 @@ func fire(board map[aoc.Position]TileType, first Beam) int {
 	return len(energized)
 }
 
-func parse(lines []string) map[aoc.Position]TileType {
-	board := make(map[aoc.Position]TileType)
-	for row, line := range lines {
-		for col, c := range line {
-			pos := aoc.Position{Row: row, Col: col}
-			switch c {
-			case '.':
-				board[pos] = empty
-			case '/':
-				board[pos] = mirrorRight
-			case '\\':
-				board[pos] = mirrorLeft
-			case '|':
-				board[pos] = splitterVertical
-			case '-':
-				board[pos] = splitterHorizontal
-			default:
-				panic(c)
-			}
-		}
-	}
-	return board
-}
-
 func fs2(input io.Reader) int {
-	lines := aoc.ReaderToStrings(input)
-	board := parse(lines)
+	board, rows, cols := aoc.ParseBoard[TileType](aoc.ReaderToStrings(input), toTileType)
 	res := 0
-	for row := 0; row < len(lines); row++ {
+	for row := 0; row < rows; row++ {
 		res = max(res, fire(board, Beam{
 			pos: aoc.Position{Row: row, Col: 0},
 			dir: aoc.Right,
 		}))
 		res = max(res, fire(board, Beam{
-			pos: aoc.Position{Row: row, Col: len(lines[0]) - 1},
+			pos: aoc.Position{Row: row, Col: cols - 1},
 			dir: aoc.Left,
 		}))
 	}
-	for col := 0; col < len(lines[0]); col++ {
+	for col := 0; col < cols; col++ {
 		res = max(res, fire(board, Beam{
 			pos: aoc.Position{Row: 0, Col: col},
 			dir: aoc.Down,
 		}))
 		res = max(res, fire(board, Beam{
-			pos: aoc.Position{Row: len(lines) - 1, Col: col},
+			pos: aoc.Position{Row: rows - 1, Col: col},
 			dir: aoc.Up,
 		}))
 	}
@@ -175,8 +167,7 @@ func fs2(input io.Reader) int {
 
 // Created for the sake of https://www.reddit.com/r/adventofcode/comments/18k1q32/2023_day16_part_12_golang/
 func fs2Concurrency(input io.Reader) int {
-	lines := aoc.ReaderToStrings(input)
-	board := parse(lines)
+	board, rows, cols := aoc.ParseBoard[TileType](aoc.ReaderToStrings(input), toTileType)
 	res := 0
 	eg, _ := errgroup.WithContext(context.Background())
 	mu := sync.Mutex{}
@@ -187,7 +178,7 @@ func fs2Concurrency(input io.Reader) int {
 		res = max(v, res)
 	}
 
-	for row := 0; row < len(lines); row++ {
+	for row := 0; row < rows; row++ {
 		row := row
 		eg.Go(func() error {
 			updateMax(fire(board, Beam{
@@ -198,14 +189,14 @@ func fs2Concurrency(input io.Reader) int {
 		})
 		eg.Go(func() error {
 			updateMax(fire(board, Beam{
-				pos: aoc.Position{Row: row, Col: len(lines[0]) - 1},
+				pos: aoc.Position{Row: row, Col: cols - 1},
 				dir: aoc.Left,
 			}))
 			return nil
 		})
 	}
 
-	for col := 0; col < len(lines[0]); col++ {
+	for col := 0; col < cols; col++ {
 		col := col
 		eg.Go(func() error {
 			updateMax(fire(board, Beam{
@@ -216,7 +207,7 @@ func fs2Concurrency(input io.Reader) int {
 		})
 		eg.Go(func() error {
 			updateMax(fire(board, Beam{
-				pos: aoc.Position{Row: len(lines) - 1, Col: col},
+				pos: aoc.Position{Row: rows - 1, Col: col},
 				dir: aoc.Up,
 			}))
 			return nil
