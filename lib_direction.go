@@ -1,6 +1,8 @@
 package aoc
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // Direction enum
 type Direction int
@@ -105,6 +107,11 @@ type Position struct {
 	Col int
 }
 
+// NewPosition creates a new position.
+func NewPosition(row, col int) Position {
+	return Position{Row: row, Col: col}
+}
+
 // String implements strings.Stringer.
 func (p Position) String() string {
 	return fmt.Sprintf("row=%d, col=%d", p.Row, p.Col)
@@ -156,6 +163,14 @@ func (p Position) Move(direction Direction, moves int) Position {
 type Location struct {
 	Pos Position
 	Dir Direction
+}
+
+// NewLocation creates a new location.
+func NewLocation(row, col int, dir Direction) Location {
+	return Location{
+		Pos: NewPosition(row, col),
+		Dir: dir,
+	}
 }
 
 // Turn turns left or right.
