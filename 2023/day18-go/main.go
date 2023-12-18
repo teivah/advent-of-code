@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"strconv"
 
@@ -14,7 +13,7 @@ type Terrain struct {
 }
 
 func fs1(input io.Reader) int {
-	board := toBoard(input)
+	board := parse1(input)
 
 	for row := board.MinRows; row < board.MaxRows; row++ {
 		for col := board.MinCols; col < board.MaxCols; col++ {
@@ -82,17 +81,10 @@ func fs1(input io.Reader) int {
 		}
 	}
 
-	board.Print(func(terrain Terrain) (rune, bool) {
-		if terrain.isGround {
-			return '.', true
-		}
-		return '#', true
-	}, '?')
-
 	return (board.MaxRows-board.MinRows)*(board.MaxCols-board.MinCols) - countTerrain
 }
 
-func toBoard(input io.Reader) aoc.Board[Terrain] {
+func parse1(input io.Reader) aoc.Board[Terrain] {
 	positions := make(map[aoc.Position]Terrain)
 	pos := aoc.Position{}
 
@@ -153,86 +145,27 @@ func fill(board aoc.Board[Terrain], pos aoc.Position) {
 }
 
 func fs2(input io.Reader) int {
-	board := toBoard2(input)
-	fmt.Println(len(board.Positions))
+	count, positions := parse2(input)
 
-	for row := board.MinRows; row < board.MaxRows; row++ {
-		for col := board.MinCols; col < board.MaxCols; col++ {
-			// Expand right
-			trench := false
-			for c := col + 1; c < board.MaxCols; c++ {
-				pos := aoc.Position{Row: row, Col: c}
-				if _, exists := board.Positions[pos]; exists {
-					trench = true
-					break
-				}
-			}
-
-			if trench {
-				// Expand Left
-				trench = false
-				for c := col - 1; c >= board.MinCols; c-- {
-					pos := aoc.Position{Row: row, Col: c}
-					if _, exists := board.Positions[pos]; exists {
-						trench = true
-						break
-					}
-				}
-			}
-
-			if trench {
-				// Expand Up
-				trench = false
-				for r := row - 1; r >= board.MinRows; r-- {
-					pos := aoc.Position{Row: r, Col: col}
-					if _, exists := board.Positions[pos]; exists {
-						trench = true
-						break
-					}
-				}
-			}
-
-			if trench {
-				// Expand Down
-				trench = false
-				for r := row + 1; r < board.MaxRows; r++ {
-					pos := aoc.Position{Row: r, Col: col}
-					if _, exists := board.Positions[pos]; exists {
-						trench = true
-						break
-					}
-				}
-			}
-
-			if trench {
-				continue
-			}
-			fill(board, aoc.Position{Row: row, Col: col})
-		}
+	// Source: https://stackoverflow.com/a/717367 (EDIT)
+	n := len(positions)
+	positions = append(positions, aoc.Position{Row: positions[0].Row, Col: positions[0].Col})
+	positions = append(positions, aoc.Position{Row: positions[1].Row, Col: positions[1].Col})
+	area := 0
+	for i := 1; i <= n; i++ {
+		area += positions[i].Col * (positions[i+1].Row - positions[i-1].Row)
 	}
 
-	countTerrain := 0
-	for row := board.MinRows; row < board.MaxRows; row++ {
-		for col := board.MinCols; col < board.MaxCols; col++ {
-			if t, exists := board.Positions[aoc.Position{Row: row, Col: col}]; exists {
-				if t.isGround {
-					countTerrain++
-				}
-			}
-		}
-	}
-
-	return (board.MaxRows-board.MinRows)*(board.MaxCols-board.MinCols) - countTerrain
+	return area/2 + count/2 + 1
 }
 
-func toBoard2(input io.Reader) aoc.Board[Terrain] {
-	positions := make(map[aoc.Position]Terrain)
+func parse2(input io.Reader) (int, []aoc.Position) {
+	var positions []aoc.Position
 	pos := aoc.Position{}
+	edges := 0
 
 	scanner := bufio.NewScanner(input)
-	idx := -1
 	for scanner.Scan() {
-		idx++
 		line := scanner.Text()
 		del := aoc.NewDelimiter(line, " ")
 		s := del.GetString(2)
@@ -258,14 +191,11 @@ func toBoard2(input io.Reader) aoc.Board[Terrain] {
 			panic(color)
 		}
 
-		for i := 0; i < int(v); i++ {
-			pos = pos.Move(dir, 1)
-			positions[pos] = Terrain{}
-		}
+		pos = pos.Move(dir, int(v))
+		edges += int(v)
 
-		positions[pos] = Terrain{}
+		positions = append(positions, pos)
 	}
 
-	fmt.Println("parse")
-	return aoc.NewBoard(positions)
+	return edges, positions
 }
