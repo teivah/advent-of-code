@@ -9,19 +9,19 @@ import (
 )
 
 func fs1(input io.Reader) int {
-	edges, positions := parse(input, parseFromInstructions)
-	return calculateArea(edges, positions)
+	perimeter, positions := parse(input, parseFromInstructions)
+	return calculateArea(perimeter, positions)
 }
 
 func fs2(input io.Reader) int {
-	edges, positions := parse(input, parseFromColor)
-	return calculateArea(edges, positions)
+	perimeter, positions := parse(input, parseFromColor)
+	return calculateArea(perimeter, positions)
 }
 
 func parse(input io.Reader, parseFunc func(string) (aoc.Direction, int)) (int, []aoc.Position) {
 	var positions []aoc.Position
 	pos := aoc.Position{}
-	edges := 0
+	perimeter := 0
 
 	scanner := bufio.NewScanner(input)
 	for scanner.Scan() {
@@ -29,11 +29,11 @@ func parse(input io.Reader, parseFunc func(string) (aoc.Direction, int)) (int, [
 		dir, count := parseFunc(line)
 
 		pos = pos.Move(dir, count)
-		edges += count
+		perimeter += count
 		positions = append(positions, pos)
 	}
 
-	return edges, positions
+	return perimeter, positions
 }
 
 func parseFromInstructions(line string) (aoc.Direction, int) {
@@ -86,7 +86,7 @@ func parseFromColor(line string) (aoc.Direction, int) {
 	return dir, int(count)
 }
 
-func calculateArea(edges int, positions []aoc.Position) int {
+func calculateArea(perimeter int, positions []aoc.Position) int {
 	// Source: https://stackoverflow.com/a/717367 (EDIT section)
 	n := len(positions)
 	positions = append(positions, aoc.Position{Row: positions[0].Row, Col: positions[0].Col})
@@ -96,5 +96,5 @@ func calculateArea(edges int, positions []aoc.Position) int {
 		area += positions[i].Col * (positions[i+1].Row - positions[i-1].Row)
 	}
 
-	return area/2 + edges/2 + 1
+	return area/2 + perimeter/2 + 1
 }
