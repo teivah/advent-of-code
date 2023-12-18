@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"math"
 	"strconv"
 
 	aoc "github.com/teivah/advent-of-code"
@@ -98,9 +97,6 @@ func toBoard(input io.Reader) aoc.Board[Terrain] {
 		del := aoc.NewDelimiter(line, " ")
 		direction := del.GetString(0)
 		count := del.GetInt(1)
-		s := del.GetString(2)
-		color := s[1 : len(s)-1]
-		_ = color
 
 		var dir aoc.Direction
 		switch direction {
@@ -146,10 +142,10 @@ func fill(board aoc.Board[Terrain], pos aoc.Position) {
 }
 
 func fs2(input io.Reader) int {
-	board, minRows, minCols := toBoard2(input)
+	board := toBoard2(input)
 
-	for row := minRows; row < board.MaxRows; row++ {
-		for col := minCols; col < board.MaxCols; col++ {
+	for row := board.MinRows; row < board.MaxRows; row++ {
+		for col := board.MinCols; col < board.MaxCols; col++ {
 			// Expand right
 			trench := false
 			for c := col + 1; c < board.MaxCols; c++ {
@@ -163,7 +159,7 @@ func fs2(input io.Reader) int {
 			if trench {
 				// Expand Left
 				trench = false
-				for c := col - 1; c >= minCols; c-- {
+				for c := col - 1; c >= board.MinCols; c-- {
 					pos := aoc.Position{Row: row, Col: c}
 					if _, exists := board.Positions[pos]; exists {
 						trench = true
@@ -175,7 +171,7 @@ func fs2(input io.Reader) int {
 			if trench {
 				// Expand Up
 				trench = false
-				for r := row - 1; r >= minRows; r-- {
+				for r := row - 1; r >= board.MinRows; r-- {
 					pos := aoc.Position{Row: r, Col: col}
 					if _, exists := board.Positions[pos]; exists {
 						trench = true
@@ -204,8 +200,8 @@ func fs2(input io.Reader) int {
 	}
 
 	countTerrain := 0
-	for row := minRows; row < board.MaxRows; row++ {
-		for col := minCols; col < board.MaxCols; col++ {
+	for row := board.MinRows; row < board.MaxRows; row++ {
+		for col := board.MinCols; col < board.MaxCols; col++ {
 			if t, exists := board.Positions[aoc.Position{Row: row, Col: col}]; exists {
 				if t.isGround {
 					countTerrain++
@@ -214,18 +210,12 @@ func fs2(input io.Reader) int {
 		}
 	}
 
-	return (board.MaxRows-minRows)*(board.MaxCols-minCols) - countTerrain
+	return (board.MaxRows-board.MinRows)*(board.MaxCols-board.MinCols) - countTerrain
 }
 
-func toBoard2(input io.Reader) (aoc.Board[Terrain], int, int) {
-	board := aoc.Board[Terrain]{
-		Positions: make(map[aoc.Position]Terrain),
-	}
+func toBoard2(input io.Reader) aoc.Board[Terrain] {
+	positions := make(map[aoc.Position]Terrain)
 	pos := aoc.Position{}
-	maxRows := 0
-	maxCols := 0
-	minRows := math.MaxInt
-	minCols := math.MaxInt
 
 	scanner := bufio.NewScanner(input)
 	idx := -1
@@ -258,19 +248,12 @@ func toBoard2(input io.Reader) (aoc.Board[Terrain], int, int) {
 
 		for i := 0; i < int(v); i++ {
 			pos = pos.Move(dir, 1)
-			board.Positions[pos] = Terrain{}
+			positions[pos] = Terrain{}
 		}
 
-		maxRows = max(maxRows, pos.Row)
-		maxCols = max(maxCols, pos.Col)
-		minRows = min(minRows, pos.Row)
-		minCols = min(minCols, pos.Col)
-		board.Positions[pos] = Terrain{}
+		positions[pos] = Terrain{}
 	}
 
-	board.MaxRows = maxRows + 1
-	board.MaxCols = maxCols + 1
-
 	fmt.Println("parse")
-	return board, minRows, minCols
+	return aoc.NewBoard(positions)
 }
