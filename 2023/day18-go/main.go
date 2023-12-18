@@ -16,8 +16,6 @@ type Terrain struct {
 
 func fs1(input io.Reader) int {
 	board := toBoard(input)
-	board.MaxRows++
-	board.MaxCols++
 
 	for row := board.MinRows; row < board.MaxRows; row++ {
 		for col := board.MinCols; col < board.MaxCols; col++ {
@@ -85,26 +83,7 @@ func fs1(input io.Reader) int {
 		}
 	}
 
-	print(board)
-
 	return (board.MaxRows-board.MinRows)*(board.MaxCols-board.MinCols) - countTerrain
-}
-
-func print(b aoc.Board[Terrain]) {
-	for row := b.MinRows; row < b.MaxRows; row++ {
-		for col := b.MinCols; col < b.MaxCols; col++ {
-			if t, exists := b.Positions[aoc.Position{Row: row, Col: col}]; exists {
-				if t.isGround {
-					fmt.Print(".")
-				} else {
-					fmt.Print("#")
-				}
-			} else {
-				fmt.Print("?")
-			}
-		}
-		fmt.Println()
-	}
 }
 
 func toBoard(input io.Reader) aoc.Board[Terrain] {
