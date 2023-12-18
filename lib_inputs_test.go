@@ -37,8 +37,9 @@ func TestStringGroups(t *testing.T) {
 }
 
 func TestParseBoard(t *testing.T) {
-	reader := strings.NewReader(`01
-23`)
+	inputStr := `01
+23`
+	reader := strings.NewReader(inputStr)
 	board := aoc.ParseBoard[int](aoc.ReaderToStrings(reader), func(r rune) int {
 		return int(r - '0')
 	})
@@ -48,4 +49,6 @@ func TestParseBoard(t *testing.T) {
 	assert.Equal(t, 3, board.Get(aoc.NewPosition(1, 1)))
 	assert.Equal(t, 2, board.MaxRows)
 	assert.Equal(t, 2, board.MaxCols)
+
+	assert.Equal(t, inputStr+"\n", board.String(aoc.IntToRune, '?'))
 }
