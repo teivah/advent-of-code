@@ -15,27 +15,27 @@ type Terrain struct {
 func fs1(input io.Reader) int {
 	board, _ := toBoard(input)
 
-	for row := 0; row < board.Rows; row++ {
-		for col := 0; col < board.Cols; col++ {
-			if _, exists := board.Positions[aoc.Position{row, col}]; exists {
-				fmt.Print("#")
-			} else {
-				fmt.Print(".")
+	for {
+		for row := 0; row < board.Rows; row++ {
+			for col := 0; col < board.Cols; col++ {
+				if _, exists := board.Positions[aoc.Position{row, col}]; exists {
+					fmt.Print("#")
+				} else {
+					fmt.Print(".")
+				}
 			}
+			fmt.Println()
 		}
-		fmt.Println()
-	}
 
-	//for {
-	//	pos, contains := getNextInside(board)
-	//	if !contains {
-	//		break
-	//	}
-	//	fmt.Println(pos)
-	//	fill(board, pos)
-	//}
+		pos, contains := getNextInside(board)
+		if !contains {
+			break
+		}
+		fmt.Println(pos)
+		fill(board, pos)
+	}
 	// TODO Generic
-	fill(board, aoc.Position{1, 1})
+	//fill(board, aoc.Position{1, 1})
 
 	return len(board.Positions)
 }
@@ -112,10 +112,14 @@ func getNextInside(board aoc.Board[Terrain]) (aoc.Position, bool) {
 			}
 
 			edges := 0
-			for r, c := row+1, col+1; r < board.Rows && c < board.Cols; r, c = r+1, c+1 {
-				pos := aoc.Position{Row: r, Col: c}
-				if _, exists := board.Positions[pos]; exists {
+			for c := col + 1; c < board.Cols; c++ {
+				if _, exists := board.Positions[aoc.Position{Row: row, Col: c}]; exists {
 					edges++
+					for c = c + 1; c < board.Cols; c++ {
+						if _, exists := board.Positions[aoc.Position{Row: row, Col: c}]; !exists {
+							break
+						}
+					}
 				}
 			}
 
