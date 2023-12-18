@@ -82,6 +82,13 @@ func fs1(input io.Reader) int {
 		}
 	}
 
+	board.Print(func(terrain Terrain) (rune, bool) {
+		if terrain.isGround {
+			return '.', true
+		}
+		return '#', true
+	}, '?')
+
 	return (board.MaxRows-board.MinRows)*(board.MaxCols-board.MinCols) - countTerrain
 }
 
@@ -122,6 +129,10 @@ func toBoard(input io.Reader) aoc.Board[Terrain] {
 }
 
 func fill(board aoc.Board[Terrain], pos aoc.Position) {
+	if _, exists := board.Positions[pos]; exists {
+		return
+	}
+
 	q := []aoc.Position{pos}
 	for len(q) != 0 {
 		p := q[0]
@@ -143,6 +154,7 @@ func fill(board aoc.Board[Terrain], pos aoc.Position) {
 
 func fs2(input io.Reader) int {
 	board := toBoard2(input)
+	fmt.Println(len(board.Positions))
 
 	for row := board.MinRows; row < board.MaxRows; row++ {
 		for col := board.MinCols; col < board.MaxCols; col++ {
