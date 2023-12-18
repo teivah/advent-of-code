@@ -175,7 +175,7 @@ func StringGroups(lines []string) [][]string {
 	return res
 }
 
-type Board[T comparable] struct {
+type Board[T any] struct {
 	Positions map[Position]T
 	MinRows   int
 	MinCols   int
@@ -184,7 +184,7 @@ type Board[T comparable] struct {
 }
 
 // ParseBoard parses a board and maps it to a map of Position.
-func ParseBoard[T comparable](lines []string, fn func(r rune) T) Board[T] {
+func ParseBoard[T any](lines []string, fn func(r rune) T) Board[T] {
 	positions := make(map[Position]T, len(lines)*len(lines[0]))
 	for row, line := range lines {
 		runes := []rune(line)
@@ -200,7 +200,7 @@ func ParseBoard[T comparable](lines []string, fn func(r rune) T) Board[T] {
 }
 
 // NewBoard creates a board from a list of positions.
-func NewBoard[T comparable](positions map[Position]T) Board[T] {
+func NewBoard[T any](positions map[Position]T) Board[T] {
 	board := Board[T]{
 		Positions: positions,
 		MinRows:   math.MaxInt,
@@ -209,10 +209,10 @@ func NewBoard[T comparable](positions map[Position]T) Board[T] {
 		MaxCols:   math.MinInt,
 	}
 	for pos := range positions {
-		board.MinRows = min(board.MinRows, pos.Row)
-		board.MaxRows = max(board.MaxRows, pos.Row)
-		board.MinCols = min(board.MinCols, pos.Col)
-		board.MaxCols = max(board.MaxCols, pos.Col)
+		board.MinRows = min(board.MinRows, pos.Row+1)
+		board.MaxRows = max(board.MaxRows, pos.Row+1)
+		board.MinCols = min(board.MinCols, pos.Col+1)
+		board.MaxCols = max(board.MaxCols, pos.Col+1)
 	}
 	return board
 }
@@ -229,15 +229,17 @@ func (b Board[T]) Contains(position Position) bool {
 }
 
 // Print displays the board.
-func (b Board[T]) Print(mapping map[T]rune) {
+func (b Board[T]) Print(f func(T) (rune, bool), nonExist rune) {
 	for row := b.MinRows; row < b.MaxRows; row++ {
 		for col := b.MinCols; col < b.MaxCols; col++ {
 			if t, exists := b.Positions[Position{Row: row, Col: col}]; exists {
-				if v, exists := mapping[t]; exists {
-					fmt.Print(v)
+				if r, contains := f(t); contains {
+					fmt.Printf("%c", r)
 				} else {
-					fmt.Print(t)
+					fmt.Printf("%c", nonExist)
 				}
+			} else {
+				fmt.Printf("%c", nonExist)
 			}
 		}
 		fmt.Println()
