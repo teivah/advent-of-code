@@ -46,6 +46,6 @@ func TestParseBoard(t *testing.T) {
 	assert.Equal(t, 1, board.Get(aoc.NewPosition(0, 1)))
 	assert.Equal(t, 2, board.Get(aoc.NewPosition(1, 0)))
 	assert.Equal(t, 3, board.Get(aoc.NewPosition(1, 1)))
-	assert.Equal(t, 2, board.Rows)
-	assert.Equal(t, 2, board.Cols)
+	assert.Equal(t, 2, board.MaxRows)
+	assert.Equal(t, 2, board.MaxCols)
 }

@@ -159,12 +159,6 @@ func (p Position) Move(direction Direction, moves int) Position {
 	panic("not handled")
 }
 
-// IsInside checks whether a position is inside a board.
-func (p Position) IsInside(b Board[int]) bool {
-	return p.Row >= 0 && p.Row < b.Rows &&
-		p.Col >= 0 && p.Col < b.Cols
-}
-
 // Location represents a given position and direction.
 type Location struct {
 	Pos Position

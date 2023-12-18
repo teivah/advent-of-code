@@ -2,7 +2,9 @@ package aoc
 
 import (
 	"bufio"
+	"fmt"
 	"io"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -173,14 +175,16 @@ func StringGroups(lines []string) [][]string {
 	return res
 }
 
-type Board[T any] struct {
+type Board[T comparable] struct {
 	Positions map[Position]T
-	Rows      int
-	Cols      int
+	MinRows   int
+	MinCols   int
+	MaxRows   int
+	MaxCols   int
 }
 
 // ParseBoard parses a board and maps it to a map of Position.
-func ParseBoard[T any](lines []string, fn func(r rune) T) Board[T] {
+func ParseBoard[T comparable](lines []string, fn func(r rune) T) Board[T] {
 	positions := make(map[Position]T, len(lines)*len(lines[0]))
 	for row, line := range lines {
 		runes := []rune(line)
@@ -190,12 +194,52 @@ func ParseBoard[T any](lines []string, fn func(r rune) T) Board[T] {
 	}
 	return Board[T]{
 		Positions: positions,
-		Rows:      len(lines),
-		Cols:      len(lines[0]),
+		MaxRows:   len(lines),
+		MaxCols:   len(lines[0]),
 	}
+}
+
+// NewBoard creates a board from a list of positions.
+func NewBoard[T comparable](positions map[Position]T) Board[T] {
+	board := Board[T]{
+		Positions: positions,
+		MinRows:   math.MaxInt,
+		MaxRows:   math.MinInt,
+		MinCols:   math.MaxInt,
+		MaxCols:   math.MinInt,
+	}
+	for pos := range positions {
+		board.MinRows = min(board.MinRows, pos.Row)
+		board.MaxRows = max(board.MaxRows, pos.Row)
+		board.MinCols = min(board.MinCols, pos.Col)
+		board.MaxCols = max(board.MaxCols, pos.Col)
+	}
+	return board
 }
 
 // Get returns the value at a give position.
 func (b Board[T]) Get(pos Position) T {
 	return b.Positions[pos]
+}
+
+// Contains checks whether a position is inside a board.
+func (b Board[T]) Contains(position Position) bool {
+	return position.Row >= b.MinRows && position.Row < b.MaxRows &&
+		position.Col >= b.MinCols && position.Col < b.MaxCols
+}
+
+// Print displays the board.
+func (b Board[T]) Print(mapping map[T]rune) {
+	for row := b.MinRows; row < b.MaxRows; row++ {
+		for col := b.MinCols; col < b.MaxCols; col++ {
+			if t, exists := b.Positions[Position{Row: row, Col: col}]; exists {
+				if v, exists := mapping[t]; exists {
+					fmt.Print(v)
+				} else {
+					fmt.Print(t)
+				}
+			}
+		}
+		fmt.Println()
+	}
 }
