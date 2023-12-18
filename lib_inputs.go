@@ -209,9 +209,9 @@ func NewBoard[T any](positions map[Position]T) Board[T] {
 		MaxCols:   math.MinInt,
 	}
 	for pos := range positions {
-		board.MinRows = min(board.MinRows, pos.Row+1)
+		board.MinRows = min(board.MinRows, pos.Row)
 		board.MaxRows = max(board.MaxRows, pos.Row+1)
-		board.MinCols = min(board.MinCols, pos.Col+1)
+		board.MinCols = min(board.MinCols, pos.Col)
 		board.MaxCols = max(board.MaxCols, pos.Col+1)
 	}
 	return board
