@@ -1,7 +1,7 @@
 package main
 
 import (
-	"bufio"
+	"fmt"
 	"io"
 	"strings"
 
@@ -18,14 +18,32 @@ const (
 	sent
 )
 
+type Condition int
+
+const (
+	alwaysTrue Condition = iota
+	smaller
+	greater
+)
+
 type Rating map[string]int
 
-type workflowFunc func(Rating) (bool, Result, string)
+type Step struct {
+	f        stepFunc
+	res      Result
+	variable string
+	cond     Condition
+	value    int
+}
+
+type stepFunc func(Rating) (bool, Result, string)
 
 func fs1(input io.Reader) int {
 	groups := aoc.StringGroups(aoc.ReaderToStrings(input))
 	workflows := parseWorkflows(groups[0])
 	ratings := parseRatings(groups[1])
+
+	fmt.Println(workflows)
 
 	res := 0
 outer:
@@ -37,7 +55,7 @@ outer:
 			steps := workflows[workflow]
 
 			for _, step := range steps {
-				matching, result, next := step(rating)
+				matching, result, next := step.f(rating)
 				if !matching {
 					continue
 				}
@@ -59,25 +77,25 @@ outer:
 	return res
 }
 
-func parseWorkflows(lines []string) map[string][]workflowFunc {
-	m := make(map[string][]workflowFunc)
+func parseWorkflows(lines []string) map[string][]Step {
+	m := make(map[string][]Step)
 	for _, line := range lines {
 		sep := strings.Index(line, "{")
 		workflowName := line[:sep]
-		var workflows []workflowFunc
+		var workflows []Step
 		s := line[sep+1 : len(line)-1]
 
 		del := aoc.NewDelimiter(s, ",")
-		for _, step := range del.GetStrings() {
-			f := parseWorkflowStep(step)
-			workflows = append(workflows, f)
+		for _, stepName := range del.GetStrings() {
+			step := parseWorkflowStep(stepName)
+			workflows = append(workflows, step)
 		}
 		m[workflowName] = workflows
 	}
 	return m
 }
 
-func parseWorkflowStep(s string) workflowFunc {
+func parseWorkflowStep(s string) Step {
 	thenIdx := strings.Index(s, ":")
 
 	var res Result
@@ -93,8 +111,12 @@ func parseWorkflowStep(s string) workflowFunc {
 			res = sent
 			next = s
 		}
-		return func(_ Rating) (bool, Result, string) {
-			return true, res, next
+		return Step{
+			f: func(_ Rating) (bool, Result, string) {
+				return true, res, next
+			},
+			res:  res,
+			cond: alwaysTrue,
 		}
 	}
 
@@ -111,8 +133,8 @@ func parseWorkflowStep(s string) workflowFunc {
 		panic(s)
 	}
 
-	workflowName := beforeThen[:operatorIdx]
-	condition := aoc.StringToInt(beforeThen[operatorIdx+1:])
+	variable := beforeThen[:operatorIdx]
+	value := aoc.StringToInt(beforeThen[operatorIdx+1:])
 
 	switch next {
 	case "A":
@@ -124,18 +146,30 @@ func parseWorkflowStep(s string) workflowFunc {
 	}
 
 	if isSmaller {
-		return func(r Rating) (bool, Result, string) {
-			if r[workflowName] < condition {
-				return true, res, next
-			}
-			return false, res, ""
+		return Step{
+			f: func(r Rating) (bool, Result, string) {
+				if r[variable] < value {
+					return true, res, next
+				}
+				return false, res, ""
+			},
+			res:      res,
+			variable: variable,
+			cond:     smaller,
+			value:    value,
 		}
 	}
-	return func(r Rating) (bool, Result, string) {
-		if r[workflowName] > condition {
-			return true, res, next
-		}
-		return false, 0, ""
+	return Step{
+		f: func(r Rating) (bool, Result, string) {
+			if r[variable] > value {
+				return true, res, next
+			}
+			return false, 0, ""
+		},
+		res:      res,
+		variable: variable,
+		cond:     greater,
+		value:    value,
 	}
 }
 
@@ -162,11 +196,9 @@ func parseRating(s string) (string, int) {
 }
 
 func fs2(input io.Reader) int {
-	scanner := bufio.NewScanner(input)
-	for scanner.Scan() {
-		line := scanner.Text()
-		_ = line
-	}
+	//groups := aoc.StringGroups(aoc.ReaderToStrings(input))
+	//workflows := parseWorkflows(groups[0])
+	//ratings := parseRatings(groups[1])
 
 	return 42
 }
