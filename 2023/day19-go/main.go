@@ -202,7 +202,6 @@ func parseRating(s string) (string, int) {
 func fs2(input io.Reader) int {
 	groups := aoc.StringGroups(aoc.ReaderToStrings(input))
 	workflows := parseWorkflows(groups[0])
-	_ = workflows
 
 	node := createTree(workflows, startingWorkflow)
 	defaultRange := Range{
@@ -284,6 +283,9 @@ func createTree(workflows map[string][]Step, workflowName string) *Node {
 }
 
 func dfs(node *Node, r RangeRating) []RangeRating {
+	if node.rejected {
+		return nil
+	}
 	if node.accepted {
 		for _, v := range r {
 			if v.to < v.from {
@@ -292,35 +294,31 @@ func dfs(node *Node, r RangeRating) []RangeRating {
 		}
 		return []RangeRating{r}
 	}
-	if node.rejected {
-		return nil
-	}
 
 	parent := r.clone()
 	var res []RangeRating
 	for i, child := range node.children {
-		r := parent.clone()
-
+		cur := parent.clone()
 		step := node.steps[i]
 		switch step.cond {
 		case alwaysTrue:
-			res = append(res, dfs(child, r)...)
+			res = append(res, dfs(child, cur)...)
 		case smaller:
 			variable := step.condVariable
-			rr := r[variable]
+			rr := cur[variable]
 			rr.to = min(rr.to, step.condValue-1)
-			r[variable] = rr
-			res = append(res, dfs(child, r)...)
+			cur[variable] = rr
+			res = append(res, dfs(child, cur)...)
 
 			rr = parent[variable]
 			rr.from = max(rr.from, step.condValue)
 			parent[variable] = rr
 		case greater:
 			variable := step.condVariable
-			rr := r[variable]
+			rr := cur[variable]
 			rr.from = max(rr.from, step.condValue+1)
-			r[variable] = rr
-			res = append(res, dfs(child, r)...)
+			cur[variable] = rr
+			res = append(res, dfs(child, cur)...)
 
 			rr = parent[variable]
 			rr.to = min(rr.to, step.condValue)
