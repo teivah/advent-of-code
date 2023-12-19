@@ -303,6 +303,103 @@ c{s>3999:d}
 d{x<2501:A}`,
 			resp: 2500,
 		},
+		{
+			input: `in{x>3999:a}
+a{m>3999:b}
+b{a>3999:c,x>3999:c}
+c{s>3999:app}
+app{A}`,
+			resp: 4000,
+		},
+		{
+			input: `in{x>3999:a}
+a{m>3999:b}
+b{a>3999:c}
+c{s>3999:app,A}
+app{x<1000:A,R}`,
+			resp: 3999,
+		},
+		{
+			input: `in{x>3999:A}`,
+			resp:  4000 * 4000 * 4000,
+		},
+		{
+			input: `in{x>3999:a}
+a{m>3999:A}`,
+			resp: 4000 * 4000,
+		},
+		{
+			input: `in{x>3999:a}
+a{m>3999:b}
+b{a>3999:A}
+c{A}`,
+			resp: 4000,
+		},
+		{
+			input: `in{x>3999:a}
+a{m>3999:b}
+b{a>3999:c}
+c{s>3999:A}`,
+			resp: 1,
+		},
+		{
+			input: `in{x>1:R,m>2:R,a>1:R,A}`,
+			resp:  8000,
+		},
+		{
+			input: `in{x<2:a1,a2}
+a1{m<2:b1}
+b1{a<2:c1}
+c1{s<2:A}
+a2{m<2:b2}
+b2{a<2:c2}
+c2{s<2:A}`,
+			resp: 4000,
+		},
+		{
+			input: `in{x<11:a,a}
+a{x>3999:b}
+b{m<2:c}
+c{a<2:d}
+d{s<2:A}`,
+			resp: 1,
+		},
+		{
+			input: `in{x<2001:A,R}`,
+			resp:  128000000000000,
+		},
+		{
+			input: `in{x<4000:R,m<4000:R,a<4000:R,s<4000:R,A}`,
+			resp:  1,
+		},
+		{
+			input: `in{x>1:R,m>1:R,a>1:R,s>1:R,A}`,
+			resp:  1,
+		},
+		{
+			input: `in{x>3:R,x<2:R,A}`,
+			resp:  128000000000,
+		},
+		{
+			input: `in{x<4000:R,m<4000:R,a<4000:R,s>2000:a}
+a{x<3000:R,s>3000:A}`,
+			resp: 1000,
+		},
+		{
+			input: `in{x<11:a,m<2:a2}
+a{m<2:b}
+b{a<2:c}
+c{s<2:A}
+a2{x<12:b2}
+b2{a>3999:c2}
+c2{s<2:A}`,
+			resp: 11,
+		},
+		{
+			input: `in{x<4000:R,m<4000:R,a<4000:R,a}
+a{s<2001:R,A}`,
+			resp: 2000,
+		},
 	}
 
 	for _, tc := range cases {

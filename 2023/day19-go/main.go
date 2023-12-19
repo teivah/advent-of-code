@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"sort"
 	"strings"
@@ -48,7 +47,7 @@ func fs1(input io.Reader) int {
 	workflows := parseWorkflows(groups[0])
 	ratings := parseRatings(groups[1])
 
-	fmt.Println(workflows)
+	//fmt.Println(workflows)
 
 	res := 0
 outer:
@@ -220,9 +219,9 @@ func fs2(input io.Reader) int {
 		"s": defaultRange,
 	})
 
-	for _, interval := range intervals {
-		fmt.Println(interval)
-	}
+	//for _, interval := range intervals {
+	//	fmt.Println(interval)
+	//}
 
 	endpoints := make(map[string]map[int]struct{})
 	for _, k := range []string{"x", "m", "a", "s"} {
@@ -247,12 +246,12 @@ func fs2(input io.Reader) int {
 		ordered[k] = s
 	}
 
-	fmt.Println()
-	fmt.Println("ordered")
-	for k, v := range ordered {
-		fmt.Println(k, v)
-	}
-	fmt.Println()
+	//fmt.Println()
+	//fmt.Println("ordered")
+	//for k, v := range ordered {
+	//	fmt.Println(k, v)
+	//}
+	//fmt.Println()
 
 	var keys []map[string][2]int
 	for _, interval := range intervals {
@@ -263,20 +262,22 @@ func fs2(input io.Reader) int {
 			to := r.to
 
 			ints := ordered[k]
-			startIdx := 0
-			endIdx := 0
+			startIdx := -1
+			endIdx := -1
 			for idx, i := range ints {
 				if i == from {
 					startIdx = idx
 				}
 				if i == to {
-					if i == 4000 {
-						endIdx = idx + 1
-					} else {
-						endIdx = idx
-					}
+					endIdx = idx
 					break
 				}
+			}
+			if startIdx == -1 {
+				panic(startIdx)
+			}
+			if endIdx == -1 {
+				panic(endIdx)
 			}
 			key[k] = [2]int{startIdx, endIdx}
 		}
@@ -284,16 +285,19 @@ func fs2(input io.Reader) int {
 	}
 
 	type entry struct {
-		x int
-		m int
-		a int
-		s int
+		fromX int
+		toX   int
+		fromM int
+		toM   int
+		fromA int
+		toA   int
+		fromS int
+		toS   int
 	}
 
 	cache := make(map[entry]bool)
 	res := 0
-	for i, key := range keys {
-		fmt.Println(i, len(keys))
+	for _, key := range keys {
 		x := key["x"]
 		m := key["m"]
 		a := key["a"]
@@ -373,16 +377,21 @@ func fs2(input io.Reader) int {
 						}
 
 						e := entry{
-							x: toX,
-							m: toM,
-							a: toA,
-							s: toS,
+							fromX: fromX,
+							toX:   toX,
+							fromM: fromM,
+							toM:   toM,
+							fromA: fromA,
+							toA:   toA,
+							fromS: fromS,
+							toS:   toS,
 						}
 
 						if cache[e] {
+							//fmt.Println(e)
 							continue
 						}
-						fmt.Println(e)
+						//fmt.Println(e)
 						cache[e] = true
 
 						res += (toX - fromX + 1) * (toM - fromM + 1) * (toA - fromA + 1) * (toS - fromS + 1)
@@ -431,10 +440,8 @@ func dfs(node *Node, r RangeRating) []RangeRating {
 	}
 
 	parent := r.clone()
-
 	var res []RangeRating
 	for i, child := range node.children {
-		rejected := child.rejected
 		r := parent.clone()
 
 		step := node.steps[i]
@@ -442,51 +449,25 @@ func dfs(node *Node, r RangeRating) []RangeRating {
 		case alwaysTrue:
 			res = append(res, dfs(child, r)...)
 		case smaller:
-			if rejected {
-				variable := step.condVariable
-				rr := r[variable]
-				if step.condValue > rr.from {
-					rr.from = step.condValue
-				}
-				parent[variable] = rr
-			} else {
-				variable := step.condVariable
-				rr := r[variable]
-				if step.condValue-1 < rr.to {
-					rr.to = step.condValue - 1
-				}
-				r[variable] = rr
-				res = append(res, dfs(child, r)...)
+			variable := step.condVariable
+			rr := r[variable]
+			rr.to = min(rr.to, step.condValue-1)
+			r[variable] = rr
+			res = append(res, dfs(child, r)...)
 
-				rr = parent[variable]
-				if step.condValue > rr.from {
-					rr.from = step.condValue
-				}
-				parent[variable] = rr
-			}
+			rr = parent[variable]
+			rr.from = max(rr.from, step.condValue)
+			parent[variable] = rr
 		case greater:
-			if rejected {
-				variable := step.condVariable
-				rr := r[variable]
-				if step.condValue < rr.to {
-					rr.to = step.condValue
-				}
-				parent[variable] = rr
-			} else {
-				variable := step.condVariable
-				rr := r[variable]
-				if step.condValue+1 > rr.from {
-					rr.from = step.condValue + 1
-				}
-				r[variable] = rr
-				res = append(res, dfs(child, r)...)
+			variable := step.condVariable
+			rr := r[variable]
+			rr.from = max(rr.from, step.condValue+1)
+			r[variable] = rr
+			res = append(res, dfs(child, r)...)
 
-				rr = parent[variable]
-				if step.condValue < rr.to {
-					rr.to = step.condValue
-				}
-				parent[variable] = rr
-			}
+			rr = parent[variable]
+			rr.to = min(rr.to, step.condValue)
+			parent[variable] = rr
 		}
 	}
 	return res
