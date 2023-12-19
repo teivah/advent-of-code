@@ -46,8 +46,6 @@ func fs1(input io.Reader) int {
 	workflows := parseWorkflows(groups[0])
 	ratings := parseRatings(groups[1])
 
-	//fmt.Println(workflows)
-
 	res := 0
 outer:
 	for _, rating := range ratings {
@@ -106,9 +104,9 @@ func parseWorkflowStep(s string) Step {
 
 	if thenIdx == -1 {
 		switch s {
-		case "A":
+		case acceptedStr:
 			res = accepted
-		case "R":
+		case rejectedStr:
 			res = rejected
 		default:
 			res = sent
@@ -206,12 +204,12 @@ func fs2(input io.Reader) int {
 	workflows := parseWorkflows(groups[0])
 	_ = workflows
 
-	parent := dependency(workflows, startingWorkflow)
+	node := createTree(workflows, startingWorkflow)
 	defaultRange := Range{
 		from: 1,
 		to:   4000,
 	}
-	intervals := dfs(parent, RangeRating{
+	intervals := dfs(node, RangeRating{
 		"x": defaultRange,
 		"m": defaultRange,
 		"a": defaultRange,
@@ -252,7 +250,7 @@ type Range struct {
 	to   int
 }
 
-func dependency(workflows map[string][]Step, workflowName string) *Node {
+func createTree(workflows map[string][]Step, workflowName string) *Node {
 	var children []*Node
 	var steps []Step
 	for _, step := range workflows[workflowName] {
@@ -271,7 +269,7 @@ func dependency(workflows map[string][]Step, workflowName string) *Node {
 			continue
 		}
 
-		n := dependency(workflows, step.next)
+		n := createTree(workflows, step.next)
 		if n != nil {
 			children = append(children, n)
 			steps = append(steps, step)
