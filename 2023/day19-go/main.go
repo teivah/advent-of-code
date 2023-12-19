@@ -114,58 +114,29 @@ func parseWorkflowStep(s string) workflowFunc {
 	workflowName := beforeThen[:operatorIdx]
 	condition := aoc.StringToInt(beforeThen[operatorIdx+1:])
 
-	if next != "A" && next != "R" {
-		if isSmaller {
-			return func(r Rating) (bool, Result, string) {
-				if r[workflowName] < condition {
-					return true, sent, next
-				}
-				return false, 0, ""
-			}
-		}
-		return func(r Rating) (bool, Result, string) {
-			if r[workflowName] > condition {
-				return true, sent, next
-			}
-			return false, 0, ""
-		}
+	switch next {
+	case "A":
+		res = accepted
+	case "R":
+		res = rejected
+	default:
+		res = sent
 	}
 
-	if next == "A" {
-		if isSmaller {
-			return func(r Rating) (bool, Result, string) {
-				if r[workflowName] < condition {
-					return true, accepted, ""
-				}
-				return false, 0, ""
-			}
-		}
+	if isSmaller {
 		return func(r Rating) (bool, Result, string) {
-			if r[workflowName] > condition {
-				return true, accepted, ""
+			if r[workflowName] < condition {
+				return true, res, next
 			}
-			return false, 0, ""
+			return false, res, ""
 		}
 	}
-
-	if next == "R" {
-		if isSmaller {
-			return func(r Rating) (bool, Result, string) {
-				if r[workflowName] < condition {
-					return true, rejected, ""
-				}
-				return false, 0, ""
-			}
+	return func(r Rating) (bool, Result, string) {
+		if r[workflowName] > condition {
+			return true, res, next
 		}
-		return func(r Rating) (bool, Result, string) {
-			if r[workflowName] > condition {
-				return true, rejected, ""
-			}
-			return false, 0, ""
-		}
+		return false, 0, ""
 	}
-
-	panic("not")
 }
 
 func parseRatings(lines []string) []Rating {
@@ -174,9 +145,9 @@ func parseRatings(lines []string) []Rating {
 		// Remove { and }
 		line = line[1 : len(line)-1]
 		del := aoc.NewDelimiter(line, ",")
-		strings := del.GetStrings()
-		rating := make(map[string]int, len(strings))
-		for _, s := range strings {
+		items := del.GetStrings()
+		rating := make(map[string]int, len(items))
+		for _, s := range items {
 			name, value := parseRating(s)
 			rating[name] = value
 		}
