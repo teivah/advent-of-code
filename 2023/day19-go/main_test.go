@@ -198,6 +198,103 @@ b{a>3998:c}
 c{s>3999:A}`,
 			resp: 2,
 		},
+		{
+			input: `in{x>3999:a}
+a{a<3999:rej,m>3999:b}
+rej{R}
+b{a>3998:c}
+c{s>3999:A}`,
+			resp: 2,
+		},
+		{
+			input: `in{x>3999:a}
+a{a>3999:R,m>3999:b}
+b{a>3998:c}
+c{s>3999:A}`,
+			resp: 1,
+		},
+		{
+			input: `in{x<4000:rej,m<4000:rej,a}
+rej{R}
+a{x>2000:c,m>2000:c}
+c{a>3999:d}
+d{s>3999:A}`,
+			resp: 1,
+		},
+		{
+			input: `in{x<100:a,x<201:a,a}
+a{m>3999:b}
+b{a>3999:c}
+c{s>3999:A}`,
+			resp: 4000,
+		},
+		{
+			input: `in{x<101:a,x<201:a,x>3999:a}
+a{m>3999:b}
+b{a>3999:c}
+c{s>3999:A}`,
+			resp: 201,
+		},
+		{
+			input: `in{x<101:a,x<102:b}
+a{m>3999:b}
+b{a>3999:c}
+c{s>3999:A}`,
+			resp: 4100,
+		},
+		{
+			input: `in{x<4000:rej,a}
+rej{R}
+a{m>3999:b}
+b{a>3999:c}
+c{s>3999:A}`,
+			resp: 1,
+		},
+		{
+			input: `in{x<101:a1,a2}
+a1{m>3999:b1}
+b1{a>3999:c1}
+c1{s>3999:A}
+a2{m>3999:b2}
+b2{a>3999:c2}
+c2{s>3999:c3}
+c3{x>100:A}`,
+			resp: 4000,
+		},
+		{
+			input: `in{x<4000:rej,a}
+rej{R}
+a{m>3999:b}
+b{a>3999:c}
+c{s>3999:d}
+d{x>2000:A}`,
+			resp: 1,
+		},
+		{
+			input: `in{x<2:a,x<3:a,x<4:a,x>3999:a,rej}
+rej{R}
+a{m>3999:b}
+b{a>3999:c}
+c{s>3999:A}`,
+			resp: 4,
+		},
+		{
+			input: `in{x<2:a,x<3:a,x<4:a,x>3999:a,rej}
+rej{R}
+a{x<2:aa}
+aa{m>3999:b}
+b{a>3999:c}
+c{s>3999:A}`,
+			resp: 1,
+		},
+		{
+			input: `in{x>2000:a,a}
+a{m>3999:b}
+b{a>3999:c}
+c{s>3999:d}
+d{x>3999:A}`,
+			resp: 1,
+		},
 	}
 
 	for _, tc := range cases {
