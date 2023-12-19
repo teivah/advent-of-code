@@ -1,12 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"strings"
 	"testing"
 
-	"day2023-19/segmenttree"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -157,6 +155,49 @@ b2{a<2:c2}
 c2{s<2:A}`,
 			resp: 8,
 		},
+		{
+			input: `in{x>0:a}
+a{m>3999:b}
+b{a>3999:c}
+c{s>3999:A}`,
+			resp: 4000,
+		},
+		{
+			input: `in{x>0:a}
+a{m>3998:b}
+b{a>3999:c}
+c{s>3999:A}`,
+			resp: 8000,
+		},
+		{
+			input: `in{x>0:a}
+a{m>0:b}
+b{a>3999:c}
+c{s>3999:A}`,
+			resp: 16000000,
+		},
+		{
+			input: `in{x>0:a}
+a{x<4000:R,m>3999:b}
+b{a>3999:c}
+c{s>3999:A}`,
+			resp: 1,
+		},
+		{
+			input: `in{m<4000:rej,x>3999:a}
+rej{R}
+a{m>0:b}
+b{a>3999:c}
+c{s>3999:A}`,
+			resp: 1,
+		},
+		{
+			input: `in{x>3999:a}
+a{a<3999:R,m>3999:b}
+b{a>3998:c}
+c{s>3999:A}`,
+			resp: 2,
+		},
 	}
 
 	for _, tc := range cases {
@@ -177,60 +218,4 @@ func TestFs2Input(t *testing.T) {
 	f, err := os.Open("input.txt")
 	require.NoError(t, err)
 	assert.Equal(t, 42, fs2(f))
-}
-
-func TestName(t *testing.T) {
-	st := segmenttree.NewSegmentTree([]int{4000, 4000, 4000, 4000})
-	//st.Build(1, 0, 0)
-	st.Update(1, 0, 0, 0, 0, 2000)
-	fmt.Println(st.Query(4, 0, 0, 0, 4))
-	fmt.Println(st.Query(3, 0, 0, 0, 4))
-	fmt.Println(st.Query(2, 0, 0, 0, 4))
-	fmt.Println(st.Query(1, 0, 0, 0, 4))
-
-}
-
-func Test_getOverlapping(t *testing.T) {
-	intervals := []RangeRating{
-		{
-			"x": {10, 11},
-			"m": {10, 10},
-			"a": {10, 10},
-			"s": {10, 10},
-		},
-		{
-			"x": {10, 10},
-			"m": {10, 10},
-			"a": {10, 10},
-			"s": {10, 10},
-		},
-		{
-			"x": {10, 10},
-			"m": {10, 10},
-			"a": {10, 10},
-			"s": {10, 10},
-		},
-	}
-
-	total := 0
-	for _, interval := range intervals {
-		res := 1
-		for _, v := range interval {
-			res *= v.to - v.from + 1
-		}
-		total += res
-	}
-
-	fmt.Println("total", total)
-
-	overlap := 0
-	for i := 0; i < len(intervals); i++ {
-		for j := i + 1; j < len(intervals); j++ {
-			v := getOverlapping(intervals[i], intervals[j])
-			fmt.Println(v)
-			overlap += v
-		}
-	}
-
-	fmt.Println("res:", total-overlap)
 }

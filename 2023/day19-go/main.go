@@ -220,48 +220,6 @@ func fs2(input io.Reader) int {
 		"s": defaultRange,
 	})
 
-	//workflow := startingWorkflow
-	//outer:
-	//	for _, interval := range intervals {
-	//		for x := interval["x"].from; x <= interval["x"].to; x++ {
-	//			for m := interval["m"].from; m <= interval["m"].to; m++ {
-	//				for a := interval["a"].from; a <= interval["a"].to; a++ {
-	//					for s := interval["s"].from; s <= interval["s"].to; s++ {
-	//						rating := Rating{
-	//							"x": x,
-	//							"m": m,
-	//							"a": a,
-	//							"s": s,
-	//						}
-	//
-	//					inner:
-	//						for {
-	//							steps := workflows[workflow]
-	//
-	//							for _, step := range steps {
-	//								matching, result, next := step.f(rating)
-	//								if !matching {
-	//									continue
-	//								}
-	//								switch result {
-	//								case rejected:
-	//									panic(fmt.Sprintf("%v", rating))
-	//								case accepted:
-	//									continue outer
-	//								case sent:
-	//									workflow = next
-	//									continue inner
-	//								default:
-	//									panic(result)
-	//								}
-	//							}
-	//						}
-	//					}
-	//				}
-	//			}
-	//		}
-	//	}
-
 	for _, interval := range intervals {
 		fmt.Println(interval)
 	}
@@ -331,10 +289,6 @@ func fs2(input io.Reader) int {
 		a int
 		s int
 	}
-
-	//for _, key := range keys {
-	//	fmt.Println(key)
-	//}
 
 	cache := make(map[entry]bool)
 	res := 0
@@ -438,101 +392,11 @@ func fs2(input io.Reader) int {
 		}
 	}
 	return res
-
-	// Overlaps
-	//total := 0
-	//for _, interval := range intervals {
-	//	fmt.Println(interval)
-	//	res := 1
-	//	for _, v := range interval {
-	//		res *= v.to - v.from + 1
-	//	}
-	//	total += res
-	//}
-	//
-	//overlap := 0
-	//for i := 0; i < len(intervals); i++ {
-	//	for j := i + 1; j < len(intervals); j++ {
-	//		overlap += getOverlapping(intervals[i], intervals[j])
-	//	}
-	//}
-	// return total - overlap
-
-	// Segment tree
-	//var parents []*SegmentTreeNode
-	//for _, interval := range intervals {
-	//	parents = segmentTree([]string{"x", "m", "a", "s"}, interval, parents)
-	//}
-
-	return 0
-}
-
-type SegmentTreeNode struct {
-	// Included
-	from int
-	// Included
-	to       int
-	children []*SegmentTreeNode
-}
-
-func segmentTree(keys []string, intervals RangeRating, nodes []*SegmentTreeNode) []*SegmentTreeNode {
-	if len(keys) == 0 {
-		return nil
-	}
-
-	interval := intervals[keys[0]]
-	keys = keys[1:]
-
-	if len(nodes) == 0 {
-		node := &SegmentTreeNode{
-			from: interval.from,
-			to:   interval.to,
-		}
-		node.children = append(node.children, segmentTree(keys, intervals, nil)...)
-		return []*SegmentTreeNode{node}
-	}
-	return nil
-}
-
-func getOverlapping(i1, i2 RangeRating) int {
-	// map[a:{0 2005} m:{0 4000} s:{0 1350} x:{0 1415}]
-	// map[a:{0 2005} m:{0 4000} s:{0 1350} x:{2663 4000}]
-	defaultRange := Range{
-		from: 1,
-		to:   4000,
-	}
-	r := RangeRating{
-		"x": defaultRange,
-		"m": defaultRange,
-		"a": defaultRange,
-		"s": defaultRange,
-	}
-	for k, r1 := range i1 {
-		r2 := i2[k]
-
-		if (r1.from <= r2.from && r2.from <= r1.to) ||
-			(r2.from <= r1.from && r1.from <= r2.to) {
-			v := r[k]
-			v.from = max(v.from, r1.from, r2.from)
-			v.to = min(v.to, r1.to, r2.to)
-			r[k] = v
-		} else {
-			return 0
-		}
-	}
-
-	res := 1
-	for _, v := range r {
-		if v.from > v.to {
-			return 0
-		}
-		res *= v.to - v.from + 1
-	}
-	return res
 }
 
 type Node struct {
 	accepted bool
+	rejected bool
 	name     string
 	children []*Node
 	steps    []Step
@@ -562,27 +426,67 @@ func dfs(node *Node, r RangeRating) []RangeRating {
 		}
 		return []RangeRating{r}
 	}
+	if node.rejected {
+		return nil
+	}
+
+	parent := r.clone()
 
 	var res []RangeRating
 	for i, child := range node.children {
-		r := r.clone()
+		rejected := child.rejected
+		r := parent.clone()
 
 		step := node.steps[i]
 		switch step.cond {
 		case alwaysTrue:
 			res = append(res, dfs(child, r)...)
 		case smaller:
-			variable := step.condVariable
-			rr := r[variable]
-			rr.to = step.condValue - 1
-			r[variable] = rr
-			res = append(res, dfs(child, r)...)
+			if rejected {
+				variable := step.condVariable
+				rr := r[variable]
+				if step.condValue > rr.from {
+					rr.from = step.condValue
+				}
+				parent[variable] = rr
+			} else {
+				variable := step.condVariable
+				rr := r[variable]
+				if step.condValue-1 < rr.to {
+					rr.to = step.condValue - 1
+				}
+				r[variable] = rr
+				res = append(res, dfs(child, r)...)
+
+				rr = parent[variable]
+				if step.condValue > rr.from {
+					rr.from = step.condValue
+				}
+				parent[variable] = rr
+			}
 		case greater:
-			variable := step.condVariable
-			rr := r[variable]
-			rr.from = step.condValue + 1
-			r[variable] = rr
-			res = append(res, dfs(child, r)...)
+			if rejected {
+				variable := step.condVariable
+				rr := r[variable]
+				if step.condValue < rr.to {
+					rr.to = step.condValue
+				}
+				parent[variable] = rr
+			} else {
+				variable := step.condVariable
+				rr := r[variable]
+				if step.condValue+1 > rr.from {
+					rr.from = step.condValue + 1
+				}
+				r[variable] = rr
+				res = append(res, dfs(child, r)...)
+
+				rr = parent[variable]
+				if step.condValue < rr.to {
+					rr.to = step.condValue
+				}
+				parent[variable] = rr
+			}
 		}
 	}
 	return res
@@ -600,6 +504,10 @@ func dependency(workflows map[string][]Step, workflowName string) *Node {
 			steps = append(steps, step)
 			continue
 		case rejected:
+			children = append(children, &Node{
+				rejected: true,
+			})
+			steps = append(steps, step)
 			continue
 		}
 
@@ -615,61 +523,4 @@ func dependency(workflows map[string][]Step, workflowName string) *Node {
 		children: children,
 		steps:    steps,
 	}
-}
-
-func topologicalSort(workflows map[string][]Step) []string {
-	inDegree := make(map[string]int)
-	for workflow := range workflows {
-		inDegree[workflow] = 0
-	}
-
-	for _, steps := range workflows {
-		for _, step := range steps {
-			vertex := ""
-			switch step.res {
-			case accepted:
-				vertex = acceptedStr
-			case rejected:
-				vertex = rejectedStr
-			case sent:
-				vertex = step.next
-			}
-			inDegree[vertex]++
-		}
-	}
-
-	var q []string
-	for vertex, factor := range inDegree {
-		if factor == 0 {
-			q = append(q, vertex)
-		}
-	}
-
-	var res []string
-	for len(q) != 0 {
-		vertex := q[0]
-		q = q[1:]
-		res = append(res, vertex)
-
-		for _, step := range workflows[vertex] {
-			child := ""
-			switch step.res {
-			case accepted:
-				child = acceptedStr
-			case rejected:
-				child = rejectedStr
-			case sent:
-				child = step.next
-			}
-			inDegree[child]--
-			if inDegree[child] == 0 {
-				q = append(q, child)
-			}
-		}
-	}
-
-	if len(res) != len(workflows)+2 { // Adding accepted and rejected
-		panic("invalid")
-	}
-	return res
 }
