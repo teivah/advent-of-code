@@ -227,183 +227,6 @@ func fs2(input io.Reader) int {
 		sum += v
 	}
 	return sum
-
-	//for _, interval := range intervals {
-	//	fmt.Println(interval)
-	//}
-
-	// Merging segments
-	//endpoints := make(map[string]map[int]struct{})
-	//for _, k := range []string{"x", "m", "a", "s"} {
-	//	m := make(map[int]struct{})
-	//	for _, interval := range intervals {
-	//		r := interval[k]
-	//		m[r.from] = struct{}{}
-	//		m[r.to] = struct{}{}
-	//	}
-	//	m[1] = struct{}{}
-	//	m[4000] = struct{}{}
-	//	endpoints[k] = m
-	//}
-	//
-	//ordered := make(map[string][]int)
-	//for k, m := range endpoints {
-	//	var s []int
-	//	for k := range m {
-	//		s = append(s, k)
-	//	}
-	//	sort.Ints(s)
-	//	ordered[k] = s
-	//}
-	//
-	//var keys []map[string][2]int
-	//for _, interval := range intervals {
-	//	key := make(map[string][2]int)
-	//	for _, k := range []string{"x", "m", "a", "s"} {
-	//		r := interval[k]
-	//		from := r.from
-	//		to := r.to
-	//
-	//		ints := ordered[k]
-	//		startIdx := -1
-	//		endIdx := -1
-	//		for idx, i := range ints {
-	//			if i == from {
-	//				startIdx = idx
-	//			}
-	//			if i == to {
-	//				endIdx = idx
-	//				break
-	//			}
-	//		}
-	//		if startIdx == -1 {
-	//			panic(startIdx)
-	//		}
-	//		if endIdx == -1 {
-	//			panic(endIdx)
-	//		}
-	//		key[k] = [2]int{startIdx, endIdx}
-	//	}
-	//	keys = append(keys, key)
-	//}
-	//
-	//type entry struct {
-	//	fromX int
-	//	toX   int
-	//	fromM int
-	//	toM   int
-	//	fromA int
-	//	toA   int
-	//	fromS int
-	//	toS   int
-	//}
-	//
-	//cache := make(map[entry]bool)
-	//res := 0
-	//for _, key := range keys {
-	//	x := key["x"]
-	//	m := key["m"]
-	//	a := key["a"]
-	//	s := key["s"]
-	//
-	//	specialX := false
-	//	if x[0] == x[1] {
-	//		specialX = true
-	//		x[1]++
-	//	}
-	//	specialM := false
-	//	if m[0] == m[1] {
-	//		specialM = true
-	//		m[1]++
-	//	}
-	//	specialA := false
-	//	if a[0] == a[1] {
-	//		specialA = true
-	//		a[1]++
-	//	}
-	//	specialS := false
-	//	if s[0] == s[1] {
-	//		specialS = true
-	//		s[1]++
-	//	}
-	//
-	//	for iX := x[0]; iX < x[1]; iX++ {
-	//		fromX := ordered["x"][iX]
-	//		toX := 0
-	//		if specialX {
-	//			toX = fromX
-	//		} else {
-	//			if iX+1 == len(ordered["x"]) {
-	//				toX = 4000
-	//			} else {
-	//				toX = ordered["x"][iX+1]
-	//			}
-	//		}
-	//
-	//		for iM := m[0]; iM < m[1]; iM++ {
-	//			fromM := ordered["m"][iM]
-	//			toM := 0
-	//			if specialM {
-	//				toM = fromM
-	//			} else {
-	//				if iM+1 == len(ordered["m"]) {
-	//					toM = 4000
-	//				} else {
-	//					toM = ordered["m"][iM+1]
-	//				}
-	//			}
-	//
-	//			for iA := a[0]; iA < a[1]; iA++ {
-	//				fromA := ordered["a"][iA]
-	//				toA := 0
-	//				if specialA {
-	//					toA = fromA
-	//				} else {
-	//					if iA+1 == len(ordered["a"]) {
-	//						toA = 4000
-	//					} else {
-	//						toA = ordered["a"][iA+1]
-	//					}
-	//				}
-	//
-	//				for iS := s[0]; iS < s[1]; iS++ {
-	//					fromS := ordered["s"][iS]
-	//					toS := 0
-	//					if specialS {
-	//						toS = fromS
-	//					} else {
-	//						if iS+1 == len(ordered["s"]) {
-	//							toS = 4000
-	//						} else {
-	//							toS = ordered["s"][iS+1]
-	//						}
-	//					}
-	//
-	//					e := entry{
-	//						fromX: fromX,
-	//						toX:   toX,
-	//						fromM: fromM,
-	//						toM:   toM,
-	//						fromA: fromA,
-	//						toA:   toA,
-	//						fromS: fromS,
-	//						toS:   toS,
-	//					}
-	//
-	//					if cache[e] {
-	//						//fmt.Println(e)
-	//						continue
-	//					}
-	//					//fmt.Println(e)
-	//					cache[e] = true
-	//
-	//					res += (toX - fromX + 1) * (toM - fromM + 1) * (toA - fromA + 1) * (toS - fromS + 1)
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
-	//return res
 }
 
 type Node struct {
@@ -427,6 +250,39 @@ func (r RangeRating) clone() RangeRating {
 type Range struct {
 	from int
 	to   int
+}
+
+func dependency(workflows map[string][]Step, workflowName string) *Node {
+	var children []*Node
+	var steps []Step
+	for _, step := range workflows[workflowName] {
+		switch step.res {
+		case accepted:
+			children = append(children, &Node{
+				accepted: true,
+			})
+			steps = append(steps, step)
+			continue
+		case rejected:
+			children = append(children, &Node{
+				rejected: true,
+			})
+			steps = append(steps, step)
+			continue
+		}
+
+		n := dependency(workflows, step.next)
+		if n != nil {
+			children = append(children, n)
+			steps = append(steps, step)
+		}
+	}
+
+	return &Node{
+		name:     workflowName,
+		children: children,
+		steps:    steps,
+	}
 }
 
 func dfs(node *Node, r RangeRating) []RangeRating {
@@ -474,37 +330,4 @@ func dfs(node *Node, r RangeRating) []RangeRating {
 		}
 	}
 	return res
-}
-
-func dependency(workflows map[string][]Step, workflowName string) *Node {
-	var children []*Node
-	var steps []Step
-	for _, step := range workflows[workflowName] {
-		switch step.res {
-		case accepted:
-			children = append(children, &Node{
-				accepted: true,
-			})
-			steps = append(steps, step)
-			continue
-		case rejected:
-			children = append(children, &Node{
-				rejected: true,
-			})
-			steps = append(steps, step)
-			continue
-		}
-
-		n := dependency(workflows, step.next)
-		if n != nil {
-			children = append(children, n)
-			steps = append(steps, step)
-		}
-	}
-
-	return &Node{
-		name:     workflowName,
-		children: children,
-		steps:    steps,
-	}
 }
