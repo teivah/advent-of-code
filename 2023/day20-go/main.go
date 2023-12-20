@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io"
 
 	aoc "github.com/teivah/advent-of-code"
@@ -25,8 +24,6 @@ var pulsesSent map[pulseType]int
 var res2 int
 var rxParent string
 
-var debug = false
-
 type module interface {
 	pulseAction(it int, id string, p pulseType) []Pulse
 }
@@ -43,15 +40,12 @@ type broadcaster struct {
 	modules      map[string]module
 }
 
-func (b *broadcaster) pulseAction(it int, _ string, p pulseType) []Pulse {
+func (b *broadcaster) pulseAction(_ int, _ string, p pulseType) []Pulse {
 	pulses := make([]Pulse, 0, len(b.destinations))
 	for _, destination := range b.destinations {
 		destinationModule, contains := b.modules[destination]
 		if !contains {
 			pulsesSent[p]++
-			if debug {
-				fmt.Printf("%s -%s-> %s\n", b.id, p, destination)
-			}
 			continue
 		}
 
@@ -61,9 +55,6 @@ func (b *broadcaster) pulseAction(it int, _ string, p pulseType) []Pulse {
 			p:           p,
 		})
 		pulsesSent[p]++
-		if debug {
-			fmt.Printf("%s -%s-> %s\n", b.id, p, destination)
-		}
 	}
 	return pulses
 }
@@ -75,7 +66,7 @@ type flipFlop struct {
 	on           bool
 }
 
-func (f *flipFlop) pulseAction(it int, _ string, p pulseType) []Pulse {
+func (f *flipFlop) pulseAction(_ int, _ string, p pulseType) []Pulse {
 	if p == highPulse {
 		return nil
 	}
@@ -91,9 +82,6 @@ func (f *flipFlop) pulseAction(it int, _ string, p pulseType) []Pulse {
 		destinationModule, contains := f.modules[destination]
 		if !contains {
 			pulsesSent[output]++
-			if debug {
-				fmt.Printf("%s -%s-> %s\n", f.id, output, destination)
-			}
 			continue
 		}
 
@@ -103,9 +91,6 @@ func (f *flipFlop) pulseAction(it int, _ string, p pulseType) []Pulse {
 			p:           output,
 		})
 		pulsesSent[output]++
-		if debug {
-			fmt.Printf("%s -%s-> %s\n", f.id, output, destination)
-		}
 	}
 	return pulses
 }
@@ -139,8 +124,8 @@ func (c *conjunction) pulseAction(it int, id string, p pulseType) []Pulse {
 
 					if len(c.multiples) == len(c.latest) {
 						var numbers []int
-						for _, v := range c.multiples {
-							numbers = append(numbers, v)
+						for _, n := range c.multiples {
+							numbers = append(numbers, n)
 						}
 						res2 = aoc.LeastCommonMultiple(numbers)
 						return nil
@@ -164,9 +149,6 @@ func (c *conjunction) pulseAction(it int, id string, p pulseType) []Pulse {
 		destinationModule, contains := c.modules[destination]
 		if !contains {
 			pulsesSent[output]++
-			if debug {
-				fmt.Printf("%s -%s-> %s\n", c.id, output, destination)
-			}
 			continue
 		}
 
@@ -176,9 +158,6 @@ func (c *conjunction) pulseAction(it int, id string, p pulseType) []Pulse {
 			p:           output,
 		})
 		pulsesSent[output]++
-		if debug {
-			fmt.Printf("%s -%s-> %s\n", c.id, output, destination)
-		}
 	}
 	return pulses
 }
@@ -187,10 +166,6 @@ func fs1(input io.Reader, iterations int) int {
 	modules, _ := parse(input)
 
 	for i := 0; i < iterations; i++ {
-		if debug {
-			fmt.Printf("iteration %d\n", i+1)
-			fmt.Println("button -low-> broadcaster")
-		}
 		actions := modules["broadcaster"].pulseAction(i, "broadcaster", lowPulse)
 		pulsesSent[lowPulse]++
 
@@ -204,10 +179,6 @@ func fs1(input io.Reader, iterations int) int {
 		}
 	}
 
-	if debug {
-		fmt.Println("low ", pulsesSent[lowPulse], " high ", pulsesSent[highPulse])
-	}
-
 	return pulsesSent[lowPulse] * pulsesSent[highPulse]
 }
 
@@ -217,7 +188,7 @@ func parse(input io.Reader) (map[string]module, map[string][]string) {
 	lines := aoc.ReaderToStrings(input)
 	graph := make(map[string][]string)
 	modules := make(map[string]module)
-	conjuctions := make(map[string]*conjunction)
+	conjunctions := make(map[string]*conjunction)
 	inDegree := make(map[string][]string)
 
 	for _, line := range lines {
@@ -253,7 +224,7 @@ func parse(input io.Reader) (map[string]module, map[string][]string) {
 				latest:       make(map[string]int),
 				multiples:    make(map[string]int),
 			}
-			conjuctions[name] = p
+			conjunctions[name] = p
 			modules[name] = p
 		} else {
 			panic(name)
@@ -265,7 +236,7 @@ func parse(input io.Reader) (map[string]module, map[string][]string) {
 		}
 	}
 
-	for name, c := range conjuctions {
+	for name, c := range conjunctions {
 		c.setInputs(inDegree[name])
 	}
 
@@ -283,10 +254,6 @@ func fs2(input io.Reader) int {
 	}
 
 	for i := 0; ; i++ {
-		if debug {
-			fmt.Printf("iteration %d\n", i+1)
-			fmt.Println("button -low-> broadcaster")
-		}
 		actions := modules["broadcaster"].pulseAction(i, "broadcaster", lowPulse)
 		pulsesSent[lowPulse]++
 
