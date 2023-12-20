@@ -8,25 +8,25 @@ type DAGNode[K comparable, V any] struct {
 
 // DAG is the representation of a directed acyclic graph.
 type DAG[K comparable, V any] struct {
-	vertices map[K]DAGNode[K, V]
-	edges    map[K][]DAGNode[K, V]
+	vertices map[K]*DAGNode[K, V]
+	edges    map[K][]*DAGNode[K, V]
 }
 
 // NewDAG returns a new DAG.
 func NewDAG[K comparable, V any]() DAG[K, V] {
 	return DAG[K, V]{
-		vertices: make(map[K]DAGNode[K, V]),
-		edges:    make(map[K][]DAGNode[K, V]),
+		vertices: make(map[K]*DAGNode[K, V]),
+		edges:    make(map[K][]*DAGNode[K, V]),
 	}
 }
 
 // AddSimpleEdge adds a simple edge, without the DAGNode.
 func (g DAG[K, V]) AddSimpleEdge(from, to K) {
-	g.AddEdge(DAGNode[K, V]{Id: from}, DAGNode[K, V]{Id: to})
+	g.AddEdge(&DAGNode[K, V]{Id: from}, &DAGNode[K, V]{Id: to})
 }
 
 // AddEdge adds a new edge.
-func (g DAG[K, V]) AddEdge(from, to DAGNode[K, V]) {
+func (g DAG[K, V]) AddEdge(from, to *DAGNode[K, V]) {
 	if _, exists := g.vertices[from.Id]; !exists {
 		g.vertices[from.Id] = from
 	}
@@ -37,13 +37,13 @@ func (g DAG[K, V]) AddEdge(from, to DAGNode[K, V]) {
 }
 
 // Node returns a node from an id.
-func (g DAG[K, V]) Node(id K) (DAGNode[K, V], bool) {
+func (g DAG[K, V]) Node(id K) (*DAGNode[K, V], bool) {
 	v, exists := g.vertices[id]
 	return v, exists
 }
 
 // Edges returns the children from an id.
-func (g DAG[K, V]) Edges(id K) []DAGNode[K, V] {
+func (g DAG[K, V]) Edges(id K) []*DAGNode[K, V] {
 	return g.edges[id]
 }
 

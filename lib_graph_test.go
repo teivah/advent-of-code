@@ -9,15 +9,15 @@ import (
 )
 
 func TestGraph(t *testing.T) {
-	a := aoc.DAGNode[string, int]{
+	a := &aoc.DAGNode[string, int]{
 		Id:   "a",
 		Data: 1,
 	}
-	b := aoc.DAGNode[string, int]{
+	b := &aoc.DAGNode[string, int]{
 		Id:   "b",
 		Data: 2,
 	}
-	c := aoc.DAGNode[string, int]{
+	c := &aoc.DAGNode[string, int]{
 		Id:   "c",
 		Data: 3,
 	}
