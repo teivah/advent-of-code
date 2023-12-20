@@ -23,7 +23,9 @@ const (
 
 var pulsesSent map[pulseType]int
 
-var debug = false
+var debug = true
+
+var rx = false
 
 type module interface {
 	pulseAction(id string, p pulseType) []Pulse
@@ -41,21 +43,13 @@ type broadcaster struct {
 	modules      map[string]module
 }
 
-
-func pulse(modules map[string]module, destination string) {
-	destinationModule, contains := modules[destination]
-	if !contains {
-		pulsesSent[p]++
-		if debug {
-			fmt.Printf("%s -%s-> %s\n", b.id, p, destination)
-		}
-		continue
-	}
-}
-
 func (b *broadcaster) pulseAction(_ string, p pulseType) []Pulse {
 	pulses := make([]Pulse, 0, len(b.destinations))
 	for _, destination := range b.destinations {
+		if destination == "rx" && p == lowPulse {
+			rx = true
+		}
+
 		destinationModule, contains := b.modules[destination]
 		if !contains {
 			pulsesSent[p]++
@@ -98,6 +92,10 @@ func (f *flipFlop) pulseAction(_ string, p pulseType) []Pulse {
 
 	pulses := make([]Pulse, 0, len(f.destinations))
 	for _, destination := range f.destinations {
+		if destination == "rx" && output == lowPulse {
+			rx = true
+		}
+
 		destinationModule, contains := f.modules[destination]
 		if !contains {
 			pulsesSent[output]++
@@ -146,6 +144,10 @@ func (c *conjunction) pulseAction(id string, p pulseType) []Pulse {
 
 	pulses := make([]Pulse, 0, len(c.destinations))
 	for _, destination := range c.destinations {
+		if destination == "rx" && output == lowPulse {
+			rx = true
+		}
+
 		destinationModule, contains := c.modules[destination]
 		if !contains {
 			pulsesSent[output]++
@@ -259,6 +261,10 @@ func fs2(input io.Reader) int {
 	modules := parse(input)
 
 	for i := 0; ; i++ {
+		if rx {
+			return i
+		}
+
 		if debug {
 			fmt.Printf("iteration %d\n", i+1)
 			fmt.Println("button -low-> broadcaster")
@@ -275,10 +281,4 @@ func fs2(input io.Reader) int {
 			q = append(q, actions...)
 		}
 	}
-
-	if debug {
-		fmt.Println("low ", pulsesSent[lowPulse], " high ", pulsesSent[highPulse])
-	}
-
-	return pulsesSent[lowPulse] * pulsesSent[highPulse]
 }
