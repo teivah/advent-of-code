@@ -22,10 +22,10 @@ const (
 )
 
 var pulsesSent map[pulseType]int
+var res2 int
+var rxParent string
 
 var debug = false
-
-var rx = false
 
 type module interface {
 	pulseAction(it int, id string, p pulseType) []Pulse
@@ -46,10 +46,6 @@ type broadcaster struct {
 func (b *broadcaster) pulseAction(it int, _ string, p pulseType) []Pulse {
 	pulses := make([]Pulse, 0, len(b.destinations))
 	for _, destination := range b.destinations {
-		if destination == "rx" && p == lowPulse {
-			rx = true
-		}
-
 		destinationModule, contains := b.modules[destination]
 		if !contains {
 			pulsesSent[p]++
@@ -92,10 +88,6 @@ func (f *flipFlop) pulseAction(it int, _ string, p pulseType) []Pulse {
 
 	pulses := make([]Pulse, 0, len(f.destinations))
 	for _, destination := range f.destinations {
-		if destination == "rx" && output == lowPulse {
-			rx = true
-		}
-
 		destinationModule, contains := f.modules[destination]
 		if !contains {
 			pulsesSent[output]++
@@ -124,6 +116,7 @@ type conjunction struct {
 	destinations []string
 	modules      map[string]module
 	latest       map[string]int
+	multiples    map[string]int
 }
 
 func (c *conjunction) setInputs(inputs []string) {
@@ -135,30 +128,23 @@ func (c *conjunction) setInputs(inputs []string) {
 
 func (c *conjunction) pulseAction(it int, id string, p pulseType) []Pulse {
 	c.inputs[id] = p
-	if c.id == "gh" {
-		//for _, input := range c.inputs {
-		//	if input == highPulse {
-		//		atLeastOneHigh = true
-		//		break
-		//	}
-		//}
-		//if atLeastOneHigh {
-		//	fmt.Printf("iteration %d %v\n", it, c.inputs)
-		//}
-
-		// cd, rk, zf, qx
-
-		// cd 3793
-		// rk 3733
-		// zf 3947
-		// qx 4057
+	if c.id == rxParent {
 		if c.inputs[id] == highPulse {
 			v, contains := c.latest[id]
 			if !contains {
 				c.latest[id] = it
 			} else {
 				if v != it {
-					fmt.Println(id, it-v)
+					c.multiples[id] = it - v
+
+					if len(c.multiples) == len(c.latest) {
+						var numbers []int
+						for _, v := range c.multiples {
+							numbers = append(numbers, v)
+						}
+						res2 = aoc.LeastCommonMultiple(numbers)
+						return nil
+					}
 					c.latest[id] = it
 				}
 			}
@@ -175,10 +161,6 @@ func (c *conjunction) pulseAction(it int, id string, p pulseType) []Pulse {
 
 	pulses := make([]Pulse, 0, len(c.destinations))
 	for _, destination := range c.destinations {
-		if destination == "rx" && output == lowPulse {
-			rx = true
-		}
-
 		destinationModule, contains := c.modules[destination]
 		if !contains {
 			pulsesSent[output]++
@@ -202,7 +184,7 @@ func (c *conjunction) pulseAction(it int, id string, p pulseType) []Pulse {
 }
 
 func fs1(input io.Reader, iterations int) int {
-	modules := parse(input)
+	modules, _ := parse(input)
 
 	for i := 0; i < iterations; i++ {
 		if debug {
@@ -229,7 +211,7 @@ func fs1(input io.Reader, iterations int) int {
 	return pulsesSent[lowPulse] * pulsesSent[highPulse]
 }
 
-func parse(input io.Reader) map[string]module {
+func parse(input io.Reader) (map[string]module, map[string][]string) {
 	pulsesSent = make(map[pulseType]int)
 
 	lines := aoc.ReaderToStrings(input)
@@ -269,6 +251,7 @@ func parse(input io.Reader) map[string]module {
 				destinations: destinations,
 				modules:      modules,
 				latest:       make(map[string]int),
+				multiples:    make(map[string]int),
 			}
 			conjuctions[name] = p
 			modules[name] = p
@@ -286,29 +269,46 @@ func parse(input io.Reader) map[string]module {
 		c.setInputs(inDegree[name])
 	}
 
+	return modules, graph
+}
+
+func fs2(input io.Reader) int {
+	modules, graph := parse(input)
+
 	parent := dependency(graph, "broadcaster", nil, make(map[string]*Node))
 	target := find(parent, "rx")
-	_ = target
-	return modules
+	for k := range target.parents {
+		rxParent = k
+		break
+	}
+
+	for i := 0; ; i++ {
+		if debug {
+			fmt.Printf("iteration %d\n", i+1)
+			fmt.Println("button -low-> broadcaster")
+		}
+		actions := modules["broadcaster"].pulseAction(i, "broadcaster", lowPulse)
+		pulsesSent[lowPulse]++
+
+		q := actions
+		for len(q) != 0 {
+			pulse := q[0]
+			q = q[1:]
+
+			actions = pulse.destination.pulseAction(i, pulse.from, pulse.p)
+			q = append(q, actions...)
+		}
+
+		if res2 != 0 {
+			return res2
+		}
+	}
 }
 
 type Node struct {
 	id       string
 	parents  map[string]*Node
 	children []*Node
-}
-
-func find(node *Node, target string) *Node {
-	if node.id == target {
-		return node
-	}
-
-	for _, child := range node.children {
-		if n := find(child, target); n != nil {
-			return n
-		}
-	}
-	return nil
 }
 
 func dependency(graph map[string][]string, id string, currentParent *Node, nodes map[string]*Node) *Node {
@@ -342,30 +342,15 @@ func dependency(graph map[string][]string, id string, currentParent *Node, nodes
 	return node
 }
 
-func fs2(input io.Reader) int {
-	modules := parse(input)
+func find(node *Node, target string) *Node {
+	if node.id == target {
+		return node
+	}
 
-	return aoc.LeastCommonMultiple([]int{3793, 3733, 3947, 4057})
-
-	for i := 0; ; i++ {
-		if rx {
-			return i
-		}
-
-		if debug {
-			fmt.Printf("iteration %d\n", i+1)
-			fmt.Println("button -low-> broadcaster")
-		}
-		actions := modules["broadcaster"].pulseAction(i, "broadcaster", lowPulse)
-		pulsesSent[lowPulse]++
-
-		q := actions
-		for len(q) != 0 {
-			pulse := q[0]
-			q = q[1:]
-
-			actions = pulse.destination.pulseAction(i, pulse.from, pulse.p)
-			q = append(q, actions...)
+	for _, child := range node.children {
+		if n := find(child, target); n != nil {
+			return n
 		}
 	}
+	return nil
 }
