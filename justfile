@@ -14,7 +14,7 @@ gen LANGUAGE YEAR DAY:
     go mod init day{{YEAR}}-{{DAY}}
     go mod tidy
     go get github.com/stretchr/testify
-    go get github.com/teivah/advent-of-code@v1.9.0
+    go get github.com/teivah/advent-of-code@v1.9.1
     go get golang.org/x/exp
 
     # Temporary workaround as the Go version is generated with 3 digits for some reason
@@ -38,3 +38,9 @@ gen LANGUAGE YEAR DAY:
 
 
   idea {{YEAR}}/day{{DAY}}-{{LANGUAGE}}
+
+stats:
+  echo "Go lines: $(find . -name '*.go' -exec cat {} + | wc -l)"
+  echo "Go lines without tests: $(find . -name '*.go' ! -name '*_test.go' -exec cat {} + | wc -l)"
+  echo "Rust lines: $(find . -name '*.rs' ! -name '*_test.go' -exec cat {} + | wc -l)"
+  echo "Python lines: $(find . -name '*.py' ! -name '*_test.go' -exec cat {} + | wc -l)"
