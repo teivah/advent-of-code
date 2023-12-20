@@ -45,3 +45,30 @@ func IntToRune(i int) rune {
 func IsRuneDecimal(r rune) bool {
 	return r >= '0' && r <= '9'
 }
+
+// MapKeysToSlice converts the maps keys to a slice.
+func MapKeysToSlice[K comparable, V any](m map[K]V) []K {
+	s := make([]K, 0, len(m))
+	for k := range m {
+		s = append(s, k)
+	}
+	return s
+}
+
+// MapValuesToSlice converts the map values to a slice.
+func MapValuesToSlice[K comparable, V any](m map[K]V) []V {
+	s := make([]V, 0, len(m))
+	for _, v := range m {
+		s = append(s, v)
+	}
+	return s
+}
+
+// SliceToMap converts a slice into a map.
+func SliceToMap[K comparable, V any](s []K, f func(K) V) map[K]V {
+	m := make(map[K]V, len(s))
+	for _, v := range s {
+		m[v] = f(v)
+	}
+	return m
+}

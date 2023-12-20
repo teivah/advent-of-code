@@ -1,13 +1,14 @@
-package aoc
+package aoc_test
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	aoc "github.com/teivah/advent-of-code"
 )
 
 func TestNode(t *testing.T) {
-	head := NewNode[int](3)
+	head := aoc.NewNode[int](3)
 	assert.Equal(t, "3", head.String())
 
 	head = head.InsertHead(2)
