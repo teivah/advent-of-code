@@ -23,7 +23,7 @@ const (
 
 var pulsesSent map[pulseType]int
 
-var debug = true
+var debug = false
 
 var rx = false
 
@@ -254,7 +254,36 @@ func parse(input io.Reader) map[string]module {
 		c.setInputs(inDegree[name])
 	}
 
+	parent := dependency(graph, "broadcaster", make(map[string]*Node))
+	_ = parent
 	return modules
+}
+
+type Node struct {
+	id       string
+	children []*Node
+}
+
+func dependency(graph map[string][]string, id string, nodes map[string]*Node) *Node {
+	if v, exists := nodes[id]; exists {
+		return v
+	}
+
+	node := &Node{
+		id: id,
+	}
+	nodes[id] = node
+	destinations, exists := graph[id]
+	if !exists {
+		return node
+	}
+
+	var children []*Node
+	for _, destination := range destinations {
+		children = append(children, dependency(graph, destination, nodes))
+	}
+	node.children = children
+	return node
 }
 
 func fs2(input io.Reader) int {
