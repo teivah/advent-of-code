@@ -122,14 +122,13 @@ func fs2(input io.Reader, iterations int) int {
 		stats = append(stats, len(q))
 	}
 
-	// iterations = n * 131 + 65
-	remaining := 65
-	return result(iterations/board.MaxCols, [3]int{stats[remaining-1], stats[remaining-1+board.MaxCols], stats[remaining-1+board.MaxCols*2]})
+	remaining := iterations % board.MaxCols
+	return polynomial(iterations/board.MaxCols, stats[remaining-1], stats[remaining-1+board.MaxCols], stats[remaining-1+board.MaxCols*2])
 }
 
-func result(x int, a [3]int) int {
-	b0 := a[0]
-	b1 := a[1] - a[0]
-	b2 := a[2] - a[1]
-	return b0 + (b1 * x) + (x*(x-1)/2)*(b2-b1)
+func polynomial(a, x, y, z int) int {
+	b0 := x
+	b1 := y - x
+	b2 := z - y
+	return b0 + (b1 * a) + (a*(a-1)/2)*(b2-b1)
 }
