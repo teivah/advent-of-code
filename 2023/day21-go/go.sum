@@ -13,6 +13,8 @@ github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcU
 github.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXlSw2iwfAo=
 github.com/teivah/advent-of-code v1.9.1 h1:m2U+T1q2x24a37r44cP11nOPQlgNi/M73zmTI1RUCps=
 github.com/teivah/advent-of-code v1.9.1/go.mod h1:p1BrdH9bL5eXxtTxuLfUSW+jYtq9fYzKhzcpTePbpsw=
+github.com/teivah/advent-of-code v1.9.2 h1:IUPuUC71gzfYoUpUK05RDT4Zez8c/W5zy+NWSAITBjA=
+github.com/teivah/advent-of-code v1.9.2/go.mod h1:p1BrdH9bL5eXxtTxuLfUSW+jYtq9fYzKhzcpTePbpsw=
 golang.org/x/exp v0.0.0-20231219180239-dc181d75b848 h1:+iq7lrkxmFNBM7xx+Rae2W6uyPfhPeDWD+n+JgppptE=
 golang.org/x/exp v0.0.0-20231219180239-dc181d75b848/go.mod h1:iRJReGqOEeBhDZGkGbynYwcHlctCvnjTYIamk7uXpHI=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=
