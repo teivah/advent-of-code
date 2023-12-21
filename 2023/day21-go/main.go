@@ -79,7 +79,8 @@ func fs2(input io.Reader, iterations int) int {
 	q := []position{
 		{position: start},
 	}
-	for it := 0; it < iterations; it++ {
+	var stats []int
+	for it := 0; it < 64+board.MaxCols*2+1; it++ {
 		length := len(q)
 		positions := make(map[position]struct{})
 		for i := 0; i < length; i++ {
@@ -117,7 +118,18 @@ func fs2(input io.Reader, iterations int) int {
 				q = append(q, p)
 			}
 		}
+
+		stats = append(stats, len(q))
 	}
 
-	return len(q)
+	// iterations = n * 131 + 65
+	remaining := 65
+	return result(iterations/board.MaxCols, [3]int{stats[remaining-1], stats[remaining-1+board.MaxCols], stats[remaining-1+board.MaxCols*2]})
+}
+
+func result(x int, a [3]int) int {
+	b0 := a[0]
+	b1 := a[1] - a[0]
+	b2 := a[2] - a[1]
+	return b0 + (b1 * x) + (x*(x-1)/2)*(b2-b1)
 }
