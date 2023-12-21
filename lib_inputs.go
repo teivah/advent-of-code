@@ -183,12 +183,12 @@ type Board[T any] struct {
 }
 
 // ParseBoard parses a board and maps it to a map of Position.
-func ParseBoard[T any](lines []string, fn func(r rune) T) Board[T] {
+func ParseBoard[T any](lines []string, fn func(r rune, pos Position) T) Board[T] {
 	positions := make(map[Position]T, len(lines)*len(lines[0]))
 	for row, line := range lines {
 		runes := []rune(line)
 		for col, c := range runes {
-			positions[NewPosition(row, col)] = fn(c)
+			positions[NewPosition(row, col)] = fn(c, Position{Row: row, Col: col})
 		}
 	}
 	return Board[T]{

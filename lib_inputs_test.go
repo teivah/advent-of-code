@@ -40,7 +40,7 @@ func TestParseBoard(t *testing.T) {
 	inputStr := `01
 23`
 	reader := strings.NewReader(inputStr)
-	board := aoc.ParseBoard[int](aoc.ReaderToStrings(reader), func(r rune) int {
+	board := aoc.ParseBoard[int](aoc.ReaderToStrings(reader), func(r rune, _ aoc.Position) int {
 		return int(r - '0')
 	})
 	assert.Equal(t, 0, board.Get(aoc.NewPosition(0, 0)))
