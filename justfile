@@ -36,6 +36,11 @@ gen LANGUAGE YEAR DAY:
   ' README.md
   fi
 
+  if [ "{{LANGUAGE}}" = "haskell" ]; then
+    sed -i '' '45i\
+  * [Day {{DAY}}](https://adventofcode.com/{{YEAR}}/day/{{DAY}}): [Haskell]({{YEAR}}/day{{DAY}}-haskell/Main.hs)\
+  ' README.md
+  fi
 
   idea {{YEAR}}/day{{DAY}}-{{LANGUAGE}}
 

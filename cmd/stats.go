@@ -22,9 +22,10 @@ func run() error {
 	}
 
 	stats := map[string]int{
-		"Go":     0,
-		"Python": 0,
-		"Rust":   0,
+		"Go":      0,
+		"Rust":    0,
+		"Haskell": 0,
+		"Python":  0,
 	}
 	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
