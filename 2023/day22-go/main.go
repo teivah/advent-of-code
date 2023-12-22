@@ -19,6 +19,14 @@ type Brick struct {
 	to   Position
 }
 
+type Board struct {
+	bricks      []*Brick
+	cubes       map[Position]*Brick
+	perRow      map[int][]*Brick
+	minPosition Position
+	maxPosition Position
+}
+
 func (b *Brick) positionsBelow() []Position {
 	z := min(b.from.z, b.to.z)
 	if z == 1 {
@@ -86,11 +94,9 @@ func (b *Brick) disintegrate(board map[Position]*Brick) ([]Position, func()) {
 	}
 }
 
-func fs1(input io.Reader) int {
-	bricks, board, perRow, minPosition, maxPosition := parse(input)
-
-	for z := minPosition.z; z <= maxPosition.z; z++ {
-		for _, brick := range perRow[z] {
+func (b Board) initialFall() {
+	for z := b.minPosition.z; z <= b.maxPosition.z; z++ {
+		for _, brick := range b.perRow[z] {
 			for {
 				positionsBelow := brick.positionsBelow()
 				if len(positionsBelow) == 0 {
@@ -99,7 +105,7 @@ func fs1(input io.Reader) int {
 
 				isEmpty := true
 				for _, p := range positionsBelow {
-					if _, exists := board[p]; exists {
+					if _, exists := b.cubes[p]; exists {
 						isEmpty = false
 						break
 					}
@@ -109,21 +115,26 @@ func fs1(input io.Reader) int {
 					break
 				}
 
-				brick.moveDown(board)
+				brick.moveDown(b.cubes)
 			}
 		}
 	}
+}
+
+func fs1(input io.Reader) int {
+	board := parse(input)
+	board.initialFall()
 
 	res := 0
-	for _, brick := range bricks {
-		upPositions, clean := brick.disintegrate(board)
+	for _, brick := range board.bricks {
+		upPositions, clean := brick.disintegrate(board.cubes)
 		safe := true
 		for _, upPosition := range upPositions {
-			if upBrick, exists := board[upPosition]; exists {
+			if upBrick, exists := board.cubes[upPosition]; exists {
 				belowPositions := upBrick.positionsBelow()
 				fall := true
 				for _, belowPosition := range belowPositions {
-					if _, exists := board[belowPosition]; exists {
+					if _, exists := board.cubes[belowPosition]; exists {
 						fall = false
 						break
 					}
@@ -143,7 +154,7 @@ func fs1(input io.Reader) int {
 	return res
 }
 
-func parse(input io.Reader) ([]*Brick, map[Position]*Brick, map[int][]*Brick, Position, Position) {
+func parse(input io.Reader) Board {
 	var bricks []*Brick
 	board := make(map[Position]*Brick)
 	perRow := make(map[int][]*Brick)
@@ -190,7 +201,13 @@ func parse(input io.Reader) ([]*Brick, map[Position]*Brick, map[int][]*Brick, Po
 		}
 	}
 
-	return bricks, board, perRow, minPosition, maxPosition
+	return Board{
+		bricks:      bricks,
+		cubes:       board,
+		perRow:      perRow,
+		minPosition: minPosition,
+		maxPosition: maxPosition,
+	}
 }
 
 func parsePosition(s string) Position {
@@ -203,19 +220,33 @@ func parsePosition(s string) Position {
 }
 
 func fs2(input io.Reader) int {
-	bricks, board, perRow, minPosition, maxPosition := parse(input)
+	board := parse(input)
+	board.initialFall()
 
-	for z := minPosition.z; z <= maxPosition.z; z++ {
-		for _, brick := range perRow[z] {
+	res := 0
+	for _, brick := range board.bricks {
+		res += whatIf(board, brick)
+	}
+	return res
+}
+
+func whatIf(board Board, brick *Brick) int {
+	res := 0
+	_, clean := brick.disintegrate(board.cubes)
+	defer clean()
+
+	for z := min(brick.from.z, brick.to.z); z <= board.maxPosition.z; z++ {
+		for _, b := range board.perRow[z] {
+			falling := false
 			for {
-				positionsBelow := brick.positionsBelow()
+				positionsBelow := b.positionsBelow()
 				if len(positionsBelow) == 0 {
 					break
 				}
 
 				isEmpty := true
 				for _, p := range positionsBelow {
-					if _, exists := board[p]; exists {
+					if _, exists := board.cubes[p]; exists {
 						isEmpty = false
 						break
 					}
@@ -225,51 +256,14 @@ func fs2(input io.Reader) int {
 					break
 				}
 
-				brick.moveDown(board)
+				defer b.moveDown(board.cubes)()
+				falling = true
+			}
+			if falling {
+				res++
 			}
 		}
 	}
 
-	res := 0
-	for _, brick := range bricks {
-		_, clean := brick.disintegrate(board)
-		var cleanDowns []func()
-
-		for z := min(brick.from.z, brick.to.z); z <= maxPosition.z; z++ {
-			for _, brick := range perRow[z] {
-				falling := false
-				for {
-					positionsBelow := brick.positionsBelow()
-					if len(positionsBelow) == 0 {
-						break
-					}
-
-					isEmpty := true
-					for _, p := range positionsBelow {
-						if _, exists := board[p]; exists {
-							isEmpty = false
-							break
-						}
-					}
-
-					if !isEmpty {
-						break
-					}
-
-					cleanDown := brick.moveDown(board)
-					cleanDowns = append(cleanDowns, cleanDown)
-					falling = true
-				}
-				if falling {
-					res++
-				}
-			}
-		}
-
-		for i := len(cleanDowns) - 1; i >= 0; i-- {
-			cleanDowns[i]()
-		}
-		clean()
-	}
 	return res
 }
