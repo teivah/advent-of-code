@@ -38,13 +38,15 @@ func (b *Brick) positionsBelow() []Position {
 	return positions
 }
 
-func (b *Brick) moveDown(board map[Position]*Brick) {
+func (b *Brick) moveDown(board map[Position]*Brick) func() {
+	var deleted []Position
 	for x := min(b.from.x, b.to.x); x <= max(b.from.x, b.to.x); x++ {
 		for y := min(b.from.y, b.to.y); y <= max(b.from.y, b.to.y); y++ {
 			for z := min(b.from.z, b.to.z); z <= max(b.from.z, b.to.z); z++ {
 				p1 := Position{x: x, y: y, z: z}
 				p2 := Position{x: x, y: y, z: z - 1}
 				delete(board, p1)
+				deleted = append(deleted, p1)
 				board[p2] = b
 			}
 		}
@@ -52,9 +54,19 @@ func (b *Brick) moveDown(board map[Position]*Brick) {
 
 	b.from.z--
 	b.to.z--
+
+	return func() {
+		for _, p := range deleted {
+			board[p] = b
+			p.z--
+			delete(board, p)
+		}
+		b.from.z++
+		b.to.z++
+	}
 }
 
-func (b *Brick) disintegrate(board map[Position]*Brick) []Position {
+func (b *Brick) disintegrate(board map[Position]*Brick) ([]Position, func()) {
 	var up []Position
 	for x := min(b.from.x, b.to.x); x <= max(b.from.x, b.to.x); x++ {
 		for y := min(b.from.y, b.to.y); y <= max(b.from.y, b.to.y); y++ {
@@ -66,15 +78,10 @@ func (b *Brick) disintegrate(board map[Position]*Brick) []Position {
 			}
 		}
 	}
-	return up
-}
-
-func (b *Brick) reappear(board map[Position]*Brick) {
-	for x := min(b.from.x, b.to.x); x <= max(b.from.x, b.to.x); x++ {
-		for y := min(b.from.y, b.to.y); y <= max(b.from.y, b.to.y); y++ {
-			for z := min(b.from.z, b.to.z); z <= max(b.from.z, b.to.z); z++ {
-				board[Position{x: x, y: y, z: z}] = b
-			}
+	return up, func() {
+		for _, p := range up {
+			p.z--
+			board[p] = b
 		}
 	}
 }
@@ -109,7 +116,7 @@ func fs1(input io.Reader) int {
 
 	res := 0
 	for _, brick := range bricks {
-		upPositions := brick.disintegrate(board)
+		upPositions, clean := brick.disintegrate(board)
 		safe := true
 		for _, upPosition := range upPositions {
 			if upBrick, exists := board[upPosition]; exists {
@@ -130,7 +137,7 @@ func fs1(input io.Reader) int {
 		if safe {
 			res++
 		}
-		brick.reappear(board)
+		clean()
 	}
 
 	return res
@@ -223,44 +230,46 @@ func fs2(input io.Reader) int {
 		}
 	}
 
-	//res := 0
-	//for _, brick := range bricks {
-	//	board
-	//}
-	//return res
-	//
-
 	res := 0
 	for _, brick := range bricks {
-		upPositions := brick.disintegrate(board)
-		safe := true
-		for _, upPosition := range upPositions {
-			if upBrick, exists := board[upPosition]; exists {
-				belowPositions := upBrick.positionsBelow()
-				fall := true
-				for _, belowPosition := range belowPositions {
-					if _, exists := board[belowPosition]; exists {
-						fall = false
+		_, clean := brick.disintegrate(board)
+		var cleanDowns []func()
+
+		for z := min(brick.from.z, brick.to.z); z <= maxPosition.z; z++ {
+			for _, brick := range perRow[z] {
+				falling := false
+				for {
+					positionsBelow := brick.positionsBelow()
+					if len(positionsBelow) == 0 {
 						break
 					}
+
+					isEmpty := true
+					for _, p := range positionsBelow {
+						if _, exists := board[p]; exists {
+							isEmpty = false
+							break
+						}
+					}
+
+					if !isEmpty {
+						break
+					}
+
+					cleanDown := brick.moveDown(board)
+					cleanDowns = append(cleanDowns, cleanDown)
+					falling = true
 				}
-				if fall {
-					safe = false
-					break
+				if falling {
+					res++
 				}
 			}
 		}
-		if safe {
-			res++
-		}
-		brick.reappear(board)
-	}
 
+		for i := len(cleanDowns) - 1; i >= 0; i-- {
+			cleanDowns[i]()
+		}
+		clean()
+	}
 	return res
 }
-
-//func copyBoard(board map[Position]*Brick) map[Position]*Brick {
-//	res := make(map[Position]*Brick, len(board))
-//
-//
-//}
