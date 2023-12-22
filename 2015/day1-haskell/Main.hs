@@ -18,7 +18,6 @@ fn2 [] index count = -1
 fn2 (x:xs) index count =
   if count == -1
     then index
-    else
-      if x == '('
-        then fn2 xs (index + 1) (count + 1)
-        else fn2 xs (index + 1) (count - 1)
+    else if x == '('
+           then fn2 xs (index + 1) (count + 1)
+           else fn2 xs (index + 1) (count - 1)
