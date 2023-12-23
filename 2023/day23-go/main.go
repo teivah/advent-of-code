@@ -389,7 +389,7 @@ func dfs(board Board, cur aoc.Location, target aoc.Position, rightVisited, downV
 				res = moves + v.delta
 				fmt.Println(res, "delta")
 			}
-			return moves + v.delta, v.rightVisited, v.downVisited
+			return moves + v.delta, right | v.rightVisited, down | v.downVisited
 		}
 	}
 
