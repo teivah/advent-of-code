@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 
 	aoc "github.com/teivah/advent-of-code"
@@ -268,9 +269,6 @@ func fs2(input io.Reader) int {
 			panic(s)
 		}
 
-		if _, exists := cache[s.Entry]; exists {
-			continue
-		}
 		cache[s.Entry] = struct{}{}
 
 		destinations, exists := board.moves[s.loc]
@@ -282,6 +280,9 @@ func fs2(input io.Reader) int {
 			moves := s.moves + destination.moves
 
 			if destination.loc.Pos == target {
+				if moves > best {
+					fmt.Println(moves)
+				}
 				best = max(best, moves)
 				continue
 			}
@@ -290,26 +291,32 @@ func fs2(input io.Reader) int {
 			case aoc.Up, aoc.Down:
 				down := s.down | 1<<board.downSlopes[destination.loc.Pos]
 				if down != s.down {
-					q.push(State{
-						Entry: Entry{
-							loc:   destination.loc,
-							down:  down,
-							right: s.right,
-						},
-						moves: moves,
-					})
+					entry := Entry{
+						loc:   destination.loc,
+						down:  down,
+						right: s.right,
+					}
+					if _, exists := cache[entry]; !exists {
+						q.push(State{
+							Entry: entry,
+							moves: moves,
+						})
+					}
 				}
 			case aoc.Left, aoc.Right:
 				right := s.right | 1<<board.rightSlopes[destination.loc.Pos]
 				if right != s.right {
-					q.push(State{
-						Entry: Entry{
-							loc:   destination.loc,
-							down:  s.down,
-							right: right,
-						},
-						moves: moves,
-					})
+					entry := Entry{
+						loc:   destination.loc,
+						down:  s.down,
+						right: right,
+					}
+					if _, exists := cache[entry]; !exists {
+						q.push(State{
+							Entry: entry,
+							moves: moves,
+						})
+					}
 				}
 			}
 		}
