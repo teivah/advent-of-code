@@ -42,6 +42,7 @@ go get github.com/teivah/advent-of-code@v1.4.2
 
 ### 2023
 
+* [Day 23](https://adventofcode.com/2023/day/23): [Go](2023/day23-go/main.go)
 * [Day 2](https://adventofcode.com/2015/day/2): [Haskell](2015/day2-haskell/Main.hs)
 * [Day 22](https://adventofcode.com/2023/day/22): [Go](2023/day22-go/main.go)
 * [Day 21](https://adventofcode.com/2023/day/21): [Go](2023/day21-go/main.go)
