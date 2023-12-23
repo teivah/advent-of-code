@@ -175,6 +175,44 @@ func move(board Board, s State, target aoc.Location) (State, bool) {
 	panic("unhandled case")
 }
 
+type Queue struct {
+	head *Node
+	tail *Node
+}
+
+type Node struct {
+	state State
+	next  *Node
+}
+
+func (q *Queue) push(state State) {
+	n := &Node{state: state}
+	if q.head == nil {
+		q.head = n
+		q.tail = n
+		return
+	}
+	q.tail.next = n
+	q.tail = n
+}
+
+func (q *Queue) isEmpty() bool {
+	return q.head == nil
+}
+
+func (q *Queue) pop() *Node {
+	n := q.head
+
+	if q.head == q.tail {
+		q.head = nil
+		q.tail = nil
+		return n
+	}
+
+	q.head = q.head.next
+	return n
+}
+
 func fs2(input io.Reader) int {
 	var (
 		idxDown     = 0
@@ -213,19 +251,18 @@ func fs2(input io.Reader) int {
 	target := aoc.NewPosition(board.board.MaxRows-1, board.board.MaxCols-2)
 	cache := make(map[Entry]struct{})
 
-	q := []State{
-		{
-			Entry: Entry{
-				loc: aoc.NewLocation(0, 1, aoc.Down),
-			},
+	q := Queue{}
+	q.push(State{
+		Entry: Entry{
+			loc: aoc.NewLocation(0, 1, aoc.Down),
 		},
-	}
+	})
 
 	best := 0
 
-	for len(q) != 0 {
-		s := q[0]
-		q = q[1:]
+	for !q.isEmpty() {
+		n := q.pop()
+		s := n.state
 
 		if s.loc.Pos.Row < 0 || s.loc.Pos.Row >= board.board.MaxRows || s.loc.Pos.Col < 0 || s.loc.Pos.Col >= board.board.MaxCols {
 			panic(s)
@@ -253,7 +290,7 @@ func fs2(input io.Reader) int {
 			case aoc.Up, aoc.Down:
 				down := s.down | 1<<board.downSlopes[destination.loc.Pos]
 				if down != s.down {
-					q = append(q, State{
+					q.push(State{
 						Entry: Entry{
 							loc:   destination.loc,
 							down:  down,
@@ -265,7 +302,7 @@ func fs2(input io.Reader) int {
 			case aoc.Left, aoc.Right:
 				right := s.right | 1<<board.rightSlopes[destination.loc.Pos]
 				if right != s.right {
-					q = append(q, State{
+					q.push(State{
 						Entry: Entry{
 							loc:   destination.loc,
 							down:  s.down,
