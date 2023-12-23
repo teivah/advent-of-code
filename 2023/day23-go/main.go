@@ -1,15 +1,11 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"io"
-	"runtime"
-	"sync"
 	"time"
 
 	aoc "github.com/teivah/advent-of-code"
-	"golang.org/x/sync/errgroup"
 )
 
 type trailType int
@@ -40,8 +36,10 @@ type Board struct {
 }
 
 type Destination struct {
-	loc   aoc.Location
-	moves int
+	loc          aoc.Location
+	moves        int
+	rightReduced int
+	downReduced  int
 }
 
 func fs1(input io.Reader) int {
@@ -265,178 +263,85 @@ func fs2(input io.Reader) int {
 	})
 
 	best := 0
-	conc := 100_000
-	eg, _ := errgroup.WithContext(context.Background())
-	eg.SetLimit(runtime.NumCPU())
-	queueMu := sync.Mutex{}
-	cacheMu := sync.Mutex{}
-	bestMu := sync.Mutex{}
 	now := time.Now()
 
-	for {
-		queueMu.Lock()
-		if !q.isEmpty() {
-		} else {
-			queueMu.Unlock()
-			_ = eg.Wait()
-			queueMu.Lock()
-			if q.isEmpty() {
-				return best
-			} else {
-			}
+	for !q.isEmpty() {
+		n := q.pop()
+		s := n.state
+
+		if s.loc.Pos.Row < 0 || s.loc.Pos.Row >= board.board.MaxRows || s.loc.Pos.Col < 0 || s.loc.Pos.Col >= board.board.MaxCols {
+			panic(s)
 		}
 
-		states := make([]State, 0, conc)
-		for i := 0; i < conc; i++ {
-			n := q.pop()
-			states = append(states, n.state)
-			if q.isEmpty() {
-				break
-			}
+		cache[s.Entry] = struct{}{}
+
+		destinations, exists := board.moves[s.loc]
+		if !exists {
+			continue
 		}
-		queueMu.Unlock()
 
-		eg.Go(func() error {
-			localBest := 0
-			var out []State
-			for _, s := range states {
-				if s.loc.Pos.Row < 0 || s.loc.Pos.Row >= board.board.MaxRows || s.loc.Pos.Col < 0 || s.loc.Pos.Col >= board.board.MaxCols {
-					panic(s)
+		for _, destination := range destinations {
+			moves := s.moves + destination.moves
+
+			if destination.loc.Pos == target {
+				if moves > best {
+					fmt.Println(moves, time.Since(now))
 				}
+				best = max(best, moves)
+				continue
+			}
 
-				cacheMu.Lock()
-				if _, exists := cache[s.Entry]; exists {
-					cacheMu.Unlock()
-					continue
-				}
-				cache[s.Entry] = struct{}{}
-				cacheMu.Unlock()
-
-				destinations, exists := board.moves[s.loc]
-				if !exists {
-					continue
-				}
-
-				for _, destination := range destinations {
-					moves := s.moves + destination.moves
-
-					if destination.loc.Pos == target {
-						localBest = max(localBest, moves)
-						continue
-					}
-
-					switch destination.loc.Dir {
-					case aoc.Up, aoc.Down:
-						down := s.down | 1<<board.downSlopes[destination.loc.Pos]
-						if down != s.down {
-							out = append(out, State{
-								Entry: Entry{
-									loc:   destination.loc,
-									down:  down,
-									right: s.right,
-								},
+			switch destination.loc.Dir {
+			case aoc.Up, aoc.Down:
+				down := s.down | 1<<board.downSlopes[destination.loc.Pos]
+				// Check that we never passed this slope yet
+				if down != s.down {
+					// Check if we already crossed some waypoints reduced
+					if down&destination.downReduced == 0 {
+						down |= destination.downReduced
+						entry := Entry{
+							loc:   destination.loc,
+							down:  down,
+							right: s.right,
+						}
+						if _, exists := cache[entry]; !exists {
+							q.push(State{
+								Entry: entry,
 								moves: moves,
 							})
 						}
-					case aoc.Left, aoc.Right:
-						right := s.right | 1<<board.rightSlopes[destination.loc.Pos]
-						if right != s.right {
-							out = append(out, State{
-								Entry: Entry{
-									loc:   destination.loc,
-									down:  s.down,
-									right: right,
-								},
+					}
+				}
+			case aoc.Left, aoc.Right:
+				right := s.right | 1<<board.rightSlopes[destination.loc.Pos]
+				// Check that we never passed this slope yet
+				if right != s.right {
+					// Check if we already crossed some waypoints reduced
+					if right&destination.rightReduced == 0 {
+						right |= destination.rightReduced
+						entry := Entry{
+							loc:   destination.loc,
+							down:  s.down,
+							right: right,
+						}
+						if _, exists := cache[entry]; !exists {
+							q.push(State{
+								Entry: entry,
 								moves: moves,
 							})
 						}
 					}
 				}
 			}
-
-			queueMu.Lock()
-			for _, s := range out {
-				q.push(s)
-			}
-			queueMu.Unlock()
-
-			bestMu.Lock()
-			if localBest > best {
-				fmt.Println(localBest, time.Since(now))
-			}
-			best = max(best, localBest)
-			bestMu.Unlock()
-
-			return nil
-		})
+		}
 	}
-
-	//for row := 0; row < board.board.MaxRows; row++ {
-	//	for col := 0; col < board.board.MaxCols; col++ {
-	//		p := aoc.NewPosition(row, col)
-	//
-	//		contains := false
-	//		for _, dir := range []aoc.Direction{aoc.Up, aoc.Down, aoc.Left, aoc.Right} {
-	//			if _, exists := bestLocations[aoc.Location{Pos: p, Dir: dir}]; exists {
-	//				switch dir {
-	//				case aoc.Up:
-	//					fmt.Print("U")
-	//				case aoc.Down:
-	//					fmt.Print("D")
-	//				case aoc.Left:
-	//					fmt.Print("L")
-	//				case aoc.Right:
-	//					fmt.Print("R")
-	//				}
-	//				contains = true
-	//				break
-	//			}
-	//		}
-	//
-	//		if contains {
-	//			continue
-	//		}
-	//
-	//		t := board.board.Get(p)
-	//		switch t {
-	//		case slopeDown:
-	//			fmt.Print("v")
-	//		case slopeRight:
-	//			fmt.Print(">")
-	//		case path:
-	//			fmt.Print(".")
-	//		case forest:
-	//			fmt.Print("#")
-	//		}
-	//	}
-	//	fmt.Println()
-	//}
-	//
-	//fmt.Println(bestL)
 
 	return best
 }
 
-func copyLocations(locations map[aoc.Location]struct{}) map[aoc.Location]struct{} {
-	res := make(map[aoc.Location]struct{}, len(locations))
-	for k, v := range locations {
-		res[k] = v
-	}
-	return res
-}
-
-func copyLocationsS(locations []aoc.Location) []aoc.Location {
-	res := make([]aoc.Location, len(locations))
-	for k, v := range locations {
-		res[k] = v
-	}
-	return res
-}
-
 func fillMoves(board Board) {
-	waypoints := []aoc.Location{
-		aoc.NewLocation(0, 1, aoc.Down),
-	}
+	start := aoc.NewLocation(0, 1, aoc.Down)
+	waypoints := []aoc.Location{start}
 
 	for pos, t := range board.board.Positions {
 		switch t {
@@ -519,6 +424,51 @@ func fillMoves(board Board) {
 				}
 			}
 		}
+	}
+
+	var zero aoc.Location
+	reduce(0, zero, start, board, 0, make(map[aoc.Location]bool))
+	fmt.Println(board.moves)
+}
+
+func reduce(idParent int, parent, loc aoc.Location, board Board, moves int, visited map[aoc.Location]bool) {
+	if visited[loc] {
+		return
+	}
+	visited[loc] = true
+
+	destinations, exists := board.moves[loc]
+	if !exists {
+		return
+	}
+
+	if len(destinations) == 1 {
+		var zero aoc.Location
+		if parent == zero {
+			reduce(0, loc, destinations[0].loc, board, destinations[0].moves, visited)
+		} else {
+			rightReduced := board.moves[parent][idParent].rightReduced
+			downReduced := board.moves[parent][idParent].downReduced
+			switch loc.Dir {
+			case aoc.Left, aoc.Right:
+				rightReduced |= 1 << board.rightSlopes[loc.Pos]
+			case aoc.Up, aoc.Down:
+				downReduced |= 1 << board.downSlopes[loc.Pos]
+			}
+			board.moves[parent][idParent] = Destination{
+				loc:          destinations[0].loc,
+				moves:        destinations[0].moves + moves,
+				rightReduced: rightReduced,
+				downReduced:  downReduced,
+			}
+			//delete(board.moves, loc)
+			reduce(0, parent, destinations[0].loc, board, destinations[0].moves+moves, visited)
+		}
+		return
+	}
+
+	for id, destination := range destinations {
+		reduce(id, loc, destination.loc, board, destination.moves, visited)
 	}
 }
 
