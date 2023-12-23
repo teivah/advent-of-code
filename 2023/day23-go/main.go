@@ -221,6 +221,8 @@ func fs2(input io.Reader) int {
 	return dfs2(g, start, target, make(map[aoc.Position]bool), 0)
 }
 
+var res int
+
 func dfs2(g map[aoc.Location]map[aoc.Location]int, cur aoc.Location, target aoc.Position, visited map[aoc.Position]bool, moves int) int {
 	if cur.Pos == target {
 		if moves > res {
@@ -290,8 +292,6 @@ func toGraph(board Board) map[aoc.Location]map[aoc.Location]int {
 
 	return g
 }
-
-var res int
 
 type location struct {
 	loc   aoc.Location
