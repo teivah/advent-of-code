@@ -444,10 +444,12 @@ func dfs(board Board, cur aoc.Location, target aoc.Position, rightVisited, downV
 			bestRight |= 1 << v
 		}
 	}
-	cache[cur] = cacheEntry{
-		rightVisited: bestRight,
-		downVisited:  bestDown,
-		delta:        best - moves,
+	if _, exists := cache[cur]; !exists {
+		cache[cur] = cacheEntry{
+			rightVisited: bestRight,
+			downVisited:  bestDown,
+			delta:        best - moves,
+		}
 	}
 
 	return best, bestRight, bestDown
