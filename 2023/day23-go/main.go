@@ -227,6 +227,10 @@ func fs2(input io.Reader) int {
 		s := q[0]
 		q = q[1:]
 
+		if s.loc.Pos.Row < 0 || s.loc.Pos.Row >= board.board.MaxRows || s.loc.Pos.Col < 0 || s.loc.Pos.Col >= board.board.MaxCols {
+			panic(s)
+		}
+
 		if _, exists := cache[s.Entry]; exists {
 			continue
 		}
@@ -248,29 +252,92 @@ func fs2(input io.Reader) int {
 			switch destination.loc.Dir {
 			case aoc.Up, aoc.Down:
 				down := s.down | 1<<board.downSlopes[destination.loc.Pos]
-				q = append(q, State{
-					Entry: Entry{
-						loc:   destination.loc,
-						down:  down,
-						right: s.right,
-					},
-					moves: moves,
-				})
+				if down != s.down {
+					q = append(q, State{
+						Entry: Entry{
+							loc:   destination.loc,
+							down:  down,
+							right: s.right,
+						},
+						moves: moves,
+					})
+				}
 			case aoc.Left, aoc.Right:
 				right := s.right | 1<<board.rightSlopes[destination.loc.Pos]
-				q = append(q, State{
-					Entry: Entry{
-						loc:   destination.loc,
-						down:  s.down,
-						right: right,
-					},
-					moves: moves,
-				})
+				if right != s.right {
+					q = append(q, State{
+						Entry: Entry{
+							loc:   destination.loc,
+							down:  s.down,
+							right: right,
+						},
+						moves: moves,
+					})
+				}
 			}
 		}
 	}
 
+	//for row := 0; row < board.board.MaxRows; row++ {
+	//	for col := 0; col < board.board.MaxCols; col++ {
+	//		p := aoc.NewPosition(row, col)
+	//
+	//		contains := false
+	//		for _, dir := range []aoc.Direction{aoc.Up, aoc.Down, aoc.Left, aoc.Right} {
+	//			if _, exists := bestLocations[aoc.Location{Pos: p, Dir: dir}]; exists {
+	//				switch dir {
+	//				case aoc.Up:
+	//					fmt.Print("U")
+	//				case aoc.Down:
+	//					fmt.Print("D")
+	//				case aoc.Left:
+	//					fmt.Print("L")
+	//				case aoc.Right:
+	//					fmt.Print("R")
+	//				}
+	//				contains = true
+	//				break
+	//			}
+	//		}
+	//
+	//		if contains {
+	//			continue
+	//		}
+	//
+	//		t := board.board.Get(p)
+	//		switch t {
+	//		case slopeDown:
+	//			fmt.Print("v")
+	//		case slopeRight:
+	//			fmt.Print(">")
+	//		case path:
+	//			fmt.Print(".")
+	//		case forest:
+	//			fmt.Print("#")
+	//		}
+	//	}
+	//	fmt.Println()
+	//}
+	//
+	//fmt.Println(bestL)
+
 	return best
+}
+
+func copyLocations(locations map[aoc.Location]struct{}) map[aoc.Location]struct{} {
+	res := make(map[aoc.Location]struct{}, len(locations))
+	for k, v := range locations {
+		res[k] = v
+	}
+	return res
+}
+
+func copyLocationsS(locations []aoc.Location) []aoc.Location {
+	res := make([]aoc.Location, len(locations))
+	for k, v := range locations {
+		res[k] = v
+	}
+	return res
 }
 
 func fillMoves(board Board) {
