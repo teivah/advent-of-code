@@ -342,8 +342,14 @@ func fs2(input io.Reader) int {
 	return best
 }
 
+var res int
+
 func dfs(board Board, cur aoc.Location, target aoc.Position, rightVisited, downVisited int, moves int) int {
 	if cur.Pos == target {
+		if moves > res {
+			res = moves
+			fmt.Println(res)
+		}
 		return moves
 	}
 
