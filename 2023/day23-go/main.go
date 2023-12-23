@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"time"
 
 	aoc "github.com/teivah/advent-of-code"
 )
@@ -250,104 +249,14 @@ func fs2(input io.Reader) int {
 		moves:       make(map[aoc.Location][]Destination),
 	}
 
-	fillMoves(board)
+	g := toGraph(board)
+	for k, v := range g {
+		fmt.Printf("location: %v: %v\n", k, v)
+	}
+
 	start := aoc.NewLocation(0, 1, aoc.Down)
 	target := aoc.NewPosition(board.board.MaxRows-1, board.board.MaxCols-2)
-
-	g := toGraph(board)
-
-	for k, v := range g {
-		fmt.Println(k, len(v), v)
-	}
 	return dfs2(g, start, target, make(map[aoc.Position]bool), 0)
-
-	v := dfs(board, start, target, make(map[aoc.Position]bool), 0)
-	return v
-
-	cache := make(map[Entry]struct{})
-
-	q := Queue{}
-	q.push(State{
-		Entry: Entry{
-			loc: start,
-		},
-	})
-
-	best := 0
-	now := time.Now()
-
-	for !q.isEmpty() {
-		n := q.pop()
-		s := n.state
-
-		if s.loc.Pos.Row < 0 || s.loc.Pos.Row >= board.board.MaxRows || s.loc.Pos.Col < 0 || s.loc.Pos.Col >= board.board.MaxCols {
-			panic(s)
-		}
-
-		cache[s.Entry] = struct{}{}
-
-		destinations, exists := board.moves[s.loc]
-		if !exists {
-			continue
-		}
-
-		for _, destination := range destinations {
-			moves := s.moves + destination.moves
-
-			if destination.loc.Pos == target {
-				if moves > best {
-					fmt.Println(moves, time.Since(now))
-				}
-				best = max(best, moves)
-				continue
-			}
-
-			switch destination.loc.Dir {
-			case aoc.Up, aoc.Down:
-				down := s.down | 1<<board.downSlopes[destination.loc.Pos]
-				// Check that we never passed this slope yet
-				if down != s.down {
-					// Check if we already crossed some waypoints reduced
-					if down&destination.downReduced == 0 {
-						down |= destination.downReduced
-						entry := Entry{
-							loc:   destination.loc,
-							down:  down,
-							right: s.right,
-						}
-						if _, exists := cache[entry]; !exists {
-							q.push(State{
-								Entry: entry,
-								moves: moves,
-							})
-						}
-					}
-				}
-			case aoc.Left, aoc.Right:
-				right := s.right | 1<<board.rightSlopes[destination.loc.Pos]
-				// Check that we never passed this slope yet
-				if right != s.right {
-					// Check if we already crossed some waypoints reduced
-					if right&destination.rightReduced == 0 {
-						right |= destination.rightReduced
-						entry := Entry{
-							loc:   destination.loc,
-							down:  s.down,
-							right: right,
-						}
-						if _, exists := cache[entry]; !exists {
-							q.push(State{
-								Entry: entry,
-								moves: moves,
-							})
-						}
-					}
-				}
-			}
-		}
-	}
-
-	return best
 }
 
 func dfs2(g map[aoc.Location]map[aoc.Location]int, cur aoc.Location, target aoc.Position, visited map[aoc.Position]bool, moves int) int {
@@ -373,44 +282,99 @@ func dfs2(g map[aoc.Location]map[aoc.Location]int, cur aoc.Location, target aoc.
 	return best
 }
 
-func dfs(board Board, cur aoc.Location, target aoc.Position, visited map[aoc.Position]bool, moves int) int {
-	if cur.Pos == target {
-		if moves > res {
-			res = moves
-			fmt.Println(res)
-		}
-		return moves
-	}
-
-	destinations := board.moves[cur]
-	best := 0
-	for _, destination := range destinations {
-		if visited[destination.loc.Pos] {
-			continue
-		}
-		visited[destination.loc.Pos] = true
-		v := dfs(board, destination.loc, target, visited, moves+destination.moves)
-		best = max(best, v)
-		visited[destination.loc.Pos] = false
-	}
-	return best
-}
-
-var res int
-
 func toGraph(board Board) map[aoc.Location]map[aoc.Location]int {
 	g := make(map[aoc.Location]map[aoc.Location]int)
 
-	for loc, destinations := range board.moves {
-		if _, exists := g[loc]; !exists {
-			g[loc] = make(map[aoc.Location]int)
+	target := aoc.NewPosition(board.board.MaxRows-1, board.board.MaxCols-2)
+	waypoints := map[aoc.Location]bool{
+		aoc.NewLocation(0, 1, aoc.Down): true,
+	}
+
+	for pos, t := range board.board.Positions {
+		switch t {
+		case slopeDown:
+			waypoints[aoc.Location{
+				Pos: pos,
+				Dir: aoc.Down,
+			}] = true
+			waypoints[aoc.Location{
+				Pos: pos,
+				Dir: aoc.Up,
+			}] = true
+		case slopeRight:
+			waypoints[aoc.Location{
+				Pos: pos,
+				Dir: aoc.Right,
+			}] = true
+			waypoints[aoc.Location{
+				Pos: pos,
+				Dir: aoc.Left,
+			}] = true
 		}
-		for _, destination := range destinations {
-			g[loc][destination.loc] = destination.moves
+	}
+
+	for waypoint := range waypoints {
+		next := waypoint.Straight(1)
+
+		locations := nextWaypoint(board, target, next, 1, make(map[aoc.Position]bool))
+		if len(locations) == 0 {
+			continue
+		}
+		g[waypoint] = make(map[aoc.Location]int)
+		for _, l := range locations {
+			g[waypoint][l.loc] = l.moves
 		}
 	}
 
 	return g
+}
+
+var res int
+
+type location struct {
+	loc   aoc.Location
+	moves int
+}
+
+func nextWaypoint(board Board, target aoc.Position, cur aoc.Location, moves int, visited map[aoc.Position]bool) []location {
+	if cur.Pos == target {
+		return []location{{loc: cur, moves: moves}}
+	}
+
+	if cur.Pos.Row < 0 {
+		return nil
+	}
+	t := board.board.Get(cur.Pos)
+	switch t {
+	case forest:
+		return nil
+	case slopeRight, slopeDown:
+		return []location{{loc: cur, moves: moves}}
+	}
+
+	var out []location
+
+	p := cur.Straight(1)
+	if !visited[p.Pos] {
+		visited[p.Pos] = true
+		out = append(out, nextWaypoint(board, target, p, moves+1, visited)...)
+		visited[p.Pos] = false
+	}
+
+	p = cur.Turn(aoc.Left, 1)
+	if !visited[p.Pos] {
+		visited[p.Pos] = true
+		out = append(out, nextWaypoint(board, target, p, moves+1, visited)...)
+		visited[p.Pos] = false
+	}
+
+	p = cur.Turn(aoc.Right, 1)
+	if !visited[p.Pos] {
+		visited[p.Pos] = true
+		out = append(out, nextWaypoint(board, target, p, moves+1, visited)...)
+		visited[p.Pos] = false
+	}
+	return out
 }
 
 func fillMoves(board Board) {
