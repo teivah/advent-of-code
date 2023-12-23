@@ -218,12 +218,12 @@ func fs2(input io.Reader) int {
 
 	start := aoc.NewLocation(0, 1, aoc.Down)
 	target := aoc.NewPosition(board.board.MaxRows-1, board.board.MaxCols-2)
-	return dfs2(g, start, target, make(map[aoc.Position]bool), 0)
+	return dfs(g, start, target, make(map[aoc.Position]bool), 0)
 }
 
 var res int
 
-func dfs2(g map[aoc.Location]map[aoc.Location]int, cur aoc.Location, target aoc.Position, visited map[aoc.Position]bool, moves int) int {
+func dfs(g map[aoc.Location]map[aoc.Location]int, cur aoc.Location, target aoc.Position, visited map[aoc.Position]bool, moves int) int {
 	if cur.Pos == target {
 		if moves > res {
 			res = moves
@@ -234,15 +234,15 @@ func dfs2(g map[aoc.Location]map[aoc.Location]int, cur aoc.Location, target aoc.
 
 	destinations := g[cur]
 	best := 0
+	visited[cur.Pos] = true
 	for destination, distance := range destinations {
 		if visited[destination.Pos] {
 			continue
 		}
-		visited[destination.Pos] = true
-		v := dfs2(g, destination, target, visited, moves+distance)
+		v := dfs(g, destination, target, visited, moves+distance)
 		best = max(best, v)
-		visited[destination.Pos] = false
 	}
+	visited[cur.Pos] = false
 	return best
 }
 
