@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 
 	aoc "github.com/teivah/advent-of-code"
@@ -11,43 +12,38 @@ type trailType int
 const (
 	path trailType = iota
 	forest
-	slopeUp
 	slopeDown
-	slopeLeft
 	slopeRight
 )
 
 type Entry struct {
 	loc   aoc.Location
-	up    int
 	down  int
-	left  int
 	right int
 }
 
 type State struct {
 	Entry
-	moves     int
-	positions map[aoc.Position]struct{}
+	moves int
 }
 
 type Board struct {
 	board       aoc.Board[trailType]
-	upSlopes    map[aoc.Position]int
 	downSlopes  map[aoc.Position]int
-	leftSlopes  map[aoc.Position]int
 	rightSlopes map[aoc.Position]int
+	moves       map[aoc.Location][]Destination
+}
+
+type Destination struct {
+	loc   aoc.Location
+	moves int
 }
 
 func fs1(input io.Reader) int {
 	var (
-		idxUp       = 0
 		idxDown     = 0
-		idxLeft     = 0
 		idxRight    = 0
-		upSlopes    = make(map[aoc.Position]int)
 		downSlopes  = make(map[aoc.Position]int)
-		leftSlopes  = make(map[aoc.Position]int)
 		rightSlopes = make(map[aoc.Position]int)
 	)
 	b := aoc.ParseBoard(aoc.ReaderToStrings(input), func(r rune, pos aoc.Position) trailType {
@@ -56,18 +52,10 @@ func fs1(input io.Reader) int {
 			return path
 		case '#':
 			return forest
-		case '^':
-			upSlopes[pos] = idxUp
-			idxUp++
-			return slopeUp
 		case 'v':
 			downSlopes[pos] = idxDown
 			idxDown++
 			return slopeDown
-		case '<':
-			leftSlopes[pos] = idxLeft
-			idxLeft++
-			return slopeLeft
 		case '>':
 			rightSlopes[pos] = idxRight
 			idxRight++
@@ -79,9 +67,7 @@ func fs1(input io.Reader) int {
 
 	board := Board{
 		board:       b,
-		upSlopes:    upSlopes,
 		downSlopes:  downSlopes,
-		leftSlopes:  leftSlopes,
 		rightSlopes: rightSlopes,
 	}
 	target := aoc.NewPosition(board.board.MaxRows-1, board.board.MaxCols-2)
@@ -93,24 +79,17 @@ func fs1(input io.Reader) int {
 			Entry: Entry{
 				loc: aoc.NewLocation(0, 1, aoc.Down),
 			},
-			positions: map[aoc.Position]struct{}{
-				aoc.NewPosition(0, 1): {},
-			},
 		},
 	}
 
 	best := 0
-	var bestPositions map[aoc.Position]struct{}
 
 	for len(q) != 0 {
 		s := q[0]
 		q = q[1:]
 
 		if s.loc.Pos == target {
-			if s.moves > best {
-				best = s.moves
-				bestPositions = s.positions
-			}
+			best = max(best, s.moves)
 			continue
 		}
 
@@ -131,43 +110,7 @@ func fs1(input io.Reader) int {
 		}
 	}
 
-	_ = bestPositions
-	//for row := 0; row < board.board.MaxRows; row++ {
-	//	for col := 0; col < board.board.MaxRows; col++ {
-	//		pos := aoc.NewPosition(row, col)
-	//		if _, exists := bestPositions[pos]; exists {
-	//			fmt.Print("O")
-	//		} else {
-	//			if v, exists := board.board.Positions[pos]; exists {
-	//				switch v {
-	//				case forest:
-	//					fmt.Print("#")
-	//				case path:
-	//					fmt.Print(".")
-	//				case slopeLeft:
-	//					fmt.Print("<")
-	//				case slopeRight:
-	//					fmt.Print(">")
-	//				case slopeUp:
-	//					fmt.Print("^")
-	//				case slopeDown:
-	//					fmt.Print("v")
-	//				}
-	//			}
-	//		}
-	//	}
-	//	fmt.Println()
-	//}
-	//
 	return best
-}
-
-func copyPositions(positions map[aoc.Position]struct{}) map[aoc.Position]struct{} {
-	res := make(map[aoc.Position]struct{}, len(positions))
-	for i, p := range positions {
-		res[i] = p
-	}
-	return res
 }
 
 func move(board Board, s State, target aoc.Location) (State, bool) {
@@ -176,41 +119,17 @@ func move(board Board, s State, target aoc.Location) (State, bool) {
 	case forest:
 		return State{}, false
 	case path:
-		pos := copyPositions(s.positions)
-		pos[target.Pos] = struct{}{}
 		return State{
 			Entry: Entry{
 				loc: aoc.Location{
 					Pos: target.Pos,
 					Dir: target.Dir,
 				},
-				up:    s.up,
 				down:  s.down,
-				left:  s.left,
 				right: s.right,
 			},
-			moves:     s.moves,
-			positions: pos,
+			moves: s.moves,
 		}, true
-	case slopeLeft:
-		//loc := target.Move(aoc.Left, 1)
-		//left := s.left | 1<<board.leftSlopes[target.Pos]
-		//if left == s.left {
-		//	return State{}, false
-		//}
-		//return State{
-		//	Entry: Entry{
-		//		loc: aoc.Location{
-		//			Pos: loc.Pos,
-		//			Dir: aoc.Left,
-		//		},
-		//		up:    s.up,
-		//		down:  s.down,
-		//		left:  left,
-		//		right: s.right,
-		//	},
-		//	moves: s.moves + 1,
-		//}, true
 	case slopeRight:
 		if target.Dir == aoc.Left {
 			return State{}, false
@@ -221,42 +140,17 @@ func move(board Board, s State, target aoc.Location) (State, bool) {
 		if right == s.right {
 			return State{}, false
 		}
-		pos := copyPositions(s.positions)
-		pos[target.Pos] = struct{}{}
-		pos[loc.Pos] = struct{}{}
 		return State{
 			Entry: Entry{
 				loc: aoc.Location{
 					Pos: loc.Pos,
 					Dir: aoc.Right,
 				},
-				up:    s.up,
 				down:  s.down,
-				left:  s.left,
 				right: right,
 			},
-			moves:     s.moves + 1,
-			positions: pos,
+			moves: s.moves + 1,
 		}, true
-	case slopeUp:
-		//loc := target.Move(aoc.Up, 1)
-		//up := s.up | 1<<board.upSlopes[target.Pos]
-		//if up == s.up {
-		//	return State{}, false
-		//}
-		//return State{
-		//	Entry: Entry{
-		//		loc: aoc.Location{
-		//			Pos: loc.Pos,
-		//			Dir: aoc.Up,
-		//		},
-		//		up:    up,
-		//		down:  s.down,
-		//		left:  s.left,
-		//		right: s.right,
-		//	},
-		//	moves: s.moves + 1,
-		//}, true
 	case slopeDown:
 		if target.Dir == aoc.Up {
 			return State{}, false
@@ -267,22 +161,16 @@ func move(board Board, s State, target aoc.Location) (State, bool) {
 		if down == s.down {
 			return State{}, false
 		}
-		pos := copyPositions(s.positions)
-		pos[target.Pos] = struct{}{}
-		pos[loc.Pos] = struct{}{}
 		return State{
 			Entry: Entry{
 				loc: aoc.Location{
 					Pos: loc.Pos,
 					Dir: aoc.Down,
 				},
-				up:    s.up,
 				down:  down,
-				left:  s.left,
 				right: s.right,
 			},
-			moves:     s.moves + 1,
-			positions: pos,
+			moves: s.moves + 1,
 		}, true
 	}
 	panic("unhandled case")
@@ -290,13 +178,9 @@ func move(board Board, s State, target aoc.Location) (State, bool) {
 
 func fs2(input io.Reader) int {
 	var (
-		idxUp       = 0
 		idxDown     = 0
-		idxLeft     = 0
 		idxRight    = 0
-		upSlopes    = make(map[aoc.Position]int)
 		downSlopes  = make(map[aoc.Position]int)
-		leftSlopes  = make(map[aoc.Position]int)
 		rightSlopes = make(map[aoc.Position]int)
 	)
 	b := aoc.ParseBoard(aoc.ReaderToStrings(input), func(r rune, pos aoc.Position) trailType {
@@ -305,18 +189,10 @@ func fs2(input io.Reader) int {
 			return path
 		case '#':
 			return forest
-		case '^':
-			upSlopes[pos] = idxUp
-			idxUp++
-			return slopeUp
 		case 'v':
 			downSlopes[pos] = idxDown
 			idxDown++
 			return slopeDown
-		case '<':
-			leftSlopes[pos] = idxLeft
-			idxLeft++
-			return slopeLeft
 		case '>':
 			rightSlopes[pos] = idxRight
 			idxRight++
@@ -328,13 +204,16 @@ func fs2(input io.Reader) int {
 
 	board := Board{
 		board:       b,
-		upSlopes:    upSlopes,
 		downSlopes:  downSlopes,
-		leftSlopes:  leftSlopes,
 		rightSlopes: rightSlopes,
+		moves:       make(map[aoc.Location][]Destination),
 	}
-	target := aoc.NewPosition(board.board.MaxRows-1, board.board.MaxCols-2)
 
+	fillMoves(board)
+
+	fmt.Println(board.moves[aoc.NewLocation(4, 3, aoc.Up)])
+
+	target := aoc.NewPosition(board.board.MaxRows-1, board.board.MaxCols-2)
 	cache := make(map[Entry]struct{})
 
 	q := []State{
@@ -342,181 +221,157 @@ func fs2(input io.Reader) int {
 			Entry: Entry{
 				loc: aoc.NewLocation(0, 1, aoc.Down),
 			},
-			positions: map[aoc.Position]struct{}{
-				aoc.NewPosition(0, 1): {},
-			},
 		},
 	}
 
 	best := 0
-	var bestPositions map[aoc.Position]struct{}
 
 	for len(q) != 0 {
 		s := q[0]
 		q = q[1:]
-
-		if s.loc.Pos == target {
-			if s.moves > best {
-				best = s.moves
-				bestPositions = s.positions
-			}
-			continue
-		}
 
 		if _, exists := cache[s.Entry]; exists {
 			continue
 		}
 		cache[s.Entry] = struct{}{}
 
-		s.moves++
-		if e2, exists := move2(board, s, s.loc.Straight(1)); exists {
-			q = append(q, e2)
+		destinations, exists := board.moves[s.loc]
+		if !exists {
+			continue
 		}
-		if e2, exists := move2(board, s, s.loc.Turn(aoc.Left, 1)); exists {
-			q = append(q, e2)
-		}
-		if e2, exists := move2(board, s, s.loc.Turn(aoc.Right, 1)); exists {
-			q = append(q, e2)
+
+		for _, destination := range destinations {
+			moves := s.moves + destination.moves
+
+			if destination.loc.Pos == target {
+				best = max(best, moves)
+				continue
+			}
+
+			switch destination.loc.Dir {
+			case aoc.Up, aoc.Down:
+				down := s.down | 1<<board.downSlopes[destination.loc.Pos]
+				q = append(q, State{
+					Entry: Entry{
+						loc:   destination.loc,
+						down:  down,
+						right: s.right,
+					},
+					moves: moves,
+				})
+			case aoc.Left, aoc.Right:
+				right := s.right | 1<<board.rightSlopes[destination.loc.Pos]
+				q = append(q, State{
+					Entry: Entry{
+						loc:   destination.loc,
+						down:  s.down,
+						right: right,
+					},
+					moves: moves,
+				})
+			}
 		}
 	}
 
-	_ = bestPositions
-	//for row := 0; row < board.board.MaxRows; row++ {
-	//	for col := 0; col < board.board.MaxRows; col++ {
-	//		pos := aoc.NewPosition(row, col)
-	//		if _, exists := bestPositions[pos]; exists {
-	//			fmt.Print("O")
-	//		} else {
-	//			if v, exists := board.board.Positions[pos]; exists {
-	//				switch v {
-	//				case forest:
-	//					fmt.Print("#")
-	//				case path:
-	//					fmt.Print(".")
-	//				case slopeLeft:
-	//					fmt.Print("<")
-	//				case slopeRight:
-	//					fmt.Print(">")
-	//				case slopeUp:
-	//					fmt.Print("^")
-	//				case slopeDown:
-	//					fmt.Print("v")
-	//				}
-	//			}
-	//		}
-	//	}
-	//	fmt.Println()
-	//}
-	//
 	return best
 }
 
-func move2(board Board, s State, target aoc.Location) (State, bool) {
-	t := board.board.Get(target.Pos)
+func fillMoves(board Board) {
+	waypoints := []aoc.Location{
+		aoc.NewLocation(0, 1, aoc.Down),
+	}
+
+	for pos, t := range board.board.Positions {
+		switch t {
+		case slopeDown:
+			waypoints = append(waypoints, aoc.Location{
+				Pos: pos,
+				Dir: aoc.Down,
+			})
+			waypoints = append(waypoints, aoc.Location{
+				Pos: pos,
+				Dir: aoc.Up,
+			})
+		case slopeRight:
+			waypoints = append(waypoints, aoc.Location{
+				Pos: pos,
+				Dir: aoc.Right,
+			})
+			waypoints = append(waypoints, aoc.Location{
+				Pos: pos,
+				Dir: aoc.Left,
+			})
+		}
+	}
+
+	target := aoc.NewPosition(board.board.MaxRows-1, board.board.MaxCols-2)
+	type entry struct {
+		loc   aoc.Location
+		moves int
+	}
+
+	for _, waypoint := range waypoints {
+		next := waypoint.Straight(1)
+		moves := 1
+
+		q := []entry{{loc: next, moves: moves}}
+		for len(q) != 0 {
+			e := q[0]
+			q = q[1:]
+
+			if e.loc.Pos.Row < 0 {
+				// We passed via the entrance
+				continue
+			}
+
+			if exists, l2, isWaypoint := move3(board, e.loc.Straight(1), target); exists {
+				if !isWaypoint {
+					q = append(q, entry{loc: l2, moves: e.moves + 1})
+				} else {
+					board.moves[waypoint] = append(board.moves[waypoint], Destination{
+						loc:   l2,
+						moves: e.moves + 1,
+					})
+				}
+			}
+
+			if exists, l2, isWaypoint := move3(board, e.loc.Turn(aoc.Left, 1), target); exists {
+				if !isWaypoint {
+					q = append(q, entry{loc: l2, moves: e.moves + 1})
+				} else {
+					board.moves[waypoint] = append(board.moves[waypoint], Destination{
+						loc:   l2,
+						moves: e.moves + 1,
+					})
+				}
+			}
+
+			if exists, l2, isWaypoint := move3(board, e.loc.Turn(aoc.Right, 1), target); exists {
+				if !isWaypoint {
+					q = append(q, entry{loc: l2, moves: e.moves + 1})
+				} else {
+					board.moves[waypoint] = append(board.moves[waypoint], Destination{
+						loc:   l2,
+						moves: e.moves + 1,
+					})
+				}
+			}
+		}
+	}
+}
+
+func move3(board Board, loc aoc.Location, target aoc.Position) (bool, aoc.Location, bool) {
+	t := board.board.Get(loc.Pos)
 	switch t {
 	case forest:
-		return State{}, false
+		return false, aoc.Location{}, false
 	case path:
-		pos := copyPositions(s.positions)
-		pos[target.Pos] = struct{}{}
-		return State{
-			Entry: Entry{
-				loc: aoc.Location{
-					Pos: target.Pos,
-					Dir: target.Dir,
-				},
-				up:    s.up,
-				down:  s.down,
-				left:  s.left,
-				right: s.right,
-			},
-			moves:     s.moves,
-			positions: pos,
-		}, true
-	case slopeLeft:
-		//loc := target.Move(aoc.Left, 1)
-		//left := s.left | 1<<board.leftSlopes[target.Pos]
-		//if left == s.left {
-		//	return State{}, false
-		//}
-		//return State{
-		//	Entry: Entry{
-		//		loc: aoc.Location{
-		//			Pos: loc.Pos,
-		//			Dir: aoc.Left,
-		//		},
-		//		up:    s.up,
-		//		down:  s.down,
-		//		left:  left,
-		//		right: s.right,
-		//	},
-		//	moves: s.moves + 1,
-		//}, true
-	case slopeRight:
-		loc := target.Straight(1)
-		right := s.right | 1<<board.rightSlopes[target.Pos]
-		if right == s.right {
-			return State{}, false
+		if loc.Pos == target {
+			return true, loc, true
 		}
-		pos := copyPositions(s.positions)
-		pos[target.Pos] = struct{}{}
-		pos[loc.Pos] = struct{}{}
-		return State{
-			Entry: Entry{
-				loc: aoc.Location{
-					Pos: loc.Pos,
-					Dir: loc.Dir,
-				},
-				up:    s.up,
-				down:  s.down,
-				left:  s.left,
-				right: right,
-			},
-			moves:     s.moves + 1,
-			positions: pos,
-		}, true
-	case slopeUp:
-		//loc := target.Move(aoc.Up, 1)
-		//up := s.up | 1<<board.upSlopes[target.Pos]
-		//if up == s.up {
-		//	return State{}, false
-		//}
-		//return State{
-		//	Entry: Entry{
-		//		loc: aoc.Location{
-		//			Pos: loc.Pos,
-		//			Dir: aoc.Up,
-		//		},
-		//		up:    up,
-		//		down:  s.down,
-		//		left:  s.left,
-		//		right: s.right,
-		//	},
-		//	moves: s.moves + 1,
-		//}, true
-	case slopeDown:
-		loc := target.Straight(1)
-		down := s.down | 1<<board.downSlopes[target.Pos]
-		if down == s.down {
-			return State{}, false
-		}
-		pos := copyPositions(s.positions)
-		pos[target.Pos] = struct{}{}
-		pos[loc.Pos] = struct{}{}
-		return State{
-			Entry: Entry{
-				loc: aoc.Location{
-					Pos: loc.Pos,
-					Dir: loc.Dir,
-				},
-				up:    s.up,
-				down:  down,
-				left:  s.left,
-				right: s.right,
-			},
-			moves:     s.moves + 1,
-			positions: pos,
-		}, true
+		return true, loc, false
+	case slopeRight, slopeDown:
+		return true, loc, true
 	}
 	panic("unhandled case")
 }
