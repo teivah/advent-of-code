@@ -254,7 +254,7 @@ func fs2(input io.Reader) int {
 	start := aoc.NewLocation(0, 1, aoc.Down)
 	target := aoc.NewPosition(board.board.MaxRows-1, board.board.MaxCols-2)
 
-	return dfs(board, start, target, 0, 0)
+	return dfs(board, start, target, 0, 0, 0)
 
 	cache := make(map[Entry]struct{})
 
@@ -342,9 +342,9 @@ func fs2(input io.Reader) int {
 	return best
 }
 
-func dfs(board Board, cur aoc.Location, target aoc.Position, rightVisited, downVisited int) int {
+func dfs(board Board, cur aoc.Location, target aoc.Position, rightVisited, downVisited int, moves int) int {
 	if cur.Pos == target {
-		return 0
+		return moves
 	}
 
 	destinations := board.moves[cur]
@@ -372,10 +372,8 @@ func dfs(board Board, cur aoc.Location, target aoc.Position, rightVisited, downV
 			}
 		}
 
-		v := dfs(board, destination.loc, target, rightVisited, downVisited)
-		if v != -1 {
-			best = max(best, v+destination.moves)
-		}
+		v := dfs(board, destination.loc, target, rightVisited, downVisited, moves+destination.moves)
+		best = max(best, v)
 	}
 	return best
 }
