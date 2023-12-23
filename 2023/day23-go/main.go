@@ -1,10 +1,15 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"io"
+	"runtime"
+	"sync"
+	"time"
 
 	aoc "github.com/teivah/advent-of-code"
+	"golang.org/x/sync/errgroup"
 )
 
 type trailType int
@@ -260,66 +265,110 @@ func fs2(input io.Reader) int {
 	})
 
 	best := 0
+	conc := 100_000
+	eg, _ := errgroup.WithContext(context.Background())
+	eg.SetLimit(runtime.NumCPU())
+	queueMu := sync.Mutex{}
+	cacheMu := sync.Mutex{}
+	bestMu := sync.Mutex{}
+	now := time.Now()
 
-	for !q.isEmpty() {
-		n := q.pop()
-		s := n.state
-
-		if s.loc.Pos.Row < 0 || s.loc.Pos.Row >= board.board.MaxRows || s.loc.Pos.Col < 0 || s.loc.Pos.Col >= board.board.MaxCols {
-			panic(s)
-		}
-
-		cache[s.Entry] = struct{}{}
-
-		destinations, exists := board.moves[s.loc]
-		if !exists {
-			continue
-		}
-
-		for _, destination := range destinations {
-			moves := s.moves + destination.moves
-
-			if destination.loc.Pos == target {
-				if moves > best {
-					fmt.Println(moves)
-				}
-				best = max(best, moves)
-				continue
-			}
-
-			switch destination.loc.Dir {
-			case aoc.Up, aoc.Down:
-				down := s.down | 1<<board.downSlopes[destination.loc.Pos]
-				if down != s.down {
-					entry := Entry{
-						loc:   destination.loc,
-						down:  down,
-						right: s.right,
-					}
-					if _, exists := cache[entry]; !exists {
-						q.push(State{
-							Entry: entry,
-							moves: moves,
-						})
-					}
-				}
-			case aoc.Left, aoc.Right:
-				right := s.right | 1<<board.rightSlopes[destination.loc.Pos]
-				if right != s.right {
-					entry := Entry{
-						loc:   destination.loc,
-						down:  s.down,
-						right: right,
-					}
-					if _, exists := cache[entry]; !exists {
-						q.push(State{
-							Entry: entry,
-							moves: moves,
-						})
-					}
-				}
+	for {
+		queueMu.Lock()
+		if !q.isEmpty() {
+		} else {
+			queueMu.Unlock()
+			_ = eg.Wait()
+			queueMu.Lock()
+			if q.isEmpty() {
+				return best
+			} else {
 			}
 		}
+
+		states := make([]State, 0, conc)
+		for i := 0; i < conc; i++ {
+			n := q.pop()
+			states = append(states, n.state)
+			if q.isEmpty() {
+				break
+			}
+		}
+		queueMu.Unlock()
+
+		eg.Go(func() error {
+			localBest := 0
+			var out []State
+			for _, s := range states {
+				if s.loc.Pos.Row < 0 || s.loc.Pos.Row >= board.board.MaxRows || s.loc.Pos.Col < 0 || s.loc.Pos.Col >= board.board.MaxCols {
+					panic(s)
+				}
+
+				cacheMu.Lock()
+				if _, exists := cache[s.Entry]; exists {
+					cacheMu.Unlock()
+					continue
+				}
+				cache[s.Entry] = struct{}{}
+				cacheMu.Unlock()
+
+				destinations, exists := board.moves[s.loc]
+				if !exists {
+					continue
+				}
+
+				for _, destination := range destinations {
+					moves := s.moves + destination.moves
+
+					if destination.loc.Pos == target {
+						localBest = max(localBest, moves)
+						continue
+					}
+
+					switch destination.loc.Dir {
+					case aoc.Up, aoc.Down:
+						down := s.down | 1<<board.downSlopes[destination.loc.Pos]
+						if down != s.down {
+							out = append(out, State{
+								Entry: Entry{
+									loc:   destination.loc,
+									down:  down,
+									right: s.right,
+								},
+								moves: moves,
+							})
+						}
+					case aoc.Left, aoc.Right:
+						right := s.right | 1<<board.rightSlopes[destination.loc.Pos]
+						if right != s.right {
+							out = append(out, State{
+								Entry: Entry{
+									loc:   destination.loc,
+									down:  s.down,
+									right: right,
+								},
+								moves: moves,
+							})
+						}
+					}
+				}
+			}
+
+			queueMu.Lock()
+			for _, s := range out {
+				q.push(s)
+			}
+			queueMu.Unlock()
+
+			bestMu.Lock()
+			if localBest > best {
+				fmt.Println(localBest, time.Since(now))
+			}
+			best = max(best, localBest)
+			bestMu.Unlock()
+
+			return nil
+		})
 	}
 
 	//for row := 0; row < board.board.MaxRows; row++ {
