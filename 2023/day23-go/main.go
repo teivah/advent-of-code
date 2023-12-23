@@ -254,7 +254,8 @@ func fs2(input io.Reader) int {
 	start := aoc.NewLocation(0, 1, aoc.Down)
 	target := aoc.NewPosition(board.board.MaxRows-1, board.board.MaxCols-2)
 
-	return dfs(board, start, target, 0, 0, 0)
+	v, _, _ := dfs(board, start, target, 0, 0, 0, make(map[aoc.Location]cacheEntry))
+	return v
 
 	cache := make(map[Entry]struct{})
 
@@ -344,21 +345,61 @@ func fs2(input io.Reader) int {
 
 var res int
 
-func dfs(board Board, cur aoc.Location, target aoc.Position, rightVisited, downVisited int, moves int) int {
+type cacheEntry struct {
+	rightVisited int
+	downVisited  int
+	delta        int
+}
+
+func checkExactlyOneBitSetOrZero(num int) bool {
+	return (num > 0 && (num&(num-1)) == 0) || num == 0
+}
+
+func clearBit(num int, i int) int {
+	mask := ^(1 << i) // Create a mask with all bits set to 1 except the i-th bit
+	return num & mask // Use bitwise AND to clear the i-th bit
+}
+
+func dfs(board Board, cur aoc.Location, target aoc.Position, rightVisited, downVisited int, moves int, cache map[aoc.Location]cacheEntry) (int, int, int) {
 	if cur.Pos == target {
 		if moves > res {
 			res = moves
 			fmt.Println(res)
 		}
-		return moves
+		return moves, 0, 0
+	}
+
+	if v, exists := cache[cur]; exists {
+		right := rightVisited
+		down := downVisited
+		switch cur.Dir {
+		case aoc.Up, aoc.Down:
+			v, contains := board.downSlopes[cur.Pos]
+			if contains {
+				down = clearBit(down, v)
+			}
+		case aoc.Left, aoc.Right:
+			v, contains := board.rightSlopes[cur.Pos]
+			if contains {
+				right = clearBit(right, v)
+			}
+		}
+		if right&v.rightVisited == 0 && down&v.downVisited == 0 {
+			if moves+v.delta > res {
+				res = moves + v.delta
+				fmt.Println(res, "delta")
+			}
+			return moves + v.delta, v.rightVisited, v.downVisited
+		}
 	}
 
 	destinations := board.moves[cur]
 	best := -1
+	bestRight := 0
+	bestDown := 0
 	for _, destination := range destinations {
 		rightVisited := rightVisited
 		downVisited := downVisited
-
 		switch destination.loc.Dir {
 		case aoc.Up, aoc.Down:
 			v, contains := board.downSlopes[destination.loc.Pos]
@@ -378,10 +419,38 @@ func dfs(board Board, cur aoc.Location, target aoc.Position, rightVisited, downV
 			}
 		}
 
-		v := dfs(board, destination.loc, target, rightVisited, downVisited, moves+destination.moves)
+		v, right, down := dfs(board, destination.loc, target, rightVisited, downVisited, moves+destination.moves, cache)
+		if v > best {
+			best = v
+			bestRight = right
+			bestDown = down
+		}
 		best = max(best, v)
 	}
-	return best
+
+	if best == -1 {
+		return -1, 0, 0
+	}
+
+	switch cur.Dir {
+	case aoc.Up, aoc.Down:
+		v, contains := board.downSlopes[cur.Pos]
+		if contains {
+			bestDown |= 1 << v
+		}
+	case aoc.Left, aoc.Right:
+		v, contains := board.rightSlopes[cur.Pos]
+		if contains {
+			bestRight |= 1 << v
+		}
+	}
+	cache[cur] = cacheEntry{
+		rightVisited: bestRight,
+		downVisited:  bestDown,
+		delta:        best - moves,
+	}
+
+	return best, bestRight, bestDown
 }
 
 func fillMoves(board Board) {
