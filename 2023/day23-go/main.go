@@ -179,12 +179,6 @@ func move(board Board, s State, target aoc.Location) (State, bool) {
 }
 
 func fs2(input io.Reader) int {
-	var (
-		idxDown     = 0
-		idxRight    = 0
-		downSlopes  = make(map[aoc.Position]int)
-		rightSlopes = make(map[aoc.Position]int)
-	)
 	b := aoc.ParseBoard(aoc.ReaderToStrings(input), func(r rune, pos aoc.Position) trailType {
 		switch r {
 		case '.':
@@ -192,12 +186,8 @@ func fs2(input io.Reader) int {
 		case '#':
 			return forest
 		case 'v':
-			downSlopes[pos] = idxDown
-			idxDown++
 			return slopeDown
 		case '>':
-			rightSlopes[pos] = idxRight
-			idxRight++
 			return slopeRight
 		default:
 			panic(r)
@@ -205,15 +195,13 @@ func fs2(input io.Reader) int {
 	})
 
 	board := Board{
-		board:       b,
-		downSlopes:  downSlopes,
-		rightSlopes: rightSlopes,
-		moves:       make(map[aoc.Location][]Destination),
+		board: b,
+		moves: make(map[aoc.Location][]Destination),
 	}
 
 	g := toGraph(board)
 	for k, v := range g {
-		fmt.Printf("location: %v: %v\n", k, v)
+		fmt.Printf("location: %v: %v, %v\n", k, len(v), v)
 	}
 
 	start := aoc.NewLocation(0, 1, aoc.Down)
