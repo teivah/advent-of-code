@@ -251,14 +251,17 @@ func fs2(input io.Reader) int {
 	}
 
 	fillMoves(board)
-
+	start := aoc.NewLocation(0, 1, aoc.Down)
 	target := aoc.NewPosition(board.board.MaxRows-1, board.board.MaxCols-2)
+
+	return dfs(board, start, target, 0, 0)
+
 	cache := make(map[Entry]struct{})
 
 	q := Queue{}
 	q.push(State{
 		Entry: Entry{
-			loc: aoc.NewLocation(0, 1, aoc.Down),
+			loc: start,
 		},
 	})
 
@@ -336,6 +339,44 @@ func fs2(input io.Reader) int {
 		}
 	}
 
+	return best
+}
+
+func dfs(board Board, cur aoc.Location, target aoc.Position, rightVisited, downVisited int) int {
+	if cur.Pos == target {
+		return 0
+	}
+
+	destinations := board.moves[cur]
+	best := -1
+	for _, destination := range destinations {
+		rightVisited := rightVisited
+		downVisited := downVisited
+
+		switch destination.loc.Dir {
+		case aoc.Up, aoc.Down:
+			v, contains := board.downSlopes[destination.loc.Pos]
+			if contains {
+				if (1<<v)&downVisited != 0 {
+					continue
+				}
+				downVisited |= 1 << v
+			}
+		case aoc.Left, aoc.Right:
+			v, contains := board.rightSlopes[destination.loc.Pos]
+			if contains {
+				if (1<<v)&rightVisited != 0 {
+					continue
+				}
+				rightVisited |= 1 << v
+			}
+		}
+
+		v := dfs(board, destination.loc, target, rightVisited, downVisited)
+		if v != -1 {
+			best = max(best, v+destination.moves)
+		}
+	}
 	return best
 }
 
@@ -426,9 +467,9 @@ func fillMoves(board Board) {
 		}
 	}
 
-	var zero aoc.Location
-	reduce(0, zero, start, board, 0, make(map[aoc.Location]bool))
-	fmt.Println(board.moves)
+	//var zero aoc.Location
+	//reduce(0, zero, start, board, 0, make(map[aoc.Location]bool))
+	//fmt.Println(board.moves)
 }
 
 func reduce(idParent int, parent, loc aoc.Location, board Board, moves int, visited map[aoc.Location]bool) {
