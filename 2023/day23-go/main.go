@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io"
 
 	aoc "github.com/teivah/advent-of-code"
@@ -211,8 +210,6 @@ func fs2(input io.Reader) int {
 
 	fillMoves(board)
 
-	fmt.Println(board.moves[aoc.NewLocation(4, 3, aoc.Up)])
-
 	target := aoc.NewPosition(board.board.MaxRows-1, board.board.MaxCols-2)
 	cache := make(map[Entry]struct{})
 
@@ -312,6 +309,11 @@ func fillMoves(board Board) {
 
 	for _, waypoint := range waypoints {
 		next := waypoint.Straight(1)
+		t := board.board.Get(next.Pos)
+		if t == forest {
+			continue
+		}
+
 		moves := 1
 
 		q := []entry{{loc: next, moves: moves}}
