@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io"
 
 	aoc "github.com/teivah/advent-of-code"
@@ -200,39 +199,13 @@ func fs2(input io.Reader) int {
 	}
 
 	g := toGraph(board)
-	for k, v := range g {
-		fmt.Printf("location: %v: %v, %v\n", k, len(v), v)
-	}
-
-	//for row := 0; row < board.board.MaxRows; row++ {
-	//	for col := 0; col < board.board.MaxCols; col++ {
-	//		if _, exists := g[aoc.NewPosition(row, col)]; exists {
-	//			fmt.Print("X")
-	//		} else {
-	//			t := board.board.Get(aoc.NewPosition(row, col))
-	//			if t == forest {
-	//				fmt.Print("#")
-	//			} else {
-	//				fmt.Print(".")
-	//			}
-	//		}
-	//	}
-	//	fmt.Println()
-	//}
-
 	start := aoc.NewLocation(0, 1, aoc.Down)
 	target := aoc.NewPosition(board.board.MaxRows-1, board.board.MaxCols-2)
 	return dfs(g, start.Pos, target, make(map[aoc.Position]bool), 0)
 }
 
-var res int
-
 func dfs(g map[aoc.Position]map[aoc.Position]int, cur aoc.Position, target aoc.Position, visited map[aoc.Position]bool, moves int) int {
 	if cur == target {
-		if moves > res {
-			res = moves
-			fmt.Println(res)
-		}
 		return moves
 	}
 
