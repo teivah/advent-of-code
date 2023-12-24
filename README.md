@@ -4,7 +4,9 @@
 
 My solutions to the [Advents of Code](https://adventofcode.com/), from 2015 to 2023 (400 total ⭐, 2023 ongoing).
 
-In 2023, I also shared my experience on my blog:
+## Blog
+
+In 2023, I shared my experience with the Advent of Code on my blog:
 
 [<img src="post.png">](https://teivah.medium.com/advent-of-code-b5bf35a6d115)
 
@@ -28,6 +30,13 @@ I developed a Go library to help me solve unimportant topics as quickly as possi
 go get github.com/teivah/advent-of-code@v1.4.2
 ```
 
+## Language stats:
+
+* Go: 84.00%
+* Rust: 15.56%
+* Haskell: 1.78%
+* Python: 0.22%
+
 ## Solutions
 
 * [2023](#2023)
@@ -42,11 +51,8 @@ go get github.com/teivah/advent-of-code@v1.4.2
 
 ### 2023
 
-* [Day 1](https://adventofcode.com/2016/day/1): [Haskell](2016/day1-haskell/Main.hs)
-* [Day 3](https://adventofcode.com/2015/day/3): [Haskell](2015/day3-haskell/Main.hs)
 * [Day 24](https://adventofcode.com/2023/day/24): [Go](2023/day24-go/main.go)
 * [Day 23](https://adventofcode.com/2023/day/23): [Go](2023/day23-go/main.go)
-* [Day 2](https://adventofcode.com/2015/day/2): [Haskell](2015/day2-haskell/Main.hs)
 * [Day 22](https://adventofcode.com/2023/day/22): [Go](2023/day22-go/main.go)
 * [Day 21](https://adventofcode.com/2023/day/21): [Go](2023/day21-go/main.go)
 * [Day 20](https://adventofcode.com/2023/day/20): [Go](2023/day20-go/main.go)
@@ -71,8 +77,6 @@ go get github.com/teivah/advent-of-code@v1.4.2
 * [Day 1](https://adventofcode.com/2023/day/1): [Rust](2023/day1-rust/src/lib.rs)
 
 ### 2022
-
-Stats: Rust (56%), Go (44%)
 
 * [Day 25](https://adventofcode.com/2022/day/25): [Go](2022/day25-go/main.go)
 * [Day 24](https://adventofcode.com/2022/day/24): [Go](2022/day24-go/main.go)
@@ -101,8 +105,6 @@ Stats: Rust (56%), Go (44%)
 * [Day 1](https://adventofcode.com/2022/day/1): [Rust](2022/day1-rust/src/lib.rs)
 
 ### 2021
-
-Stats: Go (100%)
 
 * [Day 25](https://adventofcode.com/2021/day/25): [Go](2021/day25-go/main.go)
 * [Day 24](https://adventofcode.com/2021/day/24): [Go](2021/day24-go/main.go)
@@ -162,8 +164,6 @@ Stats: Go (96%), Rust (4%)
 
 ### 2019
 
-Stats: Go (100%)
-
 * [Day 25](https://adventofcode.com/2019/day/25): [Go](2019/day25-go/main.go)
 * [Day 24](https://adventofcode.com/2019/day/24): [Go](2019/day24-go/main.go)
 * [Day 23](https://adventofcode.com/2019/day/23): [Go](2019/day23-go/main.go)
@@ -192,8 +192,6 @@ Stats: Go (100%)
 
 ### 2018
 
-Stats: Go (100%)
-
 * [Day 25](https://adventofcode.com/2018/day/25): [Go](2018/day25-go/main.go)
 * [Day 24](https://adventofcode.com/2018/day/24): [Go](2018/day24-go/main.go)
 * [Day 23](https://adventofcode.com/2018/day/23): [Go](2018/day23-go/main.go)
@@ -220,8 +218,6 @@ Stats: Go (100%)
 * [Day 1](https://adventofcode.com/2018/day/1): [Go](2018/day1-go/main.go)
 
 ### 2017
-
-Stats: Go (80%), Rust (20%)
 
 * [Day 25](https://adventofcode.com/2017/day/25): [Go](2017/day25-go/main.go)
 * [Day 24](https://adventofcode.com/2017/day/24): [Go](2017/day24-go/main.go)
@@ -251,8 +247,6 @@ Stats: Go (80%), Rust (20%)
 
 ### 2016
 
-Stats: Go (76%), Rust (24%)
-
 * [Day 25](https://adventofcode.com/2016/day/25): [Go](2016/day25-go/main.go)
 * [Day 24](https://adventofcode.com/2016/day/24): [Go](2016/day24-go/main.go)
 * [Day 23](https://adventofcode.com/2016/day/23): [Go](2016/day23-go/main.go)
@@ -277,11 +271,9 @@ Stats: Go (76%), Rust (24%)
 * [Day 4](https://adventofcode.com/2016/day/4): [Go](2016/day4-go/main.go)
 * [Day 3](https://adventofcode.com/2016/day/3): [Go](2016/day3-go/main.go)
 * [Day 2](https://adventofcode.com/2016/day/2): [Go](2016/day2-go/main.go)
-* [Day 1](https://adventofcode.com/2016/day/1): [Rust](2016/day1-rust/src/lib.rs)
+* [Day 1](https://adventofcode.com/2016/day/1): [Rust](2016/day1-rust/src/lib.rs), [Haskell](2016/day1-haskell/Main.hs)
 
 ### 2015
-
-Stats: Go (68%), Rust (32%)
 
 * [Day 25](https://adventofcode.com/2015/day/25): [Go](2015/day25-go/main.go)
 * [Day 24](https://adventofcode.com/2015/day/24): [Go](2015/day24-go/main.go)
@@ -305,6 +297,6 @@ Stats: Go (68%), Rust (32%)
 * [Day 6](https://adventofcode.com/2015/day/6): [Rust](2015/day6-rust/src/lib.rs)
 * [Day 5](https://adventofcode.com/2015/day/5): [Rust](2015/day5-rust/src/lib.rs)
 * [Day 4](https://adventofcode.com/2015/day/4): [Rust](2015/day4-rust/src/lib.rs)
-* [Day 3](https://adventofcode.com/2015/day/3): [Rust](2015/day3-rust/src/lib.rs)
-* [Day 2](https://adventofcode.com/2015/day/2): [Rust](2015/day2-rust/src/lib.rs)
+* [Day 3](https://adventofcode.com/2015/day/3): [Rust](2015/day3-rust/src/lib.rs), [Haskell](2015/day3-haskell/Main.hs)
+* [Day 2](https://adventofcode.com/2015/day/2): [Rust](2015/day2-rust/src/lib.rs), [Haskell](2015/day2-haskell/Main.hs)
 * [Day 1](https://adventofcode.com/2015/day/1): [Rust](2015/day1-rust/src/lib.rs), [Haskell](2015/day1-haskell/Main.hs)

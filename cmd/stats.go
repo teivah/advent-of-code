@@ -41,7 +41,7 @@ func run() error {
 	}
 
 	for language, count := range stats {
-		fmt.Printf("%s: %.2f%%\n", language, float64(count)/float64(totalStars)*100)
+		fmt.Printf("* %s: %.2f%%\n", language, float64(count)/float64(totalStars)*100)
 	}
 	return nil
 }

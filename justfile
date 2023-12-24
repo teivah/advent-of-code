@@ -6,7 +6,7 @@ gen LANGUAGE YEAR DAY:
   curl --cookie "session=$ADVENT_OF_CODE_COOKIE" https://adventofcode.com/{{YEAR}}/day/{{DAY}}/input -o {{YEAR}}/day{{DAY}}-{{LANGUAGE}}/input.txt
   perl -i -pe 'chomp if eof' {{YEAR}}/day{{DAY}}-{{LANGUAGE}}/input.txt
   if [ "{{LANGUAGE}}" = "go" ]; then
-    sed -i '' '45i\
+    sed -i '' '54i\
   * [Day {{DAY}}](https://adventofcode.com/{{YEAR}}/day/{{DAY}}): [Go]({{YEAR}}/day{{DAY}}-go/main.go)\
   ' README.md
 
@@ -25,19 +25,19 @@ gen LANGUAGE YEAR DAY:
   fi
 
   if [ "{{LANGUAGE}}" = "rust" ]; then
-    sed -i '' '45i\
+    sed -i '' '54i\
   * [Day {{DAY}}](https://adventofcode.com/{{YEAR}}/day/{{DAY}}): [Rust]({{YEAR}}/day{{DAY}}-rust/src/lib.rs)\
   ' README.md
   fi
 
   if [ "{{LANGUAGE}}" = "python" ]; then
-    sed -i '' '45i\
+    sed -i '' '54i\
   * [Day {{DAY}}](https://adventofcode.com/{{YEAR}}/day/{{DAY}}): [Python]({{YEAR}}/day{{DAY}}-python/main.py)\
   ' README.md
   fi
 
   if [ "{{LANGUAGE}}" = "haskell" ]; then
-    sed -i '' '45i\
+    sed -i '' '54i\
   * [Day {{DAY}}](https://adventofcode.com/{{YEAR}}/day/{{DAY}}): [Haskell]({{YEAR}}/day{{DAY}}-haskell/Main.hs)\
   ' README.md
   fi
