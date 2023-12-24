@@ -51,6 +51,7 @@ go get github.com/teivah/advent-of-code@v1.4.2
 
 ### 2023
 
+* [Day 1](https://adventofcode.com/2023/day/1): [Haskell](2023/day1-haskell/Main.hs)
 * [Day 24](https://adventofcode.com/2023/day/24): [Go](2023/day24-go/main.go)
 * [Day 23](https://adventofcode.com/2023/day/23): [Go](2023/day23-go/main.go)
 * [Day 22](https://adventofcode.com/2023/day/22): [Go](2023/day22-go/main.go)
@@ -133,8 +134,6 @@ go get github.com/teivah/advent-of-code@v1.4.2
 * [Day 1](https://adventofcode.com/2021/day/1): [Go](2021/day1-go/main.go)
 
 ### 2020
-
-Stats: Go (96%), Rust (4%)
 
 * [Day 25](https://adventofcode.com/2020/day/25): [Rust](2020/day25-rust/src/lib.rs)
 * [Day 24](https://adventofcode.com/2020/day/24): [Go](2020/day24-go/main.go)
