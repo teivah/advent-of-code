@@ -204,38 +204,31 @@ func fs2(input io.Reader) int {
 		fmt.Printf("location: %v: %v, %v\n", k, len(v), v)
 	}
 
-	for row := 0; row < board.board.MaxRows; row++ {
-		for col := 0; col < board.board.MaxCols; col++ {
-			found := false
-			for _, dir := range []aoc.Direction{aoc.Up, aoc.Down, aoc.Left, aoc.Right} {
-				if _, exists := g[aoc.NewLocation(row, col, dir)]; exists {
-					fmt.Print("X")
-					found = true
-					break
-				}
-			}
-			if !found {
-				t := board.board.Get(aoc.NewPosition(row, col))
-				if t == forest {
-					fmt.Print("#")
-				} else {
-					fmt.Print(".")
-				}
-			}
-
-		}
-		fmt.Println()
-	}
+	//for row := 0; row < board.board.MaxRows; row++ {
+	//	for col := 0; col < board.board.MaxCols; col++ {
+	//		if _, exists := g[aoc.NewPosition(row, col)]; exists {
+	//			fmt.Print("X")
+	//		} else {
+	//			t := board.board.Get(aoc.NewPosition(row, col))
+	//			if t == forest {
+	//				fmt.Print("#")
+	//			} else {
+	//				fmt.Print(".")
+	//			}
+	//		}
+	//	}
+	//	fmt.Println()
+	//}
 
 	start := aoc.NewLocation(0, 1, aoc.Down)
 	target := aoc.NewPosition(board.board.MaxRows-1, board.board.MaxCols-2)
-	return dfs(g, start, target, make(map[aoc.Position]bool), 0)
+	return dfs(g, start.Pos, target, make(map[aoc.Position]bool), 0)
 }
 
 var res int
 
-func dfs(g map[aoc.Location]map[aoc.Location]int, cur aoc.Location, target aoc.Position, visited map[aoc.Position]bool, moves int) int {
-	if cur.Pos == target {
+func dfs(g map[aoc.Position]map[aoc.Position]int, cur aoc.Position, target aoc.Position, visited map[aoc.Position]bool, moves int) int {
+	if cur == target {
 		if moves > res {
 			res = moves
 			fmt.Println(res)
@@ -245,15 +238,15 @@ func dfs(g map[aoc.Location]map[aoc.Location]int, cur aoc.Location, target aoc.P
 
 	destinations := g[cur]
 	best := 0
-	visited[cur.Pos] = true
+	visited[cur] = true
 	for destination, distance := range destinations {
-		if visited[destination.Pos] {
+		if visited[destination] {
 			continue
 		}
 		v := dfs(g, destination, target, visited, moves+distance)
 		best = max(best, v)
 	}
-	delete(visited, cur.Pos)
+	delete(visited, cur)
 	return best
 }
 
@@ -279,8 +272,8 @@ func countAround(board Board, pos aoc.Position) []aoc.Direction {
 	return out
 }
 
-func toGraph(board Board) map[aoc.Location]map[aoc.Location]int {
-	g := make(map[aoc.Location]map[aoc.Location]int)
+func toGraph(board Board) map[aoc.Position]map[aoc.Position]int {
+	g := make(map[aoc.Position]map[aoc.Position]int)
 
 	target := aoc.NewPosition(board.board.MaxRows-1, board.board.MaxCols-2)
 	waypoints := map[aoc.Location]bool{
@@ -308,19 +301,18 @@ func toGraph(board Board) map[aoc.Location]map[aoc.Location]int {
 	set[target] = true
 
 	for waypoint := range waypoints {
-		next := waypoint.Straight(1)
+		if _, exists := g[waypoint.Pos]; !exists {
+			g[waypoint.Pos] = make(map[aoc.Position]int)
+		}
 
+		next := waypoint.Straight(1)
 		locations := nextWaypoint(board, set, target, next, 1, make(map[aoc.Position]bool))
-		g[waypoint] = make(map[aoc.Location]int)
 		for _, l := range locations {
-			g[waypoint][l.loc] = l.moves
+			g[waypoint.Pos][l.loc.Pos] = l.moves
 		}
 	}
 
-	g[aoc.Location{
-		Pos: target,
-		Dir: aoc.Up,
-	}] = make(map[aoc.Location]int)
+	g[target] = make(map[aoc.Position]int)
 
 	return g
 }
