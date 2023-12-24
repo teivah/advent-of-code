@@ -186,9 +186,9 @@ func fs2(input io.Reader) int {
 		case '#':
 			return forest
 		case 'v':
-			return slopeDown
+			return path
 		case '>':
-			return slopeRight
+			return path
 		default:
 			panic(r)
 		}
@@ -202,6 +202,29 @@ func fs2(input io.Reader) int {
 	g := toGraph(board)
 	for k, v := range g {
 		fmt.Printf("location: %v: %v, %v\n", k, len(v), v)
+	}
+
+	for row := 0; row < board.board.MaxRows; row++ {
+		for col := 0; col < board.board.MaxCols; col++ {
+			found := false
+			for _, dir := range []aoc.Direction{aoc.Up, aoc.Down, aoc.Left, aoc.Right} {
+				if _, exists := g[aoc.NewLocation(row, col, dir)]; exists {
+					fmt.Print("X")
+					found = true
+					break
+				}
+			}
+			if !found {
+				t := board.board.Get(aoc.NewPosition(row, col))
+				if t == forest {
+					fmt.Print("#")
+				} else {
+					fmt.Print(".")
+				}
+			}
+
+		}
+		fmt.Println()
 	}
 
 	start := aoc.NewLocation(0, 1, aoc.Down)
@@ -234,6 +257,28 @@ func dfs(g map[aoc.Location]map[aoc.Location]int, cur aoc.Location, target aoc.P
 	return best
 }
 
+func countAround(board Board, pos aoc.Position) []aoc.Direction {
+	if pos.Row == 0 || pos.Row == board.board.MaxRows-1 ||
+		pos.Col == 0 || pos.Col == board.board.MaxCols-1 {
+		return nil
+	}
+
+	var out []aoc.Direction
+	if delta := pos.Move(aoc.Up, 1); board.board.Get(delta) == path {
+		out = append(out, aoc.Up)
+	}
+	if delta := pos.Move(aoc.Down, 1); board.board.Get(delta) == path {
+		out = append(out, aoc.Down)
+	}
+	if delta := pos.Move(aoc.Left, 1); board.board.Get(delta) == path {
+		out = append(out, aoc.Left)
+	}
+	if delta := pos.Move(aoc.Right, 1); board.board.Get(delta) == path {
+		out = append(out, aoc.Right)
+	}
+	return out
+}
+
 func toGraph(board Board) map[aoc.Location]map[aoc.Location]int {
 	g := make(map[aoc.Location]map[aoc.Location]int)
 
@@ -242,41 +287,40 @@ func toGraph(board Board) map[aoc.Location]map[aoc.Location]int {
 		aoc.NewLocation(0, 1, aoc.Down): true,
 	}
 
+	set := make(map[aoc.Position]bool)
+
 	for pos, t := range board.board.Positions {
 		switch t {
-		case slopeDown:
-			waypoints[aoc.Location{
-				Pos: pos,
-				Dir: aoc.Down,
-			}] = true
-			waypoints[aoc.Location{
-				Pos: pos,
-				Dir: aoc.Up,
-			}] = true
-		case slopeRight:
-			waypoints[aoc.Location{
-				Pos: pos,
-				Dir: aoc.Right,
-			}] = true
-			waypoints[aoc.Location{
-				Pos: pos,
-				Dir: aoc.Left,
-			}] = true
+		case path:
+			around := countAround(board, pos)
+			if len(around) == 3 || len(around) == 4 {
+				for _, dir := range around {
+					waypoints[aoc.Location{
+						Pos: pos,
+						Dir: dir,
+					}] = true
+					set[pos] = true
+				}
+			}
 		}
 	}
+
+	set[target] = true
 
 	for waypoint := range waypoints {
 		next := waypoint.Straight(1)
 
-		locations := nextWaypoint(board, target, next, 1, make(map[aoc.Position]bool))
-		if len(locations) == 0 {
-			continue
-		}
+		locations := nextWaypoint(board, set, target, next, 1, make(map[aoc.Position]bool))
 		g[waypoint] = make(map[aoc.Location]int)
 		for _, l := range locations {
 			g[waypoint][l.loc] = l.moves
 		}
 	}
+
+	g[aoc.Location{
+		Pos: target,
+		Dir: aoc.Up,
+	}] = make(map[aoc.Location]int)
 
 	return g
 }
@@ -286,8 +330,7 @@ type location struct {
 	moves int
 }
 
-func nextWaypoint(board Board, target aoc.Position, cur aoc.Location, moves int, visited map[aoc.Position]bool) []location {
-	fmt.Println(cur)
+func nextWaypoint(board Board, set map[aoc.Position]bool, target aoc.Position, cur aoc.Location, moves int, visited map[aoc.Position]bool) []location {
 	if cur.Pos == target {
 		return []location{{loc: cur, moves: moves}}
 	}
@@ -299,7 +342,8 @@ func nextWaypoint(board Board, target aoc.Position, cur aoc.Location, moves int,
 	switch t {
 	case forest:
 		return nil
-	case slopeRight, slopeDown:
+	}
+	if set[cur.Pos] {
 		return []location{{loc: cur, moves: moves}}
 	}
 
@@ -308,22 +352,22 @@ func nextWaypoint(board Board, target aoc.Position, cur aoc.Location, moves int,
 	p := cur.Straight(1)
 	if !visited[p.Pos] {
 		visited[p.Pos] = true
-		out = append(out, nextWaypoint(board, target, p, moves+1, visited)...)
-		visited[p.Pos] = false
+		out = append(out, nextWaypoint(board, set, target, p, moves+1, visited)...)
+		delete(visited, p.Pos)
 	}
 
 	p = cur.Turn(aoc.Left, 1)
 	if !visited[p.Pos] {
 		visited[p.Pos] = true
-		out = append(out, nextWaypoint(board, target, p, moves+1, visited)...)
-		visited[p.Pos] = false
+		out = append(out, nextWaypoint(board, set, target, p, moves+1, visited)...)
+		delete(visited, p.Pos)
 	}
 
 	p = cur.Turn(aoc.Right, 1)
 	if !visited[p.Pos] {
 		visited[p.Pos] = true
-		out = append(out, nextWaypoint(board, target, p, moves+1, visited)...)
-		visited[p.Pos] = false
+		out = append(out, nextWaypoint(board, set, target, p, moves+1, visited)...)
+		delete(visited, p.Pos)
 	}
 	return out
 }
