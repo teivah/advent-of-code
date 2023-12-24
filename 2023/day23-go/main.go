@@ -287,6 +287,7 @@ type location struct {
 }
 
 func nextWaypoint(board Board, target aoc.Position, cur aoc.Location, moves int, visited map[aoc.Position]bool) []location {
+	fmt.Println(cur)
 	if cur.Pos == target {
 		return []location{{loc: cur, moves: moves}}
 	}
