@@ -230,7 +230,7 @@ func dfs(g map[aoc.Location]map[aoc.Location]int, cur aoc.Location, target aoc.P
 		v := dfs(g, destination, target, visited, moves+distance)
 		best = max(best, v)
 	}
-	visited[cur.Pos] = false
+	delete(visited, cur.Pos)
 	return best
 }
 
