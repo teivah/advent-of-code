@@ -204,47 +204,6 @@ func fs2(input io.Reader) int {
 	return dfs(g, start.Pos, target, make(map[aoc.Position]bool), 0)
 }
 
-func dfs(g map[aoc.Position]map[aoc.Position]int, cur aoc.Position, target aoc.Position, visited map[aoc.Position]bool, moves int) int {
-	if cur == target {
-		return moves
-	}
-
-	destinations := g[cur]
-	best := 0
-	visited[cur] = true
-	for destination, distance := range destinations {
-		if visited[destination] {
-			continue
-		}
-		v := dfs(g, destination, target, visited, moves+distance)
-		best = max(best, v)
-	}
-	delete(visited, cur)
-	return best
-}
-
-func countAround(board Board, pos aoc.Position) []aoc.Direction {
-	if pos.Row == 0 || pos.Row == board.board.MaxRows-1 ||
-		pos.Col == 0 || pos.Col == board.board.MaxCols-1 {
-		return nil
-	}
-
-	var out []aoc.Direction
-	if delta := pos.Move(aoc.Up, 1); board.board.Get(delta) == path {
-		out = append(out, aoc.Up)
-	}
-	if delta := pos.Move(aoc.Down, 1); board.board.Get(delta) == path {
-		out = append(out, aoc.Down)
-	}
-	if delta := pos.Move(aoc.Left, 1); board.board.Get(delta) == path {
-		out = append(out, aoc.Left)
-	}
-	if delta := pos.Move(aoc.Right, 1); board.board.Get(delta) == path {
-		out = append(out, aoc.Right)
-	}
-	return out
-}
-
 func toGraph(board Board) map[aoc.Position]map[aoc.Position]int {
 	g := make(map[aoc.Position]map[aoc.Position]int)
 
@@ -288,6 +247,28 @@ func toGraph(board Board) map[aoc.Position]map[aoc.Position]int {
 	g[target] = make(map[aoc.Position]int)
 
 	return g
+}
+
+func countAround(board Board, pos aoc.Position) []aoc.Direction {
+	if pos.Row == 0 || pos.Row == board.board.MaxRows-1 ||
+		pos.Col == 0 || pos.Col == board.board.MaxCols-1 {
+		return nil
+	}
+
+	var out []aoc.Direction
+	if delta := pos.Move(aoc.Up, 1); board.board.Get(delta) == path {
+		out = append(out, aoc.Up)
+	}
+	if delta := pos.Move(aoc.Down, 1); board.board.Get(delta) == path {
+		out = append(out, aoc.Down)
+	}
+	if delta := pos.Move(aoc.Left, 1); board.board.Get(delta) == path {
+		out = append(out, aoc.Left)
+	}
+	if delta := pos.Move(aoc.Right, 1); board.board.Get(delta) == path {
+		out = append(out, aoc.Right)
+	}
+	return out
 }
 
 type location struct {
@@ -335,4 +316,23 @@ func nextWaypoint(board Board, set map[aoc.Position]bool, target aoc.Position, c
 		delete(visited, p.Pos)
 	}
 	return out
+}
+
+func dfs(g map[aoc.Position]map[aoc.Position]int, cur aoc.Position, target aoc.Position, visited map[aoc.Position]bool, moves int) int {
+	if cur == target {
+		return moves
+	}
+
+	destinations := g[cur]
+	best := 0
+	visited[cur] = true
+	for destination, distance := range destinations {
+		if visited[destination] {
+			continue
+		}
+		v := dfs(g, destination, target, visited, moves+distance)
+		best = max(best, v)
+	}
+	delete(visited, cur)
+	return best
 }
