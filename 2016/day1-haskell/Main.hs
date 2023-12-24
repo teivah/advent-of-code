@@ -39,15 +39,14 @@ fn2 map [] dir row col remainingRow remainingCol =
           fn2 map2 [] dir row2 col2 deltaRow2 deltaCol2
 fn2 map (x:xs) dir row col remainingRow remainingCol =
   let v = Map.lookup (row, col) map
+      map2 = Map.insert (row, col) True map
    in if v /= Nothing
         then abs row + abs col
         else if remainingRow /= 0 || remainingCol /= 0
                then do
-                 let map2 = Map.insert (row, col) True map
                  let (row2, col2, deltaRow2, deltaCol2) = moveOne row col remainingRow remainingCol
                  fn2 map2 (x : xs) dir row2 col2 deltaRow2 deltaCol2
                else do
-                 let map2 = Map.insert (row, col) True map
                  let (to, count) = parse x
                  let dir2 = turn dir to
                  let (deltaRow, deltaCol) = delta dir2 count
