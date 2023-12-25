@@ -1,6 +1,6 @@
 # Advent of Code
 
-![](https://img.shields.io/badge/stars%20⭐-450-yellow)
+![](https://img.shields.io/badge/stars%20⭐-450-green)
 
 My solutions to the [Advents of Code](https://adventofcode.com/), from 2015 to 2023 (450 total ⭐).
 
@@ -27,7 +27,7 @@ I developed a Go library to help me solve unimportant topics as quickly as possi
 * [Documentation](https://pkg.go.dev/github.com/teivah/advent-of-code)
 
 ```shell
-go get github.com/teivah/advent-of-code@v1.4.2
+go get github.com/teivah/advent-of-code
 ```
 
 ## Language stats:
