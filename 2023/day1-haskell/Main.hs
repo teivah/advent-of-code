@@ -4,46 +4,37 @@ import System.IO
 
 main :: IO ()
 main = do
-  res <- withFile "input.txt" ReadMode (\handle -> fn1 handle 0)
+  res <- withFile "input.txt" ReadMode (\handle -> fn handle 0 usingDigit)
   print res
-  res <- withFile "input.txt" ReadMode (\handle -> fn2 handle 0)
-  print res
-  let res = firstDigitLetter "xwadaww" False 0 0
+  res <- withFile "input.txt" ReadMode (\handle -> fn handle 0 usingDigitAndWord)
   print res
 
-fn1 handle sum = do
+fn handle sum f = do
   eof <- hIsEOF handle
   if eof
     then return sum
     else do
       line <- hGetLine handle
-      let v1 = firstDigit line
-      let v2 = firstDigit (reverse line)
-      fn1 handle (sum + v1 * 10 + v2)
+      let v = f line
+      fn handle (sum + v) f
+
+usingDigit line = (firstDigit line) * 10 + (firstDigit (reverse line))
 
 firstDigit [] = error "no result"
-firstDigit (x:xs) =
-  if x >= '0' && x <= '9'
-    then digitToInt x
-    else firstDigit xs
+firstDigit (x:xs)
+  | x >= '0' && x <= '9' = digitToInt x
+  | otherwise = firstDigit xs
 
-fn2 handle sum = do
-  eof <- hIsEOF handle
-  if eof
-    then return sum
-    else do
-      line <- hGetLine handle
-      let v = firstDigitLetter line False 0 0
-      fn2 handle (sum + v)
+usingDigitAndWord line = firstDigitLetter line False 0 0
 
 firstDigitLetter [] _ v1 0 = v1 * 10 + v1
 firstDigitLetter [] _ v1 v2 = v1 * 10 + v2
-firstDigitLetter all@(_:xs) found v1 v2 =
-  if v /= 0
-    then if found
-           then firstDigitLetter xs True v1 v
-           else firstDigitLetter xs True v 0
-    else firstDigitLetter xs found v1 v2
+firstDigitLetter all@(_:xs) found v1 v2
+  | v /= 0 =
+    if found
+      then firstDigitLetter xs True v1 v
+      else firstDigitLetter xs True v 0
+  | otherwise = firstDigitLetter xs found v1 v2
   where
     v = startsWith all
 
