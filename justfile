@@ -48,5 +48,6 @@ stats:
   go run cmd/stats.go
   echo "Go lines: $(find . -name '*.go' -exec cat {} + | wc -l)"
   echo "Go lines without tests: $(find . -name '*.go' ! -name '*_test.go' -exec cat {} + | wc -l)"
-  echo "Rust lines: $(find . -name '*.rs' ! -name '*_test.go' -exec cat {} + | wc -l)"
-  echo "Python lines: $(find . -name '*.py' ! -name '*_test.go' -exec cat {} + | wc -l)"
+  echo "Rust lines: $(find . -name '*.rs' -exec cat {} + | wc -l)"
+  echo "Haskell lines: $(find . -name '*.hs' -exec cat {} + | wc -l)"
+  echo "Python lines: $(find . -name '*.py' -exec cat {} + | wc -l)"
