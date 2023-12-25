@@ -30,6 +30,11 @@ fn1 (x:xs)
 
 count line = (isPossibleList gamesStr, gameID)
   where
+    (gameID, gamesStr) = parseGame line
+
+parseGame :: String -> (Int, [[String]])
+parseGame line = (gameID, gamesStr)
+  where
     split = splitOn ": " line
     gameID = read (fromJust (stripPrefix "Game " (split !! 0))) :: Int
     gamesStr = [splitOn ", " x | x <- splitOn "; " (split !! 1)]
@@ -69,8 +74,7 @@ count2 line =
   let (red, green, blue) = fewestList gamesStr 0 0 0
    in red * green * blue
   where
-    split = splitOn ": " line
-    gamesStr = [splitOn ", " x | x <- splitOn "; " (split !! 1)]
+    (_, gamesStr) = parseGame line
 
 fewestList :: [[String]] -> Int -> Int -> Int -> (Int, Int, Int)
 fewestList [] red green blue = (red, green, blue)
