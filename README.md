@@ -1,6 +1,6 @@
 # Advent of Code
 
-![](https://img.shields.io/badge/stars%20⭐-450-yellow)
+![](https://img.shields.io/badge/stars%20⭐-450-green)
 
 My solutions to the [Advents of Code](https://adventofcode.com/), from 2015 to 2023 (450 total ⭐).
 
