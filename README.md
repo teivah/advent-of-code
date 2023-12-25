@@ -1,8 +1,8 @@
 # Advent of Code
 
-![](https://img.shields.io/badge/stars%20⭐-400-yellow)
+![](https://img.shields.io/badge/stars%20⭐-450-yellow)
 
-My solutions to the [Advents of Code](https://adventofcode.com/), from 2015 to 2023 (400 total ⭐, 2023 ongoing).
+My solutions to the [Advents of Code](https://adventofcode.com/), from 2015 to 2023 (450 total ⭐).
 
 ## Blog
 
@@ -32,7 +32,7 @@ go get github.com/teivah/advent-of-code@v1.4.2
 
 ## Language stats:
 
-* Go: 84.00%
+* Go: 84.44%
 * Rust: 15.56%
 * Haskell: 2.22%
 * Python: 0.22%
