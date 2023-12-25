@@ -27,7 +27,7 @@ I developed a Go library to help me solve unimportant topics as quickly as possi
 * [Documentation](https://pkg.go.dev/github.com/teivah/advent-of-code)
 
 ```shell
-go get github.com/teivah/advent-of-code@v1.4.2
+go get github.com/teivah/advent-of-code
 ```
 
 ## Language stats:
