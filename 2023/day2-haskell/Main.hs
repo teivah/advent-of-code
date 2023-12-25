@@ -6,7 +6,12 @@ import System.IO
 
 main :: IO ()
 main = do
-  res <- withFile "input.txt" ReadMode (\handle -> fn1 handle)
+  handle <- openFile "input.txt" ReadMode
+  contents <- hGetContents handle
+  let linesList = lines contents
+  let res = fn1 linesList
+  print res
+  let res = fn2 linesList
   print res
 
 maxRed = 12
@@ -15,27 +20,19 @@ maxGreen = 13
 
 maxBlue = 14
 
-fn1 :: Handle -> IO Int
-fn1 handle = do
-  eof <- hIsEOF handle
-  if eof
-    then return 0
-    else do
-      line <- hGetLine handle
-      let (isPossible, id) = count line
-      print isPossible
-      if not isPossible
-        then fn1 handle
-        else do
-          next <- fn1 handle
-          return (id + next)
+fn1 :: [String] -> Int
+fn1 [] = 0
+fn1 (x:xs)
+  | isPossible = id + fn1 xs
+  | otherwise = fn1 xs
+  where
+    (isPossible, id) = count x
 
-count line = (isPossibleList gamesStr2, gameID)
+count line = (isPossibleList gamesStr, gameID)
   where
     split = splitOn ": " line
     gameID = read (fromJust (stripPrefix "Game " (split !! 0))) :: Int
-    gamesStr = splitOn "; " (split !! 1)
-    gamesStr2 = [splitOn ", " x | x <- gamesStr]
+    gamesStr = [splitOn ", " x | x <- splitOn "; " (split !! 1)]
 
 isPossibleList :: [[String]] -> Bool
 isPossibleList [] = True
@@ -59,6 +56,34 @@ isPossible (x:xs)
     if count > maxBlue
       then False
       else isPossible xs
+  where
+    split = splitOn " " x
+    count = read (split !! 0) :: Int
+    color = split !! 1
+
+fn2 :: [String] -> Int
+fn2 [] = 0
+fn2 (x:xs) = count2 x + fn2 xs
+
+count2 line =
+  let (red, green, blue) = fewestList gamesStr 0 0 0
+   in red * green * blue
+  where
+    split = splitOn ": " line
+    gamesStr = [splitOn ", " x | x <- splitOn "; " (split !! 1)]
+
+fewestList :: [[String]] -> Int -> Int -> Int -> (Int, Int, Int)
+fewestList [] red green blue = (red, green, blue)
+fewestList (x:xs) red green blue = do
+  let (red2, green2, blue2) = fewest x 0 0 0
+  fewestList xs (max red red2) (max green green2) (max blue blue2)
+
+fewest :: [String] -> Int -> Int -> Int -> (Int, Int, Int)
+fewest [] red green blue = (red, green, blue)
+fewest (x:xs) red green blue
+  | color == "red" = fewest xs (max red count) green blue
+  | color == "green" = fewest xs red (max green count) blue
+  | color == "blue" = fewest xs red green (max blue count)
   where
     split = splitOn " " x
     count = read (split !! 0) :: Int

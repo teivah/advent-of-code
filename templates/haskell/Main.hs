@@ -2,14 +2,12 @@ import System.IO
 
 main :: IO ()
 main = do
-  res <- withFile "input.txt" ReadMode (\handle -> fn1 handle)
+  handle <- openFile "input.txt" ReadMode
+  contents <- hGetContents handle
+  let linesList = lines contents
+  let res = fn1 linesList
   print res
 
-fn1 handle  = do
-  eof <- hIsEOF handle
-  if eof
-    then return 1
-    else do
-      line <- hGetLine handle
-      print line
-      fn1 handle
+fn1 :: [String] -> Int
+fn1 [] = 0
+fn1 (x:xs) = fn1 xs
