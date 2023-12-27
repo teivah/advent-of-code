@@ -12,10 +12,10 @@ main = do
   print res
 
 fn1 :: [String] -> String
-fn1  = foldl (\acc x -> acc ++ [button move x]) ""
+fn1 = foldl (\acc x -> acc ++ [button move x]) ""
 
 fn2 :: [String] -> String
-fn2  = foldl (\acc x -> acc ++ [button move2 x]) ""
+fn2 = foldl (\acc x -> acc ++ [button move2 x]) ""
 
 button :: (Char -> Char -> Char) -> String -> Char
 button f = foldl (\acc x -> f x acc) '5'
