@@ -34,7 +34,7 @@ go get github.com/teivah/advent-of-code
 
 * Go: 84.44%
 * Rust: 15.56%
-* Haskell: 2.22%
+* Haskell: 3.11%
 * Python: 0.22%
 
 ## Solutions
@@ -51,9 +51,6 @@ go get github.com/teivah/advent-of-code
 
 ### 2023
 
-* [Day 2](https://adventofcode.com/2016/day/2): [Haskell](2016/day2-haskell/Main.hs)
-* [Day 3](https://adventofcode.com/2023/day/3): [Haskell](2023/day3-haskell/Main.hs)
-* [Day 2](https://adventofcode.com/2023/day/2): [Haskell](2023/day2-haskell/Main.hs)
 * [Day 25](https://adventofcode.com/2023/day/25): [Go](2023/day25-go/main.go)
 * [Day 24](https://adventofcode.com/2023/day/24): [Go](2023/day24-go/main.go)
 * [Day 23](https://adventofcode.com/2023/day/23): [Go](2023/day23-go/main.go)
@@ -77,7 +74,7 @@ go get github.com/teivah/advent-of-code
 * [Day 5](https://adventofcode.com/2023/day/5): [Go](2023/day5-go/main.go)
 * [Day 4](https://adventofcode.com/2023/day/4): [Go](2023/day4-go/main.go)
 * [Day 3](https://adventofcode.com/2023/day/3): [Go](2023/day3-go/main.go)
-* [Day 2](https://adventofcode.com/2023/day/2): [Python (part 1)](2023/day2-python/main.py), [Go](2023/day2-go/main.go)
+* [Day 2](https://adventofcode.com/2023/day/2): [Python (part 1)](2023/day2-python/main.py), [Go](2023/day2-go/main.go), [Haskell](2023/day2-haskell/Main.hs)
 * [Day 1](https://adventofcode.com/2023/day/1): [Rust](2023/day1-rust/src/lib.rs), [Haskell](2023/day1-haskell/Main.hs)
 
 ### 2022
@@ -272,7 +269,7 @@ go get github.com/teivah/advent-of-code
 * [Day 5](https://adventofcode.com/2016/day/5): [Rust](2016/day5-rust/src/lib.rs)
 * [Day 4](https://adventofcode.com/2016/day/4): [Go](2016/day4-go/main.go)
 * [Day 3](https://adventofcode.com/2016/day/3): [Go](2016/day3-go/main.go)
-* [Day 2](https://adventofcode.com/2016/day/2): [Go](2016/day2-go/main.go)
+* [Day 2](https://adventofcode.com/2016/day/2): [Go](2016/day2-go/main.go), [Haskell](2016/day2-haskell/Main.hs)
 * [Day 1](https://adventofcode.com/2016/day/1): [Rust](2016/day1-rust/src/lib.rs), [Haskell](2016/day1-haskell/Main.hs)
 
 ### 2015
