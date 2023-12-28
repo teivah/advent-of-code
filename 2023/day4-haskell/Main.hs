@@ -13,7 +13,7 @@ main = do
   let linesList = lines contents
   let res = fn1 linesList
   print res
-  let res = fn2 linesList Map.empty []
+  let res = fn2 linesList [] []
   print res
 
 fn1 :: [String] -> Int
@@ -41,14 +41,15 @@ parseLine line = matching
         0
         numbers
 
-fn2 :: [String] -> Map.Map Int [Int] -> [Int] -> Int
+-- Lines, cache, remaining
+fn2 :: [String] -> [[Int]] -> [Int] -> Int
 fn2 [] _ [] = 0
 fn2 [] cache (x:xs) = 1 + fn2 [] cache (xs ++ v)
   where
-    v = fromMaybe [] (Map.lookup x cache)
+    v = cache !! (x - 1)
 --1 + fn2 [] cache (xs ++ v)
 --        Just _ -> error "stop"
-fn2 (x:xs) cache rem = 1 + (fn2 xs (Map.insert id v cache) (rem ++ v))
+fn2 (x:xs) cache rem = 1 + (fn2 xs (cache ++ [v]) (rem ++ v))
   where
     (id, v) = parseLine' x
 
