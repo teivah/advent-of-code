@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"math"
 	"strings"
@@ -100,7 +101,10 @@ func fs2(input io.Reader) int {
 		res += len(won)
 	}
 
+	m := 0
 	for len(copies) != 0 {
+		m = max(m, len(copies))
+		fmt.Println(len(copies))
 		id := copies[0]
 		copies = copies[1:]
 
@@ -109,6 +113,7 @@ func fs2(input io.Reader) int {
 			res += len(v)
 		}
 	}
+	fmt.Println(m)
 
 	return res
 }
