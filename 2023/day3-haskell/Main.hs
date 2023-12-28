@@ -53,21 +53,21 @@ check all (Position fromRow fromCol) (Position toRow toCol) =
       (containsSign (getLineFromRow all fromRow) (fromCol - 1))
         || (containsSign (getLineFromRow all fromRow) (toCol + 1))
         || (containsSignRange
-              all
-              (Position (fromRow - 1) (fromCol - 1))
-              (Position (fromRow - 1) (toCol + 1)))
+              (getLineFromRow all (fromRow - 1))
+              (fromCol - 1)
+              (toCol + 1))
         || (containsSignRange
-              all
-              (Position (fromRow + 1) (fromCol - 1))
-              (Position (fromRow + 1) (toCol + 1)))
+              (getLineFromRow all (fromRow + 1))
+              (fromCol - 1)
+              (toCol + 1))
 
-containsSignRange :: [String] -> Position -> Position -> Bool
-containsSignRange all (Position row col) (Position toRow toCol)
+containsSignRange :: String -> Int -> Int -> Bool
+containsSignRange line col toCol
   | col > toCol = False
   | otherwise =
-    if containsSign (getLineFromRow all row) col
+    if containsSign line col
       then True
-      else containsSignRange all (Position row $ col + 1) (Position toRow toCol)
+      else containsSignRange line (col + 1) (toCol)
 
 containsSign :: String -> Int -> Bool
 containsSign [] _ = False
