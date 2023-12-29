@@ -34,7 +34,7 @@ go get github.com/teivah/advent-of-code
 
 * Go: 84.44%
 * Rust: 15.56%
-* Haskell: 3.11%
+* Haskell: 3.78%
 * Python: 0.22%
 
 ## Solutions
@@ -72,7 +72,7 @@ go get github.com/teivah/advent-of-code
 * [Day 7](https://adventofcode.com/2023/day/7): [Go](2023/day7-go/main.go)
 * [Day 6](https://adventofcode.com/2023/day/6): [Go](2023/day6-go/main.go)
 * [Day 5](https://adventofcode.com/2023/day/5): [Go](2023/day5-go/main.go)
-* [Day 4](https://adventofcode.com/2023/day/4): [Go](2023/day4-go/main.go)
+* [Day 4](https://adventofcode.com/2023/day/4): [Go](2023/day4-go/main.go), [Haskell](2023/day4-haskell/Main.hs)
 * [Day 3](https://adventofcode.com/2023/day/3): [Go](2023/day3-go/main.go), [Haskell (Part 1)](2023/day3-haskell/Main.hs)
 * [Day 2](https://adventofcode.com/2023/day/2): [Python (part 1)](2023/day2-python/main.py), [Go](2023/day2-go/main.go), [Haskell](2023/day2-haskell/Main.hs)
 * [Day 1](https://adventofcode.com/2023/day/1): [Rust](2023/day1-rust/src/lib.rs), [Haskell](2023/day1-haskell/Main.hs)
