@@ -1,6 +1,7 @@
 import Data.List (isPrefixOf)
 import qualified Data.Map as Map
 import Data.Maybe (fromMaybe)
+import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import Debug.Trace
 import Lib.Inputs
@@ -13,7 +14,7 @@ main = do
   let linesList = lines contents
   let res = fn1 linesList
   print res
-  let res = fn2 linesList [] []
+  let res = fn2 linesList [] Seq.Empty
   print res
 
 fn1 :: [String] -> Int
@@ -42,14 +43,12 @@ parseLine line = matching
         numbers
 
 -- Lines, cache, remaining
-fn2 :: [String] -> [[Int]] -> [Int] -> Int
-fn2 [] _ [] = 0
-fn2 [] cache (x:xs) = 1 + fn2 [] cache (xs ++ v)
+fn2 :: [String] -> [[Int]] -> Seq.Seq Int -> Int
+fn2 [] _ Seq.Empty = 0
+fn2 [] cache (x Seq.:<| xs) = 1 + fn2 [] cache (xs Seq.>< Seq.fromList v)
   where
     v = cache !! (x - 1)
---1 + fn2 [] cache (xs ++ v)
---        Just _ -> error "stop"
-fn2 (x:xs) cache rem = 1 + (fn2 xs (cache ++ [v]) (rem ++ v))
+fn2 (x:xs) cache rem = 1 + (fn2 xs (cache ++ [v]) (rem Seq.>< Seq.fromList v))
   where
     (id, v) = parseLine' x
 
