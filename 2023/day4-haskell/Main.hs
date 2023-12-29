@@ -42,7 +42,6 @@ parseLine line = matching
         0
         numbers
 
--- Lines, cache, remaining
 fn2 :: [String] -> [[Int]] -> Seq.Seq Int -> Int
 fn2 [] _ Seq.Empty = 0
 fn2 [] cache (x Seq.:<| xs) = 1 + fn2 [] cache (xs Seq.>< Seq.fromList v)
