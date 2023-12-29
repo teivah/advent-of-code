@@ -1,7 +1,6 @@
 import Data.List (isPrefixOf)
 import qualified Data.Map as Map
 import Data.Maybe (fromMaybe)
-import qualified Data.Sequence as Seq
 import qualified Data.Set as Set
 import Debug.Trace
 import Lib.Inputs
@@ -14,7 +13,7 @@ main = do
   let linesList = lines contents
   let res = fn1 linesList
   print res
-  let res = fn2 linesList [] Seq.Empty
+  let res = fn2 (reverse linesList) []
   print res
 
 fn1 :: [String] -> Int
@@ -42,17 +41,15 @@ parseLine line = matching
         0
         numbers
 
-fn2 :: [String] -> [[Int]] -> Seq.Seq Int -> Int
-fn2 [] _ Seq.Empty = 0
-fn2 [] cache (x Seq.:<| xs) = 1 + fn2 [] cache (xs Seq.>< Seq.fromList v)
+fn2 :: [String] -> [Int] -> Int
+fn2 [] cache = sum cache
+fn2 (x:xs) cache = fn2 xs cache2
   where
-    v = cache !! (x - 1)
-fn2 (x:xs) cache rem = 1 + (fn2 xs (cache ++ [v]) (rem Seq.>< Seq.fromList v))
-  where
-    (id, v) = parseLine' x
+    v = parseLine2 x cache
+    cache2 = v : cache
 
-parseLine' :: String -> (Int, [Int])
-parseLine' line = (id, res)
+parseLine2 :: String -> [Int] -> Int
+parseLine2 line cache = res
   where
     numbersLine = getString (newDelimiter line ": ") 1
     del = newDelimiter numbersLine " | "
@@ -70,4 +67,5 @@ parseLine' line = (id, res)
              else acc)
         0
         numbers
-    res = foldr (\a acc -> (a + id) : acc) [] [1 .. matching]
+    won = foldr (\a acc -> (a + id) : acc) [] [1 .. matching]
+    res = 1 + (foldl (\acc a -> acc + (cache !! (a - id - 1))) 0 won)
