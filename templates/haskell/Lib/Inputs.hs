@@ -1,11 +1,12 @@
 module Lib.Inputs
-( Delimiter
-, newDelimiter
-, getStrings
-, getInt
-, getInts
-, getString
-) where
+  ( Delimiter
+  , newDelimiter
+  , getStrings
+  , getInt
+  , getInts
+  , getString
+  , stringGroups
+  ) where
 
 import Data.List (isPrefixOf)
 
@@ -59,3 +60,14 @@ indexAll' all@(x:xs) sep idx
   | otherwise = next
   where
     next = indexAll' xs sep (idx + 1)
+
+stringGroups :: [String] -> [[String]]
+stringGroups [] = []
+stringGroups (x:xs) = [res] ++ (stringGroups rem)
+  where
+    (res, rem) = stringGroups' (x : xs) []
+
+stringGroups' :: [String] -> [String] -> ([String], [String])
+stringGroups' [] tmp = (tmp, [])
+stringGroups' ("":xs) tmp = (tmp, xs)
+stringGroups' (x:xs) tmp = stringGroups' (xs) (tmp ++ [x])
