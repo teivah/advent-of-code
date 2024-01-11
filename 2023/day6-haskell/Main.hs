@@ -1,4 +1,5 @@
 import Data.List (isPrefixOf)
+import Data.List (foldl')
 import Data.Text (Text, strip)
 import Debug.Trace
 import Lib.Inputs
@@ -10,34 +11,45 @@ main = do
   handle <- openFile "input.txt" ReadMode
   contents <- hGetContents handle
   let linesList = lines contents
-  let res = fn1 linesList
-  print res
+  print $ fn1 linesList
+  print $ fn2 linesList
 
+--  print $ foldl (\acc a -> acc + (travelDistance a 10 10)) 0 [1 .. 10]
 fn1 :: [String] -> Int
 fn1 line = res times distances
   where
-    times = parse (line !! 0)
-    distances = parse (line !! 1)
+    times = parse1 (line !! 0)
+    distances = parse1 (line !! 1)
 
-parse :: String -> [Int]
-parse s = res
+parse1 :: String -> [Int]
+parse1 s = [read x :: Int | x <- getStrings del, x /= ""]
   where
     line = trimSpace $ substringAfter s ": "
     del = newDelimiter line " "
-    res = [read x :: Int | x <- getStrings del, x /= ""]
 
 res :: [Int] -> [Int] -> Int
 res [] [] = 1
 res (x:xs) (y:ys) = n * res xs ys
   where
-    n = numberOfWays 0 x y
+    n = numberOfWays x y
 
-numberOfWays :: Int -> Int -> Int -> Int
-numberOfWays i time distance
-  | i == time = 0
-  | otherwise = sum + numberOfWays (i + 1) time distance
+numberOfWays :: Int -> Int -> Int
+numberOfWays time distance = foldl' (\acc i -> acc + (travelDistance i time distance)) 0 [1 .. (time - 1)]
+
+travelDistance :: Int -> Int -> Int -> Int
+travelDistance hold raceTime distance =
+  if (raceTime - hold) * hold > distance
+    then 1
+    else 0
+
+fn2 :: [String] -> Int
+fn2 line = numberOfWays time distance
   where
-    sum =
-      if ((time - i) * i) > distance
-        then 1
-        else 0
+    time = parse2 (line !! 0)
+    distance = parse2 (line !! 1)
+
+parse2 :: String -> Int
+parse2 s = read (concat [x | x <- getStrings del, x /= ""]) :: Int
+  where
+    line = trimSpace $ substringAfter s ": "
+    del = newDelimiter line " "
