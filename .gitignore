@@ -3,3 +3,8 @@
 **/vendor
 **/venv
 **.iml
+Main
+Main.hi
+Main.o
+*.hi
+*.o
