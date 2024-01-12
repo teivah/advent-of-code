@@ -32,6 +32,8 @@ go get github.com/teivah/advent-of-code
 
 ## Language stats:
 
+![](https://img.shields.io/badge/Go-84.44%-007D9C?logo=go)
+
 * Go: 84.44%
 * Rust: 15.56%
 * Haskell: 6.00%
