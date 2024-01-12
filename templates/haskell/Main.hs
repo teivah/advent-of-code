@@ -2,6 +2,7 @@ import Data.List (isPrefixOf)
 import Debug.Trace
 import Lib.Inputs
 import Lib.Strings
+import Lib.Lists
 import System.IO
 
 main :: IO ()
