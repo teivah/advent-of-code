@@ -34,7 +34,7 @@ go get github.com/teivah/advent-of-code
 
 * Go: 84.44%
 * Rust: 15.56%
-* Haskell: 3.78%
+* Haskell: 4.89%
 * Python: 0.22%
 
 ## Solutions
