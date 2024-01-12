@@ -42,7 +42,6 @@ data HandType
   | FiveOfAKind
   deriving (Eq, Ord, Show)
 
-
 data Player = Player
   { hand :: [CardValue]
   , handType :: HandType
@@ -123,8 +122,8 @@ fn2 lines = res 1 players
     players = sortBy comparePlayers (map toPlayer2 lines)
     comparePlayers :: Player -> Player -> Ordering
     comparePlayers p1 p2
-     | (handType p1) /= (handType p2) = compare (handType p1) (handType p2)
-     | otherwise = compareHands (hand p1) (hand p2)
+      | (handType p1) /= (handType p2) = compare (handType p1) (handType p2)
+      | otherwise = compareHands (hand p1) (hand p2)
     compareHands :: [CardValue] -> [CardValue] -> Ordering
     compareHands [] [] = EQ
     compareHands (x:xs) (y:ys)
@@ -160,16 +159,27 @@ toHandType2 cards jFrequency
     highestCard = getBestCard (Map.toList init) Two 0
     m = Map.insertWith (+) highestCard jFrequency init
     isCount :: Map.Map CardValue Int -> Int -> Bool
-    isCount m value = any (\(card, frequency) -> card /= Jack && frequency == value) (Map.toList m)
+    isCount m value =
+      any
+        (\(card, frequency) -> card /= Jack && frequency == value)
+        (Map.toList m)
     isTwoPair :: Map.Map CardValue Int -> Bool
-    isTwoPair m = sum (map (\(card, frequency) -> if card == Jack then 0 else (if frequency == 2 then 1 else 0)) (Map.toList m)) == 2
+    isTwoPair m =
+      sum
+        (map
+           (\(card, frequency) ->
+              if card == Jack
+                then 0
+                else (if frequency == 2
+                        then 1
+                        else 0))
+           (Map.toList m))
+        == 2
 
 getBestCard :: [(CardValue, Int)] -> CardValue -> Int -> CardValue
 getBestCard [] highest _ = highest
-getBestCard ((Jack,freq):rem) highest best = getBestCard rem highest best
-getBestCard ((card,freq):rem) highest best
+getBestCard ((Jack, freq):rem) highest best = getBestCard rem highest best
+getBestCard ((card, freq):rem) highest best
   | freq > best = getBestCard rem card freq
   | freq < best = getBestCard rem highest best
   | otherwise = getBestCard rem (max card highest) freq
-
-
