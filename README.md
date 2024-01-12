@@ -4,6 +4,13 @@
 
 My solutions to the [Advents of Code](https://adventofcode.com/), from 2015 to 2023 (450 total ⭐).
 
+Language stats:
+
+![](https://img.shields.io/badge/Go-84.4%25-007D9C.svg?logo=go)
+![](https://img.shields.io/badge/Rust-15.5%25-F75208.svg?logo=rust)
+![](https://img.shields.io/badge/Haskell-6.0%25-5e5086.svg?logo=haskell)
+![](https://img.shields.io/badge/Python-0.2%25-FFCD3A.svg?logo=python)
+
 ## Blog
 
 In 2023, I shared my experience with the Advent of Code on my blog:
@@ -29,15 +36,6 @@ I developed a Go library to help me solve unimportant topics as quickly as possi
 ```shell
 go get github.com/teivah/advent-of-code
 ```
-
-## Language stats:
-
-![](https://img.shields.io/badge/Go-84.44%-007D9C?logo=go)
-
-* Go: 84.44%
-* Rust: 15.56%
-* Haskell: 6.00%
-* Python: 0.22%
 
 ## Solutions
 
