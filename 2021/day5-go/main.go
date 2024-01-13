@@ -15,13 +15,6 @@ func fs1(input io.Reader) int {
 		lines = append(lines, toLine(line))
 	}
 
-	r := aoc.NewMinerMaxer()
-	c := aoc.NewMinerMaxer()
-	for _, line := range lines {
-		r.Add(line.from.Row, line.to.Row)
-		c.Add(line.from.Col, line.to.Col)
-	}
-
 	grid := make(map[aoc.Position]int)
 
 	for _, line := range lines {

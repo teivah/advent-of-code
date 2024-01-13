@@ -18,13 +18,13 @@ func TestFs1Test(t *testing.T) {
 func TestFs1Input(t *testing.T) {
 	f, err := os.Open("input.txt")
 	require.NoError(t, err)
-	assert.Equal(t, 368, fs1(f, 5))
+	assert.Equal(t, 184, fs1(f, 5))
 }
 
 func TestFs2Input(t *testing.T) {
 	f, err := os.Open("input.txt")
 	require.NoError(t, err)
-	assert.Equal(t, 368, fs1(f, 18))
+	assert.Equal(t, 2810258, fs1(f, 18))
 }
 func Test_addOptions(t *testing.T) {
 	options := make(map[string]string)
