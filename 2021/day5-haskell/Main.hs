@@ -14,6 +14,8 @@ main = do
   let linesList = lines contents
   let res = fn1 linesList
   print res
+  let res = fn2 linesList
+  print res
 
 data Line = Line
   { from :: Position
@@ -72,3 +74,34 @@ toLine s = Line {from = from, to = to, direction = direction}
       | col from < col to && row from > row to = DirUpRight
       | col from > col to && row from < row to = DirDownLeft
       | col from > col to && row from > row to = DirUpLeft
+
+fn2 :: [String] -> Int
+fn2 s = length $ filter (\(_, v) -> v >= 2) (Map.toList grid)
+  where
+    lines = map toLine s
+    grid = toGrid2 lines Map.empty
+
+toGrid2 :: [Line] -> Map.Map Position Int -> Map.Map Position Int
+toGrid2 [] grid = grid
+toGrid2 (line:xs) grid =
+  case d of
+    Just (deltaRow, deltaCol) ->
+      let grid2 = Map.insertWith (+) (from line) 1 grid
+       in toGrid2 xs $ updateGrid (deltaRow, deltaCol) grid2 (from line) (to line)
+    Nothing -> toGrid xs grid
+  where
+    d = deltaDir2 (direction line)
+    updateGrid :: (Int, Int) -> Map.Map Position Int -> Position -> Position -> Map.Map Position Int
+    updateGrid (deltaRow, deltaCol) grid cur to
+      | cur == to = grid
+      | otherwise = updateGrid (deltaRow, deltaCol) (Map.insertWith (+) cur 1 grid) (delta cur deltaRow deltaCol) to
+
+deltaDir2 :: Direction -> Maybe (Int, Int)
+deltaDir2 DirUp = Just (-1, 0)
+deltaDir2 DirDown = Just (1, 0)
+deltaDir2 DirLeft = Just (0, -1)
+deltaDir2 DirRight = Just (0, 1)
+deltaDir2 DirUpLeft = Just (-1, -1)
+deltaDir2 DirUpRight = Just (-1, 1)
+deltaDir2 DirDownLeft = Just (1, -1)
+deltaDir2 DirDownRight = Just (1, 1)
