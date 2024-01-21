@@ -1,0 +1,16 @@
+indent:
+  hindent app/Main.hs
+  hindent src/Lib.hs
+
+dev:
+  ghcid -W --command="stack ghci" --test=":main"
+
+build:
+  stack build
+
+run:
+  just build
+  stack exec day8-haskell-exe
+
+time:
+  time stack exec day7-haskell-exe

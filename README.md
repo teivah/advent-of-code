@@ -124,7 +124,7 @@ go get github.com/teivah/advent-of-code
 * [Day 11](https://adventofcode.com/2021/day/11): [Go](2021/day11-go/main.go)
 * [Day 10](https://adventofcode.com/2021/day/10): [Go](2021/day10-go/main.go)
 * [Day 9](https://adventofcode.com/2021/day/9): [Go](2021/day9-go/main.go)
-* [Day 8](https://adventofcode.com/2021/day/8): [Go](2021/day8-go/main.go)
+* [Day 8](https://adventofcode.com/2021/day/8): [Go](2021/day8-go/main.go), [Haskell (Part 1)](2021/day8-haskell/Main.hs)
 * [Day 7](https://adventofcode.com/2021/day/7): [Go](2021/day7-go/main.go), [Haskell (Part 1)](2021/day7-haskell/Main.hs)
 * [Day 6](https://adventofcode.com/2021/day/6): [Go](2021/day6-go/main.go), [Haskell](2021/day6-haskell/Main.hs)
 * [Day 5](https://adventofcode.com/2021/day/5): [Go](2021/day5-go/main.go), [Haskell)](2021/day5-haskell/Main.hs)
