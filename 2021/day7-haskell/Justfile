@@ -10,7 +10,7 @@ build:
 
 run:
   just build
-  stack exec dayX-haskell-exe
+  stack exec day7-haskell-exe
 
 time:
   time stack exec day7-haskell-exe

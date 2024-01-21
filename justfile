@@ -49,8 +49,8 @@ gen LANGUAGE YEAR DAY:
     cp templates/haskell/Justfile {{YEAR}}/day{{DAY}}-{{LANGUAGE}}
     sed -i -e 's/X/{{DAY}}/' {{YEAR}}/day{{DAY}}-{{LANGUAGE}}/Justfile
     rm {{YEAR}}/day{{DAY}}-{{LANGUAGE}}/Justfile-e
-    cp templates/haskell/Lib/* {{YEAR}}/day{{DAY}}-{{LANGUAGE}}/src
     rm {{YEAR}}/day{{DAY}}-{{LANGUAGE}}/src/Lib.hs
+    cp templates/haskell/Lib/* {{YEAR}}/day{{DAY}}-{{LANGUAGE}}/src
     rm {{YEAR}}/day{{DAY}}-{{LANGUAGE}}/app/Main.hs
     cp templates/haskell/Main.hs {{YEAR}}/day{{DAY}}-{{LANGUAGE}}/app
     cd {{YEAR}}/day{{DAY}}-{{LANGUAGE}}
