@@ -1,4 +1,4 @@
-module Lib.Inputs
+module Inputs
   ( Delimiter
   , newDelimiter
   , getStrings

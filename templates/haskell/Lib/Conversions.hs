@@ -1,4 +1,4 @@
-module Lib.Conversions
+module Conversions
   ( binaryToDecimal
   ) where
 

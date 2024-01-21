@@ -1,4 +1,4 @@
-module Lib.Lists
+module Lists
   ( sublist
   ) where
 

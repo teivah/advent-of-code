@@ -1,8 +1,8 @@
 import Data.List (isPrefixOf)
 import Debug.Trace
-import Lib.Inputs
-import Lib.Strings
-import Lib.Lists
+import Inputs
+import Strings
+import Lists
 import System.IO
 
 main :: IO ()

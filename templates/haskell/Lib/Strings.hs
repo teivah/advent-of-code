@@ -1,4 +1,4 @@
-module Lib.Strings
+module Strings
   ( substringAfter
   , trimSpace
   ) where

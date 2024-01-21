@@ -1,4 +1,4 @@
-module Lib.Directions
+module Directions
   ( Direction(..)
   , Position(..)
   , newPosition

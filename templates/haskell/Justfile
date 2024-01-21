@@ -1,17 +1,3 @@
-dev:
-  ghcid --command="stack ghci Main.hs" --test=":main"
-
-build:
-  ghc -O Main.hs
-
-build1:
-  ghc -O1 Main.hs
-
-build2:
-  ghc -O2 Main.hs
-
 run:
-  ./Main
-
-time:
-  time ./Main
+  stack build
+  stack exec dayX-haskell-exe

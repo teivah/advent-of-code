@@ -1,11 +1,11 @@
 gen LANGUAGE YEAR DAY:
   #!/bin/bash
-  [[ -s "$GVM_ROOT/scripts/gvm" ]] && source "$GVM_ROOT/scripts/gvm"
-  gvm use go1.21.4
-  cp -R templates/{{LANGUAGE}} {{YEAR}}/day{{DAY}}-{{LANGUAGE}}
-  curl --cookie "session=$ADVENT_OF_CODE_COOKIE" https://adventofcode.com/{{YEAR}}/day/{{DAY}}/input -o {{YEAR}}/day{{DAY}}-{{LANGUAGE}}/input.txt
-  perl -i -pe 'chomp if eof' {{YEAR}}/day{{DAY}}-{{LANGUAGE}}/input.txt
   if [ "{{LANGUAGE}}" = "go" ]; then
+    [[ -s "$GVM_ROOT/scripts/gvm" ]] && source "$GVM_ROOT/scripts/gvm"
+    gvm use go1.21.4
+    cp -R templates/{{LANGUAGE}} {{YEAR}}/day{{DAY}}-{{LANGUAGE}}
+    curl --cookie "session=$ADVENT_OF_CODE_COOKIE" https://adventofcode.com/{{YEAR}}/day/{{DAY}}/input -o {{YEAR}}/day{{DAY}}-{{LANGUAGE}}/input.txt
+    perl -i -pe 'chomp if eof' {{YEAR}}/day{{DAY}}-{{LANGUAGE}}/input.txt
     sed -i '' '54i\
   * [Day {{DAY}}](https://adventofcode.com/{{YEAR}}/day/{{DAY}}): [Go]({{YEAR}}/day{{DAY}}-go/main.go)\
   ' README.md
@@ -25,21 +25,39 @@ gen LANGUAGE YEAR DAY:
   fi
 
   if [ "{{LANGUAGE}}" = "rust" ]; then
+    cp -R templates/{{LANGUAGE}} {{YEAR}}/day{{DAY}}-{{LANGUAGE}}
+    curl --cookie "session=$ADVENT_OF_CODE_COOKIE" https://adventofcode.com/{{YEAR}}/day/{{DAY}}/input -o {{YEAR}}/day{{DAY}}-{{LANGUAGE}}/input.txt
+    perl -i -pe 'chomp if eof' {{YEAR}}/day{{DAY}}-{{LANGUAGE}}/input.txt
     sed -i '' '54i\
   * [Day {{DAY}}](https://adventofcode.com/{{YEAR}}/day/{{DAY}}): [Rust]({{YEAR}}/day{{DAY}}-rust/src/lib.rs)\
   ' README.md
   fi
 
   if [ "{{LANGUAGE}}" = "python" ]; then
+    cp -R templates/{{LANGUAGE}} {{YEAR}}/day{{DAY}}-{{LANGUAGE}}
+    curl --cookie "session=$ADVENT_OF_CODE_COOKIE" https://adventofcode.com/{{YEAR}}/day/{{DAY}}/input -o {{YEAR}}/day{{DAY}}-{{LANGUAGE}}/input.txt
+    perl -i -pe 'chomp if eof' {{YEAR}}/day{{DAY}}-{{LANGUAGE}}/input.txt
     sed -i '' '54i\
   * [Day {{DAY}}](https://adventofcode.com/{{YEAR}}/day/{{DAY}}): [Python]({{YEAR}}/day{{DAY}}-python/main.py)\
   ' README.md
   fi
 
   if [ "{{LANGUAGE}}" = "haskell" ]; then
-    sed -i '' '54i\
-  * [Day {{DAY}}](https://adventofcode.com/{{YEAR}}/day/{{DAY}}): [Haskell]({{YEAR}}/day{{DAY}}-haskell/Main.hs)\
-  ' README.md
+    cd {{YEAR}}
+    stack new day{{DAY}}-haskell
+    cd ..
+    cp templates/haskell/Justfile {{YEAR}}/day{{DAY}}-{{LANGUAGE}}
+    sed -i -e 's/X/{{DAY}}/' {{YEAR}}/day{{DAY}}-{{LANGUAGE}}/Justfile
+    rm {{YEAR}}/day{{DAY}}-{{LANGUAGE}}/Justfile-e
+    cp templates/haskell/Lib/* {{YEAR}}/day{{DAY}}-{{LANGUAGE}}/src
+    rm {{YEAR}}/day{{DAY}}-{{LANGUAGE}}/src/Lib.hs
+    rm {{YEAR}}/day{{DAY}}-{{LANGUAGE}}/app/Main.hs
+    cp templates/haskell/Main.hs {{YEAR}}/day{{DAY}}-{{LANGUAGE}}/app
+    cd {{YEAR}}/day{{DAY}}-{{LANGUAGE}}
+    stack setup
+    cd ../..
+    curl --cookie "session=$ADVENT_OF_CODE_COOKIE" https://adventofcode.com/{{YEAR}}/day/{{DAY}}/input -o {{YEAR}}/day{{DAY}}-{{LANGUAGE}}/input.txt
+    perl -i -pe 'chomp if eof' {{YEAR}}/day{{DAY}}-{{LANGUAGE}}/input.txt
   fi
 
   idea {{YEAR}}/day{{DAY}}-{{LANGUAGE}}
