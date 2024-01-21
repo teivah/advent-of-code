@@ -8,7 +8,7 @@ Language stats:
 
 ![](https://img.shields.io/badge/Go-84.4%25-007D9C.svg?logo=go)
 ![](https://img.shields.io/badge/Rust-15.5%25-F75208.svg?logo=rust)
-![](https://img.shields.io/badge/Haskell-6.2%25-5e5086.svg?logo=haskell)
+![](https://img.shields.io/badge/Haskell-6.9%25-5e5086.svg?logo=haskell)
 ![](https://img.shields.io/badge/Python-0.2%25-FFCD3A.svg?logo=python)
 
 ## Blog
