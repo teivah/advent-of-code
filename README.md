@@ -159,7 +159,7 @@ go get github.com/teivah/advent-of-code
 * [Day 4](https://adventofcode.com/2020/day/4): [Go](2020/day4-go/main.go)
 * [Day 3](https://adventofcode.com/2020/day/3): [Go](2020/day3-go/main.go)
 * [Day 2](https://adventofcode.com/2020/day/2): [Go](2020/day2-go/main.go)
-* [Day 1](https://adventofcode.com/2020/day/1): [Go](2020/day1-go/main.go)
+* [Day 1](https://adventofcode.com/2020/day/1): [Go](2020/day1-go/main.go), [Haskell](2020/day1-haskell/Main.hs)
 
 ### 2019
 
