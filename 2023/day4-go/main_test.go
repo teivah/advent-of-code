@@ -1,52 +1,33 @@
 package main
 
 import (
+	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-//go:nosplit
-func funcWithNoSplit() int {
-	return 1
+func TestFs1Test(t *testing.T) {
+	f, err := os.Open("test.txt")
+	require.NoError(t, err)
+	assert.Equal(t, 13, fs1(f))
 }
 
-func LoopWithNoSplit() int {
-	sum := 0
-	for i := 0; i < 1e6; i++ {
-		sum += funcWithNoSplit()
-		sum += funcWithNoSplit()
-		sum += funcWithNoSplit()
-		sum += funcWithNoSplit()
-		sum += funcWithNoSplit()
-	}
-	return sum
+func TestFs1Input(t *testing.T) {
+	f, err := os.Open("input.txt")
+	require.NoError(t, err)
+	assert.Equal(t, 26426, fs1(f))
 }
 
-func funcWithSplit() int {
-	return 1
+func TestFs2Test(t *testing.T) {
+	f, err := os.Open("test.txt")
+	require.NoError(t, err)
+	assert.Equal(t, 30, fs2(f))
 }
 
-func LoopWithSplit() int {
-	sum := 0
-	for i := 0; i < 1e6; i++ {
-		sum += funcWithSplit()
-		sum += funcWithSplit()
-		sum += funcWithSplit()
-		sum += funcWithSplit()
-		sum += funcWithSplit()
-	}
-	return sum
-}
-
-var global int
-
-func BenchmarkNoSplit(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		_ = LoopWithNoSplit()
-	}
-}
-
-func BenchmarkSplit(b *testing.B) {
-	for i := 0; i < b.N; i++ {
-		_ = LoopWithSplit()
-	}
+func TestFs2Input(t *testing.T) {
+	f, err := os.Open("input.txt")
+	require.NoError(t, err)
+	assert.Equal(t, 6227972, fs2(f))
 }
