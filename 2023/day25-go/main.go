@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"math"
 
@@ -30,7 +29,6 @@ func fs1(input io.Reader) int {
 	i := 0
 	for node := range set {
 		i++
-		fmt.Println(i, len(set))
 		visited := make(map[string]int)
 		dfs(graph, node, visited, 0)
 		best := 0
