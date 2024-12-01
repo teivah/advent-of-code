@@ -39,6 +39,7 @@ go get github.com/teivah/advent-of-code
 
 ## Solutions
 
+* [2024](#2024)
 * [2023](#2023)
 * [2022](#2022)
 * [2021](#2021)
@@ -48,6 +49,10 @@ go get github.com/teivah/advent-of-code
 * [2017](#2017)
 * [2016](#2016)
 * [2015](#2015)
+
+## 2024
+
+* [Day 1](https://adventofcode.com/2024/day/1): [Go](2024/day1-go/main.go)
 
 ### 2023
 
