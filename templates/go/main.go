@@ -1,26 +1,17 @@
 package main
 
 import (
-	"bufio"
 	"io"
+
+	aoc "github.com/teivah/advent-of-code"
 )
 
 func fs1(input io.Reader) int {
-	scanner := bufio.NewScanner(input)
-	for scanner.Scan() {
-		line := scanner.Text()
-		_ = line
-	}
-
+	_ = aoc.ReaderToStrings(input)
 	return 42
 }
 
 func fs2(input io.Reader) int {
-	scanner := bufio.NewScanner(input)
-	for scanner.Scan() {
-		line := scanner.Text()
-		_ = line
-	}
-
+	_ = aoc.ReaderToStrings(input)
 	return 42
 }
