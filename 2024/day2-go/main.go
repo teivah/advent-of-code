@@ -63,7 +63,7 @@ func isSafe2(elems []int) bool {
 		return true
 	}
 	for i := 0; i < len(elems); i++ {
-		e := aoc.SliceWithoutIndex(elems, i)
+		e := aoc.FilterSliceIndices(elems, []int{i})
 		if isSafe(e) {
 			return true
 		}
