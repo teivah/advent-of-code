@@ -59,7 +59,7 @@ gen LANGUAGE YEAR DAY:
   idea {{YEAR}}/day{{DAY}}-{{LANGUAGE}}
 
 stats:
-  runghc cmd/Main.hs
+  go run cmd/stats.go
   echo "Go lines: $(find . -name '*.go' -exec cat {} + | wc -l)"
   echo "Go lines without tests: $(find . -name '*.go' ! -name '*_test.go' -exec cat {} + | wc -l)"
   echo "Rust lines: $(find . -name '*.rs' -exec cat {} + | wc -l)"
