@@ -1,8 +1,11 @@
 module github.com/teivah/advent-of-code
 
-go 1.21
+go 1.23
 
-require github.com/stretchr/testify v1.8.4
+require (
+	github.com/stretchr/testify v1.8.4
+	golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f
+)
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
