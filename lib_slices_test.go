@@ -12,11 +12,13 @@ func TestSliceCopy(t *testing.T) {
 	assert.Equal(t, a, b)
 }
 
-func TestSliceWithoutIndex(t *testing.T) {
+func TestFilterSliceIndices(t *testing.T) {
 	a := []int{1, 2, 3, 4}
-	assert.Equal(t, []int{2, 3, 4}, SliceWithoutIndex(a, 0))
-	assert.Equal(t, []int{1, 2, 3}, SliceWithoutIndex(a, 3))
-	assert.Equal(t, []int{1, 3, 4}, SliceWithoutIndex(a, 1))
+	assert.Equal(t, []int{2, 3, 4}, FilterSliceIndices(a, []int{0}))
+	assert.Equal(t, []int{1, 2, 3}, FilterSliceIndices(a, []int{3}))
+	assert.Equal(t, []int{1, 3, 4}, FilterSliceIndices(a, []int{1}))
+	assert.Equal(t, []int{1, 3}, FilterSliceIndices(a, []int{1, 3}))
+	assert.Equal(t, []int{1, 2, 3, 4}, FilterSliceIndices(a, []int{8}))
 }
 
 func TestSliceSorted(t *testing.T) {

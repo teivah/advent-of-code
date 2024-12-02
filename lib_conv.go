@@ -72,3 +72,12 @@ func SliceToMap[K comparable, V any](s []K, f func(K) V) map[K]V {
 	}
 	return m
 }
+
+// SliceToSet converts a slice into a set.
+func SliceToSet[T comparable](s []T) map[T]bool {
+	m := make(map[T]bool)
+	for _, v := range s {
+		m[v] = true
+	}
+	return m
+}

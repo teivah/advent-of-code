@@ -1,6 +1,8 @@
 package aoc
 
 import (
+	"slices"
+
 	"golang.org/x/exp/constraints"
 )
 
@@ -10,31 +12,30 @@ func SliceCopy[T any](in []T) []T {
 	return res
 }
 
-func SliceWithoutIndex[T any](in []T, idx int) []T {
+func FilterSliceIndices[T any](in []T, indices []int) []T {
 	if len(in) == 0 {
 		return nil
 	}
 	e := SliceCopy(in)
-	if idx < 0 || idx >= len(in) {
-		panic(idx)
-	}
-	if idx == 0 {
-		return e[1:]
-	} else if idx == len(e)-1 {
-		return e[0 : len(e)-1]
-	} else {
-		return append(e[0:idx], e[idx+1:]...)
-	}
+	set := SliceToSet(indices)
+
+	i := 0
+	return slices.DeleteFunc(e, func(t T) bool {
+		defer func() {
+			i++
+		}()
+		return set[i]
+	})
 }
 
-func IsSliceSortedFunc[T constraints.Ordered](in []T, f func(a T, b T) bool) bool {
+func IsSliceSorted[T constraints.Ordered](in []T, comp func(a T, b T) bool) bool {
 	if len(in) <= 1 {
 		return true
 	}
 	prev := in[0]
 	for i := 1; i < len(in); i++ {
 		cur := in[i]
-		if !f(prev, cur) {
+		if !comp(prev, cur) {
 			return false
 		}
 		prev = cur
@@ -43,25 +44,25 @@ func IsSliceSortedFunc[T constraints.Ordered](in []T, f func(a T, b T) bool) boo
 }
 
 func IsSliceMonotonicallyIncreasing[T constraints.Ordered](in []T) bool {
-	return IsSliceSortedFunc(in, func(a T, b T) bool {
+	return IsSliceSorted(in, func(a T, b T) bool {
 		return b >= a
 	})
 }
 
 func IsSliceMonotonicallyDecreasing[T constraints.Ordered](in []T) bool {
-	return IsSliceSortedFunc(in, func(a T, b T) bool {
+	return IsSliceSorted(in, func(a T, b T) bool {
 		return b <= a
 	})
 }
 
 func IsSliceStrictlyIncreasing[T constraints.Ordered](in []T) bool {
-	return IsSliceSortedFunc(in, func(a T, b T) bool {
+	return IsSliceSorted(in, func(a T, b T) bool {
 		return b > a
 	})
 }
 
 func IsSliceStrictlyDecreasing[T constraints.Ordered](in []T) bool {
-	return IsSliceSortedFunc(in, func(a T, b T) bool {
+	return IsSliceSorted(in, func(a T, b T) bool {
 		return b < a
 	})
 }
