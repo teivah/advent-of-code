@@ -63,23 +63,10 @@ func isSafe2(elems []int) bool {
 		return true
 	}
 	for i := 0; i < len(elems); i++ {
-		e := remove(elems, i)
+		e := aoc.SliceWithoutIndex(elems, i)
 		if isSafe(e) {
 			return true
 		}
 	}
 	return false
-}
-
-func remove(elems []int, i int) []int {
-	l := len(elems)
-	if i == 0 {
-		return elems[1:]
-	}
-	if i == l-1 {
-		return elems[0 : l-1]
-	}
-	e := make([]int, len(elems))
-	copy(e, elems)
-	return append(e[0:i], e[i+1:]...)
 }
