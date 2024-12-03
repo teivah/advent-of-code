@@ -11,7 +11,7 @@ import (
 func TestRegexpFindAll(t *testing.T) {
 	re := regexp.MustCompile(`\d*`)
 	s := "123,456"
-	assert.Equal(t, []string{"123", "456"}, aoc.RegexpFindAll(re, s))
+	assert.Equal(t, []string{"123", "456"}, aoc.RegexpFindAll(s, re))
 }
 
 func TestRegexpFindIndices(t *testing.T) {
@@ -20,7 +20,7 @@ func TestRegexpFindIndices(t *testing.T) {
 	assert.Equal(t, []aoc.CapturingGroup{
 		{0, 3},
 		{4, 7},
-	}, aoc.RegexpFindIndices(re, s))
+	}, aoc.RegexpFindIndices(s, re))
 }
 
 func TestRegexpFindSubmatches(t *testing.T) {
@@ -43,5 +43,5 @@ func TestRegexpFindSubmatches(t *testing.T) {
 				{Start: 16, End: 17},
 			},
 		},
-	}, aoc.RegexpFindSubmatches(re, s))
+	}, aoc.RegexpFindSubmatches(s, re))
 }
