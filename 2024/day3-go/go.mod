@@ -4,7 +4,7 @@ go 1.23.3
 
 require (
 	github.com/stretchr/testify v1.10.0
-	github.com/teivah/advent-of-code v1.10.3
+	github.com/teivah/advent-of-code v1.11.0
 )
 
 require (

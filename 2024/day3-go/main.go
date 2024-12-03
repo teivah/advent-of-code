@@ -26,35 +26,32 @@ func fs1(input io.Reader) int {
 func fs2(input io.Reader) int {
 	lines := aoc.ReaderToStrings(input)
 
-	pq := aoc.NewPriorityQueue[elem](func(a, b elem) int {
-		return a.position - b.position
+	pq := aoc.NewPriorityQueue[elem](func(a, b elem) bool {
+		return a.position < b.position
 	})
 	res := 0
 	curDo := true
 	for _, line := range lines {
-		do := aoc.IndexAll(line, "do()")
-		for _, v := range do {
+		for _, v := range aoc.FindStringIndices(line, "do()") {
 			pq.Push(elem{
 				position: v,
 				do:       true,
 			})
 		}
-		dont := aoc.IndexAll(line, "don't()")
-		for _, v := range dont {
+		for _, v := range aoc.FindStringIndices(line, "don't()") {
 			pq.Push(elem{
 				position: v,
 				dont:     true,
 			})
 		}
 
-		matches := re.FindAllStringSubmatchIndex(line, -1)
-		for _, match := range matches {
+		for _, match := range aoc.RegexpFindSubmatches(line, re) {
 			m := mul{
-				x: aoc.StringToInt(line[match[2]:match[3]]),
-				y: aoc.StringToInt(line[match[4]:match[5]]),
+				x: aoc.StringToInt(line[match.CapturingGroups[0].Start:match.CapturingGroups[0].End]),
+				y: aoc.StringToInt(line[match.CapturingGroups[1].Start:match.CapturingGroups[1].End]),
 			}
 			pq.Push(elem{
-				position: match[0],
+				position: match.Start,
 				mul:      true,
 				vmul:     m,
 			})
