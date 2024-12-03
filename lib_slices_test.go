@@ -28,5 +28,5 @@ func TestSliceSorted(t *testing.T) {
 }
 
 func TestCountSliceOccurrence(t *testing.T) {
-	assert.Equal(t, map[int]int{1: 1, 2: 2}, CountSliceOccurrence([]int{2, 1, 2}))
+	assert.Equal(t, map[int]int{1: 1, 2: 2}, SliceCount([]int{2, 1, 2}))
 }

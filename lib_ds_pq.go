@@ -3,11 +3,11 @@ package aoc
 // PriorityQueue is a priority queue implementation.
 type PriorityQueue[T comparable] struct {
 	items      []T
-	comparator func(a, b T) int
+	comparator func(a, b T) bool
 }
 
 // NewPriorityQueue creates a new PriorityQueue using a comparator.
-func NewPriorityQueue[T comparable](comparator func(a, b T) int) PriorityQueue[T] {
+func NewPriorityQueue[T comparable](comparator func(a, b T) bool) PriorityQueue[T] {
 	return PriorityQueue[T]{comparator: comparator}
 }
 
@@ -45,7 +45,7 @@ func (pq *PriorityQueue[T]) IsEmpty() bool {
 func (pq *PriorityQueue[T]) heapifyUp(index int) {
 	for index > 0 {
 		parentIndex := (index - 1) / 2
-		if pq.comparator(pq.items[index], pq.items[parentIndex]) < 0 {
+		if pq.comparator(pq.items[index], pq.items[parentIndex]) {
 			pq.items[index], pq.items[parentIndex] = pq.items[parentIndex], pq.items[index]
 			index = parentIndex
 		} else {
@@ -60,11 +60,11 @@ func (pq *PriorityQueue[T]) heapifyDown(index int) {
 		rightChild := 2*index + 2
 		smallest := index
 
-		if leftChild < len(pq.items) && pq.comparator(pq.items[leftChild], pq.items[smallest]) < 0 {
+		if leftChild < len(pq.items) && pq.comparator(pq.items[leftChild], pq.items[smallest]) {
 			smallest = leftChild
 		}
 
-		if rightChild < len(pq.items) && pq.comparator(pq.items[rightChild], pq.items[smallest]) < 0 {
+		if rightChild < len(pq.items) && pq.comparator(pq.items[rightChild], pq.items[smallest]) {
 			smallest = rightChild
 		}
 

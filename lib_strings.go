@@ -5,8 +5,8 @@ import (
 	"strings"
 )
 
-// IndexAll returns all the indices from a given string into a string.
-func IndexAll(s string, search string) []int {
+// FindStringIndices returns all the indices from a given string into a string.
+func FindStringIndices(s string, search string) []int {
 	i := 0
 	var res []int
 	for i < len(s) {

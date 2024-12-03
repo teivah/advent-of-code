@@ -67,7 +67,7 @@ func IsSliceStrictlyDecreasing[T constraints.Ordered](in []T) bool {
 	})
 }
 
-func CountSliceOccurrence[T comparable](in []T) map[T]int {
+func SliceCount[T comparable](in []T) map[T]int {
 	res := make(map[T]int)
 	for _, v := range in {
 		res[v]++

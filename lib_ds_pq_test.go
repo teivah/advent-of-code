@@ -11,8 +11,8 @@ func TestNewPriorityQueue(t *testing.T) {
 	type person struct {
 		age int
 	}
-	pq := aoc.NewPriorityQueue[person](func(a, b person) int {
-		return a.age - b.age
+	pq := aoc.NewPriorityQueue[person](func(a, b person) bool {
+		return a.age < b.age
 	})
 	pq.Push(person{age: 2})
 	pq.Push(person{age: 1})
