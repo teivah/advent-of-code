@@ -5,12 +5,12 @@ import (
 )
 
 // RegexpFindAll finds all occurrences of a regexp.
-func RegexpFindAll(s string, re *regexp.Regexp) []string {
+func RegexpFindAll(re *regexp.Regexp, s string) []string {
 	return re.FindAllString(s, -1)
 }
 
 // RegexpFindIndices finds all the indices of a regexp.
-func RegexpFindIndices(s string, re *regexp.Regexp) []CapturingGroup {
+func RegexpFindIndices(re *regexp.Regexp, s string) []CapturingGroup {
 	var res []CapturingGroup
 	for _, v := range re.FindAllStringIndex(s, -1) {
 		res = append(res, CapturingGroup{v[0], v[1]})
@@ -32,7 +32,7 @@ type CapturingGroup struct {
 }
 
 // RegexpFindSubmatches find all submatches and related capturing groups.
-func RegexpFindSubmatches(s string, re *regexp.Regexp) []Submatch {
+func RegexpFindSubmatches(re *regexp.Regexp, s string) []Submatch {
 	var res []Submatch
 	for _, match := range re.FindAllStringSubmatchIndex(s, -1) {
 		sub := Submatch{Start: match[0], End: match[1]}
