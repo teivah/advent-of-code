@@ -7,7 +7,7 @@ import (
 )
 
 func fs1(input io.Reader) int {
-	board := aoc.NewBoard(parsePositions(input))
+	board := aoc.NewBoardFromReader(input, func(r rune) rune { return r })
 	res := 0
 	word := []rune("XMAS")
 	for pos := range board.Positions {
@@ -36,19 +36,8 @@ func expand(board aoc.Board[rune], pos aoc.Position, dir aoc.Direction, word []r
 	return expand(board, pos.Move(dir, 1), dir, word[1:])
 }
 
-func parsePositions(input io.Reader) map[aoc.Position]rune {
-	lines := aoc.ReaderToStrings(input)
-	m := make(map[aoc.Position]rune)
-	for row, line := range lines {
-		for col, v := range line {
-			m[aoc.NewPosition(row, col)] = v
-		}
-	}
-	return m
-}
-
 func fs2(input io.Reader) int {
-	board := aoc.NewBoard(parsePositions(input))
+	board := aoc.NewBoardFromReader(input, func(r rune) rune { return r })
 	res := 0
 	for pos := range board.Positions {
 		res += xmas(board, pos)
