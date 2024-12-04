@@ -218,6 +218,18 @@ func NewBoard[T any](positions map[Position]T) Board[T] {
 	return board
 }
 
+// NewBoardFromReader creates a board from an input reader.
+func NewBoardFromReader[T any](input io.Reader, f func(r rune) T) Board[T] {
+	lines := ReaderToStrings(input)
+	positions := make(map[Position]T, len(lines)*len(lines[0]))
+	for row, line := range lines {
+		for col, r := range line {
+			positions[NewPosition(row, col)] = f(r)
+		}
+	}
+	return NewBoard(positions)
+}
+
 // Get returns the value at a give position.
 func (b Board[T]) Get(pos Position) T {
 	return b.Positions[pos]
