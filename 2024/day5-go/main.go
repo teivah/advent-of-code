@@ -3,7 +3,7 @@ package main
 import (
 	"io"
 
-	aoc "github.com/teivah/advent-of-code"
+	"github.com/teivah/go-aoc"
 )
 
 func fs1(input io.Reader) int {
@@ -11,7 +11,7 @@ func fs1(input io.Reader) int {
 	before, after := dep(groups[0])
 	res := 0
 	for _, line := range groups[1] {
-		res += isRightOrder(before, after, line)
+		res += correctOrder(before, after, line)
 	}
 	return res
 }
@@ -24,24 +24,13 @@ func dep(lines []string) (map[int]map[int]bool, map[int]map[int]bool) {
 		src := del.GetInt(0)
 		dst := del.GetInt(1)
 
-		m, ok := before[src]
-		if !ok {
-			m = make(map[int]bool)
-			before[src] = m
-		}
-		m[dst] = true
-
-		m, ok = after[dst]
-		if !ok {
-			m = make(map[int]bool)
-			after[dst] = m
-		}
-		m[src] = true
+		aoc.InnerMapGet(before, src)[dst] = true
+		aoc.InnerMapGet(after, dst)[src] = true
 	}
 	return before, after
 }
 
-func isRightOrder(before, after map[int]map[int]bool, line string) int {
+func correctOrder(before, after map[int]map[int]bool, line string) int {
 	del := aoc.NewDelimiter(line, ",")
 	ints := del.GetInts()
 	for i := 0; i < len(ints); i++ {
@@ -49,15 +38,11 @@ func isRightOrder(before, after map[int]map[int]bool, line string) int {
 			x := ints[i]
 			y := ints[j]
 
-			if m, ok := before[y]; ok {
-				if m[x] {
-					return 0
-				}
+			if m, ok := before[y]; ok && m[x] {
+				return 0
 			}
-			if m, ok := after[x]; ok {
-				if m[y] {
-					return 0
-				}
+			if m, ok := after[x]; ok && m[y] {
+				return 0
 			}
 		}
 	}
@@ -65,7 +50,17 @@ func isRightOrder(before, after map[int]map[int]bool, line string) int {
 	return ints[len(ints)/2]
 }
 
-func isIncorrectOrder(before, after map[int]map[int]bool, line string) int {
+func fs2(input io.Reader) int {
+	groups := aoc.StringGroups(aoc.ReaderToStrings(input))
+	before, after := dep(groups[0])
+	res := 0
+	for _, line := range groups[1] {
+		res += incorrectOrder(before, after, line)
+	}
+	return res
+}
+
+func incorrectOrder(before, after map[int]map[int]bool, line string) int {
 	del := aoc.NewDelimiter(line, ",")
 	ints := del.GetInts()
 	invalid := false
@@ -75,17 +70,13 @@ outer:
 			x := ints[i]
 			y := ints[j]
 
-			if m, ok := before[y]; ok {
-				if m[x] {
-					invalid = true
-					break outer
-				}
+			if m, ok := before[y]; ok && m[x] {
+				invalid = true
+				break outer
 			}
-			if m, ok := after[x]; ok {
-				if m[y] {
-					invalid = true
-					break outer
-				}
+			if m, ok := after[x]; ok && m[y] {
+				invalid = true
+				break outer
 			}
 		}
 	}
@@ -112,14 +103,4 @@ outer:
 	}
 
 	panic("not valid")
-}
-
-func fs2(input io.Reader) int {
-	groups := aoc.StringGroups(aoc.ReaderToStrings(input))
-	before, after := dep(groups[0])
-	res := 0
-	for _, line := range groups[1] {
-		res += isIncorrectOrder(before, after, line)
-	}
-	return res
 }
