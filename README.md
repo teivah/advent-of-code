@@ -17,26 +17,6 @@ In 2023, I shared my experience with the Advent of Code on my blog:
 
 [<img src="post.png">](https://teivah.medium.com/advent-of-code-b5bf35a6d115)
 
-## AoC Library
-
-### Templates
-
-I created a [justfile](justfile) ([casey/just](https://github.com/casey/just)) that:
-* Downloads the input of the day (to authenticate, you have to set up a `ADVENT_OF_CODE_COOKIE` environment variable, see [this issue](https://github.com/wimglenn/advent-of-code-wim/issues/1) to understand how to extract your session cookie)
-* Generates a skeleton project (Go, Rust, or Python)
-* Configures the required dependencies (Go only)
-
-### Go
-
-I developed a Go library to help me solve unimportant topics as quickly as possible (e.g., puzzle input parsing) to focus on the concrete problem:
-
-* Source: [lib branch](https://github.com/teivah/advent-of-code/tree/lib)
-* [Documentation](https://pkg.go.dev/github.com/teivah/advent-of-code)
-
-```shell
-go get github.com/teivah/advent-of-code
-```
-
 ## Solutions
 
 * [2024](#2024)
