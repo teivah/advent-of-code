@@ -3,7 +3,7 @@ package main
 import (
 	"io"
 
-	aoc "github.com/teivah/advent-of-code"
+	"github.com/teivah/go-aoc"
 )
 
 func fs1(input io.Reader) int {
