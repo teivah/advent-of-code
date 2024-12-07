@@ -14,7 +14,7 @@ gen LANGUAGE YEAR DAY:
     go mod init day{{YEAR}}-{{DAY}}
     go mod tidy
     go get github.com/stretchr/testify
-    go get github.com/teivah/go-aoc
+    go get github.com/teivah/go-aoc@main
     go get golang.org/x/exp
 
     cd ../..
