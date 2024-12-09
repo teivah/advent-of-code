@@ -8,6 +8,8 @@ github.com/teivah/advent-of-code v1.11.2 h1:3pQaFLEAyXHJDk+ML8PFl5cVMAqSxXFEIuiM
 github.com/teivah/advent-of-code v1.11.2/go.mod h1:GMeHLiy72IT5PDxG9npWyHzfahRQ1AejM7zhKLsD0Ik=
 github.com/teivah/go-aoc v0.0.0-20241208173340-ea87c68409cb h1:7MskrmKKoK2gcAPq1DTtxzxHvQ3iWmG+leIxEcXm/LI=
 github.com/teivah/go-aoc v0.0.0-20241208173340-ea87c68409cb/go.mod h1:lo05hi8Ik87LoZb1kUPhgcMDGi33Z7TpE2iurnfa1W8=
+github.com/teivah/go-aoc v0.0.0-20241209173248-51798021f5f9 h1:DWHLoojO6003wpq4jl+AGTZF9J9+RpgiWkif5f740Jk=
+github.com/teivah/go-aoc v0.0.0-20241209173248-51798021f5f9/go.mod h1:lo05hi8Ik87LoZb1kUPhgcMDGi33Z7TpE2iurnfa1W8=
 github.com/teivah/go-aoc v1.0.0 h1:dZRSUGYZuVGf6ScJsu0CuQM+7AOHRfgBw8OHI/KhPOU=
 github.com/teivah/go-aoc v1.0.0/go.mod h1:lo05hi8Ik87LoZb1kUPhgcMDGi33Z7TpE2iurnfa1W8=
 golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f h1:XdNn9LlyWAhLVp6P/i8QYBW+hlyhrhei9uErw2B5GJo=

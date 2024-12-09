@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io"
 
 	"github.com/teivah/go-aoc"
@@ -60,17 +59,6 @@ func fs1(input io.Reader) int {
 		res += position * c.digit
 	}
 	return res
-}
-
-func printDisk(disk []cell) {
-	for _, c := range disk {
-		if c.empty {
-			fmt.Printf(".")
-		} else {
-			fmt.Printf("x")
-		}
-	}
-	fmt.Println()
 }
 
 type Empty struct {
@@ -145,7 +133,7 @@ func fs2(input io.Reader) int {
 					disk[r-i] = cell{empty: true}
 				}
 				if length == empty.free {
-					emptys = append(emptys[:pos], emptys[pos+1:]...)
+					emptys = aoc.DeleteSliceIndex(emptys, pos, false)
 				} else {
 					emptys[pos].free = empty.free - length
 					emptys[pos].index += length
