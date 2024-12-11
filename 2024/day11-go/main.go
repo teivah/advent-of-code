@@ -10,46 +10,45 @@ import (
 func fs(input io.Reader, count int) int {
 	del := aoc.NewDelimiter(aoc.ReaderToString(input), " ")
 	digits := del.GetInts()
-	head := aoc.NewNode(digits[0])
-	cur := head
-	for i := 1; i < len(digits); i++ {
-		cur.Next = aoc.NewNode(digits[i])
-		cur = cur.Next
-	}
-
-	for i := 0; i < count; i++ {
-		cur = head
-		for cur != nil {
-			s := fmt.Sprintf("%d", cur.Data)
-			switch {
-			case cur.Data == 0:
-				cur.Data = 1
-				cur = cur.Next
-			case len(s)%2 == 0:
-				a := aoc.StringToInt(s[:len(s)/2])
-				b := aoc.StringToInt(s[len(s)/2:])
-				cur.Data = a
-				oldNext := cur.Next
-				cur.Next = aoc.NewNode(b)
-				cur.Next.Next = oldNext
-				cur = oldNext
-			default:
-				cur.Data *= 2024
-				cur = cur.Next
-			}
-		}
-	}
-
 	res := 0
-	cur = head
-	for cur != nil {
-		res++
-		cur = cur.Next
+	s := solver{dp: map[key]int{}}
+	for _, digit := range digits {
+		res += s.solve(digit, count)
 	}
 	return res
 }
 
-func fs2(input io.Reader) int {
-	_ = aoc.ReaderToStrings(input)
-	return 42
+type key struct {
+	n     int
+	count int
+}
+
+type solver struct {
+	dp map[key]int
+}
+
+func (s solver) solve(n int, count int) int {
+	if count == 0 {
+		return 1
+	}
+
+	if v, ok := s.dp[key{n, count}]; ok {
+		return v
+	}
+
+	digits := fmt.Sprintf("%d", n)
+	k := key{n, count}
+	res := 0
+	switch {
+	case n == 0:
+		res = s.solve(1, count-1)
+	case len(digits)%2 == 0:
+		a := aoc.StringToInt(digits[:len(digits)/2])
+		b := aoc.StringToInt(digits[len(digits)/2:])
+		res = s.solve(a, count-1) + s.solve(b, count-1)
+	default:
+		res = s.solve(n*2024, count-1)
+	}
+	s.dp[k] = res
+	return res
 }
