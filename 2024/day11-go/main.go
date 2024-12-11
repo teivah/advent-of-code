@@ -8,8 +8,7 @@ import (
 )
 
 func fs(input io.Reader, count int) int {
-	del := aoc.NewDelimiter(aoc.ReaderToString(input), " ")
-	digits := del.GetInts()
+	digits := aoc.NewDelimiter(aoc.ReaderToString(input), " ").GetInts()
 	res := 0
 	s := solver{dp: map[key]int{}}
 	for _, digit := range digits {
@@ -31,7 +30,6 @@ func (s solver) solve(n int, count int) int {
 	if count == 0 {
 		return 1
 	}
-
 	if v, ok := s.dp[key{n, count}]; ok {
 		return v
 	}
@@ -43,9 +41,8 @@ func (s solver) solve(n int, count int) int {
 	case n == 0:
 		res = s.solve(1, count-1)
 	case len(digits)%2 == 0:
-		a := aoc.StringToInt(digits[:len(digits)/2])
-		b := aoc.StringToInt(digits[len(digits)/2:])
-		res = s.solve(a, count-1) + s.solve(b, count-1)
+		res = s.solve(aoc.StringToInt(digits[:len(digits)/2]), count-1) +
+			s.solve(aoc.StringToInt(digits[len(digits)/2:]), count-1)
 	default:
 		res = s.solve(n*2024, count-1)
 	}
