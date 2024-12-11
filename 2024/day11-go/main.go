@@ -21,7 +21,7 @@ type solver struct {
 	dp map[aoc.Pair[int, int]]int
 }
 
-func (s solver) solve(n int, count int) int {
+func (s solver) solve(n int, count int) (res int) {
 	if count == 0 {
 		return 1
 	}
@@ -29,18 +29,18 @@ func (s solver) solve(n int, count int) int {
 	if v, ok := s.dp[k]; ok {
 		return v
 	}
+	defer func() {
+		s.dp[k] = res
+	}()
 
-	var res int
 	digits := strconv.Itoa(n)
 	switch {
 	case n == 0:
-		res = s.solve(1, count-1)
+		return s.solve(1, count-1)
 	case len(digits)%2 == 0:
-		res = s.solve(aoc.StringToInt(digits[:len(digits)/2]), count-1) +
+		return s.solve(aoc.StringToInt(digits[:len(digits)/2]), count-1) +
 			s.solve(aoc.StringToInt(digits[len(digits)/2:]), count-1)
 	default:
-		res = s.solve(n*2024, count-1)
+		return s.solve(n*2024, count-1)
 	}
-	s.dp[k] = res
-	return res
 }
