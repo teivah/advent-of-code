@@ -10,7 +10,7 @@ import (
 func fs(input io.Reader, count int) int {
 	digits := aoc.NewDelimiter(aoc.ReaderToString(input), " ").GetInts()
 	res := 0
-	s := solver{dp: map[aoc.Pair[int, int]]int{}}
+	s := solver{dp: make(map[aoc.Pair[int, int]]int)}
 	for _, digit := range digits {
 		res += s.solve(digit, count)
 	}
