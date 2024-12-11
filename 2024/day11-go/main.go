@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"io"
+	"strconv"
 
 	"github.com/teivah/go-aoc"
 )
@@ -10,33 +10,28 @@ import (
 func fs(input io.Reader, count int) int {
 	digits := aoc.NewDelimiter(aoc.ReaderToString(input), " ").GetInts()
 	res := 0
-	s := solver{dp: map[key]int{}}
+	s := solver{dp: map[aoc.Pair[int, int]]int{}}
 	for _, digit := range digits {
 		res += s.solve(digit, count)
 	}
 	return res
 }
 
-type key struct {
-	n     int
-	count int
-}
-
 type solver struct {
-	dp map[key]int
+	dp map[aoc.Pair[int, int]]int
 }
 
 func (s solver) solve(n int, count int) int {
 	if count == 0 {
 		return 1
 	}
-	if v, ok := s.dp[key{n, count}]; ok {
+	k := aoc.Pair[int, int]{n, count}
+	if v, ok := s.dp[k]; ok {
 		return v
 	}
 
-	digits := fmt.Sprintf("%d", n)
-	k := key{n, count}
-	res := 0
+	var res int
+	digits := strconv.Itoa(n)
 	switch {
 	case n == 0:
 		res = s.solve(1, count-1)
