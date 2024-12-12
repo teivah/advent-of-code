@@ -56,57 +56,92 @@ func fs2(input io.Reader) int {
 		if after == before {
 			continue
 		}
-
-		local := 0
-
-		horizontal := aoc.MapCopy(external)
-		for pos := range horizontal {
-			exists := make(map[aoc.Direction]bool)
-			expand(pos, aoc.Left, internal, horizontal, exists)
-			horizontal[pos] = true
-			expand(pos, aoc.Right, internal, horizontal, exists)
-			local += len(exists)
-			//fmt.Println("horizontal", pos, len(exists))
-		}
-
-		vertical := aoc.MapCopy(external)
-		for pos := range vertical {
-			exists := make(map[aoc.Direction]bool)
-			expand(pos, aoc.Up, internal, vertical, exists)
-			vertical[pos] = true
-			expand(pos, aoc.Down, internal, vertical, exists)
-			local += len(exists)
-			//fmt.Println("vertical", pos, len(exists))
-		}
-		//fmt.Println(after-before, local)
-		res += (after - before) * local
+		count := countSides(board, internal)
+		res += (after - before) * count
 	}
 	return res
 }
 
-func expand(pos aoc.Position, dir aoc.Direction, internal, external map[aoc.Position]bool, exists map[aoc.Direction]bool) {
-	if !external[pos] {
-		return
+func countSides(board aoc.Board[rune], internal map[aoc.Position]bool) int {
+	count := 0
+
+	// From left
+	for col := 0; col < board.MaxCols; col++ {
+		for row := 0; row < board.MaxRows; row++ {
+			cur := aoc.NewPosition(row, col)
+			prev := aoc.NewPosition(row, col-1)
+			if internal[cur] && !internal[prev] {
+				count++
+				row++
+				for ; row < board.MaxRows; row++ {
+					cur := aoc.NewPosition(row, col)
+					prev := aoc.NewPosition(row, col-1)
+					if !(internal[cur] && !internal[prev]) {
+						break
+					}
+				}
+			}
+		}
 	}
 
-	switch dir {
-	case aoc.Left, aoc.Right:
-		if internal[pos.Move(aoc.Up, 1)] {
-			exists[aoc.Up] = true
-		}
-		if internal[pos.Move(aoc.Down, 1)] {
-			exists[aoc.Down] = true
-		}
-	case aoc.Up, aoc.Down:
-		if internal[pos.Move(aoc.Left, 1)] {
-			exists[aoc.Left] = true
-		}
-		if internal[pos.Move(aoc.Right, 1)] {
-			exists[aoc.Right] = true
+	// From right
+	for col := board.MaxCols - 1; col >= 0; col-- {
+		for row := 0; row < board.MaxRows; row++ {
+			cur := aoc.NewPosition(row, col)
+			prev := aoc.NewPosition(row, col+1)
+			if internal[cur] && !internal[prev] {
+				count++
+				row++
+				for ; row < board.MaxRows; row++ {
+					cur := aoc.NewPosition(row, col)
+					prev := aoc.NewPosition(row, col+1)
+					if !(internal[cur] && !internal[prev]) {
+						break
+					}
+				}
+			}
 		}
 	}
-	delete(external, pos)
-	expand(pos.Move(dir, 1), dir, internal, external, exists)
+
+	// From top
+	for row := 0; row < board.MaxRows; row++ {
+		for col := 0; col < board.MaxCols; col++ {
+			cur := aoc.NewPosition(row, col)
+			prev := aoc.NewPosition(row-1, col)
+			if internal[cur] && !internal[prev] {
+				count++
+				col++
+				for ; col < board.MaxCols; col++ {
+					cur := aoc.NewPosition(row, col)
+					prev := aoc.NewPosition(row-1, col)
+					if !(internal[cur] && !internal[prev]) {
+						break
+					}
+				}
+			}
+		}
+	}
+
+	// From bottom
+	for row := board.MaxRows - 1; row >= 0; row-- {
+		for col := 0; col < board.MaxCols; col++ {
+			cur := aoc.NewPosition(row, col)
+			prev := aoc.NewPosition(row+1, col)
+			if internal[cur] && !internal[prev] {
+				count++
+				col++
+				for ; col < board.MaxCols; col++ {
+					cur := aoc.NewPosition(row, col)
+					prev := aoc.NewPosition(row+1, col)
+					if !(internal[cur] && !internal[prev]) {
+						break
+					}
+				}
+			}
+		}
+	}
+
+	return count
 }
 
 func sides(r rune, board aoc.Board[rune], pos aoc.Position, visited, internal, external map[aoc.Position]bool) {
