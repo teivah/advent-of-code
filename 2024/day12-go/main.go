@@ -28,14 +28,11 @@ func fs2(input io.Reader) int {
 	res := 0
 	for pos, r := range board.Positions {
 		shape := make(map[aoc.Position]bool)
-		before := len(visited)
-		_ = perimeter(r, board, pos, visited, shape)
-		after := len(visited)
-		if after == before {
+		perimeter(r, board, pos, visited, shape)
+		if len(shape) == 0 {
 			continue
 		}
-		count := countSides(board, shape)
-		res += (after - before) * count
+		res += len(shape) * countSides(board, shape)
 	}
 	return res
 }
@@ -61,17 +58,17 @@ func perimeter(r rune, board aoc.Board[rune], pos aoc.Position, visited, shape m
 		perimeter(r, board, pos.Move(aoc.Down, 1), visited, shape)
 }
 
-func countSides(board aoc.Board[rune], internal map[aoc.Position]bool) int {
+func countSides(board aoc.Board[rune], shape map[aoc.Position]bool) int {
 	count := 0
 
 	// From left
 	for col := 0; col < board.MaxCols; col++ {
 		for row := 0; row < board.MaxRows; row++ {
-			if internal[aoc.NewPosition(row, col)] && !internal[aoc.NewPosition(row, col-1)] {
+			if shape[aoc.NewPosition(row, col)] && !shape[aoc.NewPosition(row, col-1)] {
 				count++
 				row++
 				for ; row < board.MaxRows; row++ {
-					if !(internal[aoc.NewPosition(row, col)] && !internal[aoc.NewPosition(row, col-1)]) {
+					if !(shape[aoc.NewPosition(row, col)] && !shape[aoc.NewPosition(row, col-1)]) {
 						break
 					}
 				}
@@ -82,11 +79,11 @@ func countSides(board aoc.Board[rune], internal map[aoc.Position]bool) int {
 	// From right
 	for col := board.MaxCols - 1; col >= 0; col-- {
 		for row := 0; row < board.MaxRows; row++ {
-			if internal[aoc.NewPosition(row, col)] && !internal[aoc.NewPosition(row, col+1)] {
+			if shape[aoc.NewPosition(row, col)] && !shape[aoc.NewPosition(row, col+1)] {
 				count++
 				row++
 				for ; row < board.MaxRows; row++ {
-					if !(internal[aoc.NewPosition(row, col)] && !internal[aoc.NewPosition(row, col+1)]) {
+					if !(shape[aoc.NewPosition(row, col)] && !shape[aoc.NewPosition(row, col+1)]) {
 						break
 					}
 				}
@@ -97,11 +94,11 @@ func countSides(board aoc.Board[rune], internal map[aoc.Position]bool) int {
 	// From top
 	for row := 0; row < board.MaxRows; row++ {
 		for col := 0; col < board.MaxCols; col++ {
-			if internal[aoc.NewPosition(row, col)] && !internal[aoc.NewPosition(row-1, col)] {
+			if shape[aoc.NewPosition(row, col)] && !shape[aoc.NewPosition(row-1, col)] {
 				count++
 				col++
 				for ; col < board.MaxCols; col++ {
-					if !(internal[aoc.NewPosition(row, col)] && !internal[aoc.NewPosition(row-1, col)]) {
+					if !(shape[aoc.NewPosition(row, col)] && !shape[aoc.NewPosition(row-1, col)]) {
 						break
 					}
 				}
@@ -112,11 +109,11 @@ func countSides(board aoc.Board[rune], internal map[aoc.Position]bool) int {
 	// From bottom
 	for row := board.MaxRows - 1; row >= 0; row-- {
 		for col := 0; col < board.MaxCols; col++ {
-			if internal[aoc.NewPosition(row, col)] && !internal[aoc.NewPosition(row+1, col)] {
+			if shape[aoc.NewPosition(row, col)] && !shape[aoc.NewPosition(row+1, col)] {
 				count++
 				col++
 				for ; col < board.MaxCols; col++ {
-					if !(internal[aoc.NewPosition(row, col)] && !internal[aoc.NewPosition(row+1, col)]) {
+					if !(shape[aoc.NewPosition(row, col)] && !shape[aoc.NewPosition(row+1, col)]) {
 						break
 					}
 				}
