@@ -25,19 +25,19 @@ func fs1(input io.Reader) int {
 
 	antinodes := make(map[aoc.Position]struct{})
 	for _, positions := range antennas {
-		findAntinodes(board, positions, antinodes)
+		findAntinodes(board, positions, antinodes, setAntinode)
 	}
 
 	return len(antinodes)
 }
 
-func findAntinodes(board aoc.Board[cell], positions []aoc.Position, antinodes map[aoc.Position]struct{}) {
+func findAntinodes(board aoc.Board[cell], positions []aoc.Position, antinodes map[aoc.Position]struct{}, f func(board aoc.Board[cell], x, y aoc.Position, antinodes map[aoc.Position]struct{})) {
 	for i := 0; i < len(positions); i++ {
 		for j := i + 1; j < len(positions); j++ {
 			x := positions[i]
 			y := positions[j]
-			setAntinode(board, x, y, antinodes)
-			setAntinode(board, y, x, antinodes)
+			f(board, x, y, antinodes)
+			f(board, y, x, antinodes)
 		}
 	}
 }
@@ -74,24 +74,13 @@ func fs2(input io.Reader) int {
 		if len(positions) <= 1 {
 			continue
 		}
-		findAntinodes2(board, positions, antinodes)
+		findAntinodes(board, positions, antinodes, setAntinode2)
 		for _, pos := range positions {
 			antinodes[pos] = struct{}{}
 		}
 	}
 
 	return len(antinodes)
-}
-
-func findAntinodes2(board aoc.Board[cell], positions []aoc.Position, antinodes map[aoc.Position]struct{}) {
-	for i := 0; i < len(positions); i++ {
-		for j := i + 1; j < len(positions); j++ {
-			x := positions[i]
-			y := positions[j]
-			setAntinode2(board, x, y, antinodes)
-			setAntinode2(board, y, x, antinodes)
-		}
-	}
 }
 
 func setAntinode2(board aoc.Board[cell], x, y aoc.Position, antinodes map[aoc.Position]struct{}) {
