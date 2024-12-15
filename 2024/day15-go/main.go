@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"sort"
 
@@ -58,25 +57,6 @@ func fs1(input io.Reader) int {
 		}
 	}
 	return res
-}
-
-func display(board aoc.Board[Cell2]) {
-	fmt.Println(board.String(func(cell Cell2) rune {
-		switch {
-		default:
-			panic(cell)
-		case cell.robot:
-			return '@'
-		case cell.wall:
-			return '#'
-		case cell.empty:
-			return '.'
-		case cell.boxStart:
-			return '['
-		case cell.boxEnd:
-			return ']'
-		}
-	}, 'x'))
 }
 
 func move(pos aoc.Position, dir aoc.Direction, board aoc.Board[Cell]) aoc.Position {
@@ -143,12 +123,10 @@ func fs2(input io.Reader) int {
 		}
 	})
 
-	//display(board)
 	i := -1
 	for _, instructions := range lines[1] {
 		for _, instruction := range instructions {
 			i++
-			//fmt.Println(i, string(instruction))
 			switch instruction {
 			default:
 				panic(instruction)
@@ -161,7 +139,6 @@ func fs2(input io.Reader) int {
 			case 'v':
 				cur, _ = move2(map[aoc.Position]bool{}, cur, aoc.Down, board)
 			}
-			//display(board)
 		}
 	}
 
@@ -192,7 +169,7 @@ func move2(set map[aoc.Position]bool, pos aoc.Position, dir aoc.Direction, board
 				return pos, false
 			}
 			if board.Get(pos).robot {
-				shift(set, map[aoc.Position]bool{}, 0, pos, dir, board)
+				shift(set, pos, dir, board)
 				return pos.Move(dir, 1), true
 			} else {
 				return pos, true
@@ -213,7 +190,7 @@ func move2(set map[aoc.Position]bool, pos aoc.Position, dir aoc.Direction, board
 				}
 			}
 			if board.Get(pos).robot {
-				shift(set, map[aoc.Position]bool{}, 0, pos, dir, board)
+				shift(set, pos, dir, board)
 				return pos.Move(dir, 1), true
 			} else {
 				return pos, true
@@ -230,7 +207,7 @@ func move2(set map[aoc.Position]bool, pos aoc.Position, dir aoc.Direction, board
 	}
 }
 
-func shift(set, visited map[aoc.Position]bool, count int, pos aoc.Position, dir aoc.Direction, board aoc.Board[Cell2]) {
+func shift(set map[aoc.Position]bool, pos aoc.Position, dir aoc.Direction, board aoc.Board[Cell2]) {
 	positions := aoc.MapKeysToSlice(set)
 	sort.Slice(positions, func(i, j int) bool {
 		a := positions[i]
