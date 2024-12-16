@@ -1,3 +1,4 @@
+// Part 1 and 2: Classic BFS.
 package main
 
 import (
