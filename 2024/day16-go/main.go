@@ -21,7 +21,7 @@ func (c Cell) isNonWall() bool {
 func fs1(input io.Reader) int {
 	s := newSolver(input)
 	for !s.q.IsEmpty() {
-		s.solve1()
+		s.solve()
 	}
 	return s.best
 }
@@ -29,7 +29,7 @@ func fs1(input io.Reader) int {
 func fs2(input io.Reader) int {
 	s := newSolver(input)
 	for !s.q.IsEmpty() {
-		s.solve2()
+		s.solve()
 	}
 	return len(s.paths)
 }
@@ -82,50 +82,7 @@ func newSolver(input io.Reader) *Solver {
 	return &s
 }
 
-func (s *Solver) solve1() {
-	cur := s.q.Pop()
-
-	if s.board.Get(cur.loc.Pos).end {
-		s.best = min(s.best, cur.count)
-		return
-	}
-
-	if s.best != 0 && cur.count >= s.best {
-		return
-	}
-	if c, ok := s.visited[cur.loc]; ok {
-		if c <= cur.count {
-			return
-		}
-	}
-	s.visited[cur.loc] = cur.count
-
-	// Straight
-	next := cur.loc.Straight(1)
-	pos := s.board.Get(next.Pos)
-	if pos.isNonWall() {
-		s.q.Push(State{
-			loc:   next,
-			count: cur.count + 1,
-		})
-	}
-
-	// Left
-	next = cur.loc.Turn(aoc.Left, 0)
-	s.q.Push(State{
-		loc:   next,
-		count: cur.count + 1000,
-	})
-
-	// Right
-	next = cur.loc.Turn(aoc.Right, 0)
-	s.q.Push(State{
-		loc:   next,
-		count: cur.count + 1000,
-	})
-}
-
-func (s *Solver) solve2() {
+func (s *Solver) solve() {
 	cur := s.q.Pop()
 
 	if s.board.Get(cur.loc.Pos).end {
