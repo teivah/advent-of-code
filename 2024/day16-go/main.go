@@ -18,6 +18,36 @@ func (c Cell) isNonWall() bool {
 }
 
 func fs1(input io.Reader) int {
+	s := newSolver(input)
+	for !s.q.IsEmpty() {
+		s.solve1()
+	}
+	return s.best
+}
+
+func fs2(input io.Reader) int {
+	s := newSolver(input)
+	for !s.q.IsEmpty() {
+		s.solve2()
+	}
+	return len(s.paths)
+}
+
+type State struct {
+	loc   aoc.Location
+	count int
+	path  map[aoc.Position]bool
+}
+
+type Solver struct {
+	q       aoc.Heap[State]
+	board   aoc.Board[Cell]
+	visited map[aoc.Location]int
+	best    int
+	paths   map[aoc.Position]bool
+}
+
+func newSolver(input io.Reader) *Solver {
 	var start aoc.Location
 	board := aoc.ParseBoard(aoc.ReaderToStrings(input), func(r rune, pos aoc.Position) Cell {
 		switch r {
@@ -48,25 +78,7 @@ func fs1(input io.Reader) int {
 		count: 0,
 		path:  map[aoc.Position]bool{start.Pos: true},
 	})
-
-	for !s.q.IsEmpty() {
-		s.solve1()
-	}
-	return s.best
-}
-
-type State struct {
-	loc   aoc.Location
-	count int
-	path  map[aoc.Position]bool
-}
-
-type Solver struct {
-	q       aoc.Heap[State]
-	board   aoc.Board[Cell]
-	visited map[aoc.Location]int
-	best    int
-	paths   map[aoc.Position]bool
+	return &s
 }
 
 func (s *Solver) solve1() {
@@ -110,44 +122,6 @@ func (s *Solver) solve1() {
 		loc:   next,
 		count: cur.count + 1000,
 	})
-}
-
-func fs2(input io.Reader) int {
-	var start aoc.Location
-	board := aoc.ParseBoard(aoc.ReaderToStrings(input), func(r rune, pos aoc.Position) Cell {
-		switch r {
-		default:
-			panic(r)
-		case 'S':
-			start = aoc.NewLocation(pos.Row, pos.Col, aoc.Right)
-			return Cell{empty: true}
-		case 'E':
-			return Cell{end: true}
-		case '.':
-			return Cell{empty: true}
-		case '#':
-			return Cell{wall: true}
-		}
-	})
-
-	s := Solver{
-		q: aoc.NewHeap(func(a, b State) bool {
-			return a.count < b.count
-		}),
-		board:   board,
-		visited: make(map[aoc.Location]int),
-		best:    math.MaxInt,
-	}
-	s.q.Push(State{
-		loc:   start,
-		count: 0,
-		path:  map[aoc.Position]bool{start.Pos: true},
-	})
-
-	for !s.q.IsEmpty() {
-		s.solve2()
-	}
-	return len(s.paths)
 }
 
 func (s *Solver) solve2() {
