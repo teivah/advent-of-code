@@ -8,14 +8,16 @@ import (
 	"github.com/teivah/go-aoc"
 )
 
-type Cell struct {
-	end   bool
-	empty bool
-	wall  bool
-}
+type cell uint32
 
-func (c Cell) isNonWall() bool {
-	return c.empty || c.end
+const (
+	end cell = iota
+	empty
+	wall
+)
+
+func (c cell) isNonWall() bool {
+	return c == empty || c == end
 }
 
 func fs1(input io.Reader) int {
@@ -34,47 +36,47 @@ func fs2(input io.Reader) int {
 	return len(s.paths)
 }
 
-type State struct {
+type state struct {
 	loc   aoc.Location
 	count int
 	path  map[aoc.Position]bool
 }
 
-type Solver struct {
-	q       aoc.Heap[State]
-	board   aoc.Board[Cell]
+type solver struct {
+	q       aoc.Heap[state]
+	board   aoc.Board[cell]
 	visited map[aoc.Location]int
 	best    int
 	paths   map[aoc.Position]bool
 }
 
-func newSolver(input io.Reader) *Solver {
+func newSolver(input io.Reader) *solver {
 	var start aoc.Location
-	board := aoc.ParseBoard(aoc.ReaderToStrings(input), func(r rune, pos aoc.Position) Cell {
+	board := aoc.ParseBoard(aoc.ReaderToStrings(input), func(r rune, pos aoc.Position) cell {
 		switch r {
 		default:
 			panic(r)
 		case 'S':
 			start = aoc.NewLocation(pos.Row, pos.Col, aoc.Right)
-			return Cell{empty: true}
+			return empty
 		case 'E':
-			return Cell{end: true}
+			return end
 		case '.':
-			return Cell{empty: true}
+			return empty
 		case '#':
-			return Cell{wall: true}
+			return wall
 		}
 	})
 
-	s := Solver{
-		q: aoc.NewHeap(func(a, b State) bool {
+	s := solver{
+		q: aoc.NewHeap(func(a, b state) bool {
 			return a.count < b.count
 		}),
 		board:   board,
 		visited: make(map[aoc.Location]int),
 		best:    math.MaxInt,
 	}
-	s.q.Push(State{
+	s.q.Push(state{
 		loc:   start,
 		count: 0,
 		path:  map[aoc.Position]bool{start.Pos: true},
@@ -82,15 +84,17 @@ func newSolver(input io.Reader) *Solver {
 	return &s
 }
 
-func (s *Solver) solve() {
+func (s *solver) solve() {
 	cur := s.q.Pop()
 
-	if s.board.Get(cur.loc.Pos).end {
+	if s.board.Get(cur.loc.Pos) == end {
 		if cur.count < s.best {
 			s.best = cur.count
 			s.paths = cur.path
 		} else if cur.count == s.best {
-			s.mergePaths(cur.path)
+			for p := range cur.path {
+				s.paths[p] = true
+			}
 		}
 		return
 	}
@@ -107,28 +111,22 @@ func (s *Solver) solve() {
 	if s.board.Get(next.Pos).isNonWall() {
 		path := aoc.MapCopy(cur.path)
 		path[next.Pos] = true
-		s.q.Push(State{
+		s.q.Push(state{
 			loc:   next,
 			count: cur.count + 1,
 			path:  path,
 		})
 	}
 
-	s.q.Push(State{
+	s.q.Push(state{
 		loc:   cur.loc.Turn(aoc.Left, 0),
 		count: cur.count + 1000,
 		path:  cur.path,
 	})
 
-	s.q.Push(State{
+	s.q.Push(state{
 		loc:   cur.loc.Turn(aoc.Right, 0),
 		count: cur.count + 1000,
 		path:  cur.path,
 	})
-}
-
-func (s *Solver) mergePaths(path map[aoc.Position]bool) {
-	for p := range path {
-		s.paths[p] = true
-	}
 }
