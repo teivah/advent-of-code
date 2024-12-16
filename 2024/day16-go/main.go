@@ -95,20 +95,16 @@ func (s *Solver) solve() {
 		return
 	}
 
-	if s.best != 0 && cur.count >= s.best {
+	if cur.count >= s.best {
 		return
 	}
-	if c, ok := s.visited[cur.loc]; ok {
-		if c < cur.count {
-			return
-		}
+	if c, ok := s.visited[cur.loc]; ok && c < cur.count {
+		return
 	}
 	s.visited[cur.loc] = cur.count
 
-	// Straight
 	next := cur.loc.Straight(1)
-	pos := s.board.Get(next.Pos)
-	if pos.isNonWall() {
+	if s.board.Get(next.Pos).isNonWall() {
 		path := aoc.MapCopy(cur.path)
 		path[next.Pos] = true
 		s.q.Push(State{
@@ -118,18 +114,14 @@ func (s *Solver) solve() {
 		})
 	}
 
-	// Left
-	next = cur.loc.Turn(aoc.Left, 0)
 	s.q.Push(State{
-		loc:   next,
+		loc:   cur.loc.Turn(aoc.Left, 0),
 		count: cur.count + 1000,
 		path:  cur.path,
 	})
 
-	// Right
-	next = cur.loc.Turn(aoc.Right, 0)
 	s.q.Push(State{
-		loc:   next,
+		loc:   cur.loc.Turn(aoc.Right, 0),
 		count: cur.count + 1000,
 		path:  cur.path,
 	})
