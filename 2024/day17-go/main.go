@@ -6,34 +6,9 @@ import (
 	"math"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/teivah/go-aoc"
 )
-
-/*
-
-Ins:
-- 0: adv
-numerator: A
-divisor: 2^combo
-Result truncated and then written to A
-- 1: blx
-bitwise XOR of B and literal => B
-- 2: bst
-combo % 8 => B
-- 3: jnz
-nothing if A is 0
-otherwise, jumps to the IP of the literal operand (no IP increased after)
-- 4: bxc
-XOR of B and C => B
-- 5: out
-combo % 7 => output if multiple, separated by commas
-- 6: bdv
-same as adv but store in B
-- 7: cdv
-same as adv but store in C
-*/
 
 type opcode uint8
 
@@ -145,15 +120,6 @@ func (c *computer) out() {
 	c.ip += 2
 }
 
-func substr(s string, i int) string {
-	v := s[len(s)-i:]
-	return v
-}
-
-var mu sync.Mutex
-
-var visited = map[string]bool{}
-
 func (c *computer) bdv() {
 	n := c.combo()
 	c.b = c.a / int(math.Pow(float64(2), float64(n)))
@@ -195,15 +161,18 @@ func fs2(input io.Reader) int {
 	comp := newComputer(aoc.ReaderToStrings(input))
 	ins := len(comp.program)
 
-	n := 9
-	search := comp.program[len(comp.program)-n:]
+	// First, we try to find the last 9 levels (meaning the last 9x3 binary digits).
+	// Why 9? Because after that it takes too much time.
+
+	level := 9
+	search := comp.program[len(comp.program)-level:]
 	var checks []string
-	for i := 0; i < digits(3*n); i++ {
+	for i := 0; i < maxInt(3*level); i++ {
 		var res []int
 		var c int
 		a := i
 		found := true
-		for j := 0; j < n; j++ {
+		for j := 0; j < level; j++ {
 			c, a = calc(a)
 			res = append(res, c)
 			if search[j] != c {
@@ -212,15 +181,23 @@ func fs2(input io.Reader) int {
 			}
 		}
 		if found {
-			checks = append(checks, binary(i, n))
+			checks = append(checks, binary(i, level))
 		}
 	}
 
-	m := digits((ins - n) * 3)
+	// At this stage in checks, we have all the starting valid combinations in binary
+	// For example: 101110000000001011010111101
+	// As need to find a binary number of composed of ins * 3 digits, we're missing a few digits.
+	// For example, if we have to find 48 digits, it means we're missing 21 digits.
+	// So from 21, we compute the max value corresponding of 21 1s: 111111111111111111111 (2097151)
+
+	// Now, for all the combinations in checks, we need to iterate from 0 to 2097151.
+
+	maxValue := maxInt((ins - level) * 3)
 	search = comp.program
 	res := math.MaxInt
 	for _, check := range checks {
-		for i := 0; i <= m; i++ {
+		for i := 0; i <= maxValue; i++ {
 			d := convert(check, i)
 			a := d
 			var c int
@@ -268,7 +245,7 @@ func binary(i, n int) string {
 	return s[len(s)-(n*3):]
 }
 
-func digits(x int) int {
+func maxInt(x int) int {
 	s := strings.Repeat("1", x)
 	result, _ := strconv.ParseInt(s, 2, 64)
 	return int(result)
