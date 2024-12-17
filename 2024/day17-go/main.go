@@ -6,6 +6,7 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/teivah/go-aoc"
 	"golang.org/x/sync/errgroup"
@@ -160,12 +161,30 @@ func (c *computer) out() {
 			c.stdoutIdx++
 		}
 
-		if !c.stop {
-			c.stop = true
+		x := 1
+		if !c.stop && c.stdoutIdx == x {
+			s := fmt.Sprintf("%064b", c.i)
+			sub := substr(s, x*3)
+			mu.Lock()
+			if !visited[sub] {
+				visited[sub] = true
+				//fmt.Printf("%2d %32d %064b\n", c.stdoutIdx, c.i, c.i)
+				fmt.Printf("%d %s\n", first, sub)
+			}
+			mu.Unlock()
 		}
 	}
 	c.ip += 2
 }
+
+func substr(s string, i int) string {
+	v := s[len(s)-i:]
+	return v
+}
+
+var mu sync.Mutex
+
+var visited = map[string]bool{}
 
 func (c *computer) bdv() {
 	n := c.combo()
@@ -206,17 +225,42 @@ func (c *computer) isStopped() bool {
 
 func fs2(input io.Reader) int {
 	eg := errgroup.Group{}
-	eg.SetLimit(16)
+	eg.SetLimit(1)
 
 	lines := aoc.ReaderToStrings(input)
 	zero := newComputer(lines)
 	zero.part2 = true
-	//for i := 1490000000; ; i++ {
-	for i := 0; ; i++ {
+	for i := 0; ; i += 1 {
+		if i < 0 {
+			return 0
+		}
+		//if i%10_000_000 == 0 {
+		//	fmt.Println(i)
+		//}
+		eg.Go(func() error {
+			comp := zero.copy()
+			comp.a = i
+			comp.i = i
+			comp.part2 = true
+			for !comp.isStopped() {
+				comp.cycle()
+			}
+			if comp.isOutputProgram() {
+				panic(i)
+			}
+			return nil
+		})
+	}
+}
+
+func fs21(input io.Reader) int {
+	lines := aoc.ReaderToStrings(input)
+	zero := newComputer(lines)
+	zero.part2 = true
+	for i := 1310096632362; ; i += 10794 {
 		if i%10_000_000 == 0 {
 			fmt.Println(i)
 		}
-		//eg.Go(func() error {
 		comp := zero.copy()
 		comp.a = i
 		comp.i = i
@@ -227,11 +271,64 @@ func fs2(input io.Reader) int {
 		if comp.isOutputProgram() {
 			panic(i)
 		}
-		//return nil
-		//})
 	}
+}
+
+func (c *computer) solve() {
+
 }
 
 func (c *computer) isOutputProgram() bool {
 	return c.stdoutIdx == len(c.program)
+}
+
+func solve() {
+	eg := errgroup.Group{}
+	eg.SetLimit(16)
+
+	found := []int{2, 4, 1, 1, 7, 5, 0, 3, 1, 4, 4, 5, 5, 5, 3, 0}
+	//found := []int{0, 3, 5, 4, 3, 0}
+	//for i := 0; ; i++ {
+	for i := 140737488355328; i <= 281474976710655; i += 64 {
+		if i%10_000_000 == 0 {
+			fmt.Println(i)
+		}
+
+		//eg.Go(func() error {
+		a := i
+		idx := 0
+		for {
+			var prt int
+			prt, a = calc(a)
+			if found[idx] != prt {
+				break
+			}
+			idx++
+			if idx == 10 {
+				fmt.Printf("%2d %32d %48b\n", idx, i, i)
+			}
+			if idx == len(found) && a == 0 {
+				panic(i)
+			}
+			if idx == len(found) {
+				//return nil
+				break
+			}
+		}
+		//	return nil
+		//})
+	}
+}
+func calc(a int) (int, int) {
+	b := a % 8
+	b = b ^ 1
+	c := a / int(math.Pow(float64(2), float64(b)))
+	a = a / 8
+	b = b ^ 4
+	b = b ^ c
+	return a % 8, a
+}
+
+func pow(a, b int) int {
+	return int(math.Pow(float64(a), float64(b)))
 }
