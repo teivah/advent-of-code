@@ -1,4 +1,3 @@
-// Part 1 and 2: Classic BFS.
 package main
 
 import (
@@ -23,7 +22,7 @@ func (c cell) isNonWall() bool {
 func fs1(input io.Reader) int {
 	s := newSolver(input)
 	for !s.q.IsEmpty() {
-		s.solve()
+		s.step()
 	}
 	return s.best
 }
@@ -31,7 +30,7 @@ func fs1(input io.Reader) int {
 func fs2(input io.Reader) int {
 	s := newSolver(input)
 	for !s.q.IsEmpty() {
-		s.solve()
+		s.step()
 	}
 	return len(s.paths)
 }
@@ -84,7 +83,7 @@ func newSolver(input io.Reader) *solver {
 	return &s
 }
 
-func (s *solver) solve() {
+func (s *solver) step() {
 	cur := s.q.Pop()
 
 	if s.board.Get(cur.loc.Pos) == end {
@@ -102,6 +101,7 @@ func (s *solver) solve() {
 	if cur.count >= s.best {
 		return
 	}
+
 	if c, ok := s.visited[cur.loc]; ok && c < cur.count {
 		return
 	}
