@@ -9,7 +9,6 @@ import (
 	"sync"
 
 	"github.com/teivah/go-aoc"
-	"golang.org/x/sync/errgroup"
 )
 
 /*
@@ -66,9 +65,6 @@ type computer struct {
 	stdout    []string
 	stdoutIdx int
 	i         int
-
-	part2 bool
-	stop  bool
 }
 
 func newComputer(lines []string) *computer {
@@ -86,7 +82,6 @@ func (c *computer) copy() *computer {
 		b:       c.b,
 		c:       c.c,
 		program: aoc.SliceCopy(c.program),
-		part2:   c.part2,
 	}
 }
 
@@ -115,20 +110,17 @@ func (c *computer) cycle() {
 }
 
 func (c *computer) adv() {
-	n := c.combo()
-	c.a = c.a / int(math.Pow(float64(2), float64(n)))
+	c.a = c.a / int(math.Pow(float64(2), float64(c.combo())))
 	c.ip += 2
 }
 
 func (c *computer) blx() {
-	n := c.literal()
-	c.b = c.b ^ n
+	c.b = c.b ^ c.literal()
 	c.ip += 2
 }
 
 func (c *computer) bst() {
-	n := c.combo()
-	c.b = aoc.Mod(n, 8)
+	c.b = aoc.Mod(c.combo(), 8)
 	c.ip += 2
 }
 
@@ -136,8 +128,7 @@ func (c *computer) jnz() {
 	if c.a == 0 {
 		c.ip += 2
 	} else {
-		n := c.literal()
-		c.ip = n
+		c.ip = c.literal()
 	}
 }
 
@@ -150,30 +141,7 @@ func (c *computer) out() {
 	n := c.combo()
 	v := aoc.Mod(n, 8)
 	r := strconv.Itoa(v)[0]
-	if !c.part2 {
-		c.stdout = append(c.stdout, string(r))
-	} else {
-		first := c.program[c.stdoutIdx]
-		if first != v {
-			c.stdoutIdx = -1
-			c.stop = true
-		} else {
-			c.stdoutIdx++
-		}
-
-		x := 1
-		if !c.stop && c.stdoutIdx == x {
-			s := fmt.Sprintf("%064b", c.i)
-			sub := substr(s, x*3)
-			mu.Lock()
-			if !visited[sub] {
-				visited[sub] = true
-				//fmt.Printf("%2d %32d %064b\n", c.stdoutIdx, c.i, c.i)
-				fmt.Printf("%d %s\n", first, sub)
-			}
-			mu.Unlock()
-		}
-	}
+	c.stdout = append(c.stdout, string(r))
 	c.ip += 2
 }
 
@@ -220,105 +188,62 @@ func (c *computer) combo() int {
 }
 
 func (c *computer) isStopped() bool {
-	return c.ip >= len(c.program) || c.stop
+	return c.ip >= len(c.program)
 }
 
 func fs2(input io.Reader) int {
-	eg := errgroup.Group{}
-	eg.SetLimit(1)
+	comp := newComputer(aoc.ReaderToStrings(input))
+	ins := len(comp.program)
 
-	lines := aoc.ReaderToStrings(input)
-	zero := newComputer(lines)
-	zero.part2 = true
-	for i := 0; ; i += 1 {
-		if i < 0 {
-			return 0
-		}
-		//if i%10_000_000 == 0 {
-		//	fmt.Println(i)
-		//}
-		eg.Go(func() error {
-			comp := zero.copy()
-			comp.a = i
-			comp.i = i
-			comp.part2 = true
-			for !comp.isStopped() {
-				comp.cycle()
+	n := 9
+	search := comp.program[len(comp.program)-n:]
+	var checks []string
+	for i := 0; i < digits(3*n); i++ {
+		var res []int
+		var c int
+		a := i
+		found := true
+		for j := 0; j < n; j++ {
+			c, a = calc(a)
+			res = append(res, c)
+			if search[j] != c {
+				found = false
+				break
 			}
-			if comp.isOutputProgram() {
-				panic(i)
-			}
-			return nil
-		})
-	}
-}
-
-func fs21(input io.Reader) int {
-	lines := aoc.ReaderToStrings(input)
-	zero := newComputer(lines)
-	zero.part2 = true
-	for i := 1310096632362; ; i += 10794 {
-		if i%10_000_000 == 0 {
-			fmt.Println(i)
 		}
-		comp := zero.copy()
-		comp.a = i
-		comp.i = i
-		comp.part2 = true
-		for !comp.isStopped() {
-			comp.cycle()
-		}
-		if comp.isOutputProgram() {
-			panic(i)
+		if found {
+			checks = append(checks, binary(i, n))
 		}
 	}
-}
 
-func (c *computer) solve() {
-
+	m := digits((ins - n) * 3)
+	search = comp.program
+	res := math.MaxInt
+	for _, check := range checks {
+		for i := 0; i <= m; i++ {
+			d := convert(check, i)
+			a := d
+			var c int
+			found := true
+			for j := 0; j < 16; j++ {
+				c, a = calc(a)
+				if search[j] != c {
+					found = false
+					break
+				}
+			}
+			if found && a == 0 {
+				res = min(res, d)
+			}
+		}
+	}
+	return res
 }
 
 func (c *computer) isOutputProgram() bool {
 	return c.stdoutIdx == len(c.program)
 }
 
-func solve() {
-	eg := errgroup.Group{}
-	eg.SetLimit(16)
-
-	found := []int{2, 4, 1, 1, 7, 5, 0, 3, 1, 4, 4, 5, 5, 5, 3, 0}
-	//found := []int{0, 3, 5, 4, 3, 0}
-	//for i := 0; ; i++ {
-	for i := 140737488355328; i <= 281474976710655; i += 64 {
-		if i%10_000_000 == 0 {
-			fmt.Println(i)
-		}
-
-		//eg.Go(func() error {
-		a := i
-		idx := 0
-		for {
-			var prt int
-			prt, a = calc(a)
-			if found[idx] != prt {
-				break
-			}
-			idx++
-			if idx == 10 {
-				fmt.Printf("%2d %32d %48b\n", idx, i, i)
-			}
-			if idx == len(found) && a == 0 {
-				panic(i)
-			}
-			if idx == len(found) {
-				//return nil
-				break
-			}
-		}
-		//	return nil
-		//})
-	}
-}
 func calc(a int) (int, int) {
 	b := a % 8
 	b = b ^ 1
@@ -329,6 +254,22 @@ func calc(a int) (int, int) {
 	return b % 8, a
 }
 
-func pow(a, b int) int {
-	return int(math.Pow(float64(a), float64(b)))
+func convert(prefix string, i int) int {
+	s := fmt.Sprintf("%s%021b", prefix, i)
+	d, err := strconv.ParseInt(s, 2, 0)
+	if err != nil {
+		panic(err)
+	}
+	return int(d)
+}
+
+func binary(i, n int) string {
+	s := fmt.Sprintf("%048b", i)
+	return s[len(s)-(n*3):]
+}
+
+func digits(x int) int {
+	s := strings.Repeat("1", x)
+	result, _ := strconv.ParseInt(s, 2, 64)
+	return int(result)
 }
