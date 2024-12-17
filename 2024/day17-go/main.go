@@ -326,7 +326,7 @@ func calc(a int) (int, int) {
 	a = a / 8
 	b = b ^ 4
 	b = b ^ c
-	return a % 8, a
+	return b % 8, a
 }
 
 func pow(a, b int) int {
