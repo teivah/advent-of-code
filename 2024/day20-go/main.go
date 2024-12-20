@@ -287,9 +287,7 @@ s.cheatedPosStart.Row == 3 && s.cheatedPosStart.Col == 1 && s.pos.Row == 7 && s.
 s.cheatedPosStart.Row == 3 && s.cheatedPosStart.Col == 1 && s.pos.Row == 7 && s.pos.Col == 6
 */
 func countCheats2(all map[aoc.Position]int, board aoc.Board[cell], start, end aoc.Position, shortest int) int {
-	q := []state3{
-		{pos: start},
-	}
+	q := []state3{{pos: start}}
 	visited := make(map[key2]bool)
 	minSaves := 50
 
@@ -302,8 +300,11 @@ func countCheats2(all map[aoc.Position]int, board aoc.Board[cell], start, end ao
 			if s.currentlyCheating {
 				saved := shortest - s.moves
 				if saved >= minSaves {
-					c := cheat{start: s.cheatedPosStart, end: s.prevPos}
+					c := cheat{start: s.cheatedPosStart, end: s.pos}
 					if !res[c] {
+						if saved == 62 {
+							fmt.Println(c)
+						}
 						res[c] = true
 						count[saved]++
 					}
@@ -339,8 +340,11 @@ func countCheats2(all map[aoc.Position]int, board aoc.Board[cell], start, end ao
 			solution := s.moves + all[s.pos]
 			saved := shortest - solution
 			if saved >= minSaves {
-				c := cheat{start: s.cheatedPosStart, end: s.prevPos}
+				c := cheat{start: s.cheatedPosStart, end: s.pos}
 				if !res[c] {
+					if saved == 62 {
+						fmt.Println(c)
+					}
 					res[c] = true
 					count[saved]++
 				}
