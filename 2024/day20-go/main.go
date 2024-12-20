@@ -264,18 +264,16 @@ type state3 struct {
 	pos               aoc.Position
 	currentlyCheating bool
 	cheatingRemaining int
-	cheated           bool
 	cheatedPosStart   aoc.Position
 	cheatedPosEnd     aoc.Position
 	prevPos           aoc.Position
 }
 
 type key2 struct {
-	pos        aoc.Position
-	cheated    bool
-	cheating   bool
-	cheatStart aoc.Position
-	cheatEnd   aoc.Position
+	pos               aoc.Position
+	currentlyCheating bool
+	cheatStart        aoc.Position
+	cheatEnd          aoc.Position
 }
 
 type cheat struct {
@@ -286,12 +284,14 @@ type cheat struct {
 /*
 s.cheatedPosStart.Row == 3 && s.cheatedPosStart.Col == 1 && s.cheatedPosEnd.Row == 7 && s.cheatedPosEnd.Col == 3
 s.cheatedPosStart.Row == 3 && s.cheatedPosStart.Col == 1 && s.pos.Row == 7 && s.pos.Col == 3
+s.cheatedPosStart.Row == 3 && s.cheatedPosStart.Col == 1 && s.pos.Row == 7 && s.pos.Col == 6
 */
 func countCheats2(all map[aoc.Position]int, board aoc.Board[cell], start, end aoc.Position, shortest int) int {
 	q := []state3{
 		{pos: start},
 	}
 	visited := make(map[key2]bool)
+	minSaves := 50
 
 	res := make(map[cheat]bool)
 	count := make(map[int]int)
@@ -299,12 +299,12 @@ func countCheats2(all map[aoc.Position]int, board aoc.Board[cell], start, end ao
 		s := q[0]
 		q = q[1:]
 		if s.pos == end {
-			if s.cheated {
+			if s.currentlyCheating {
 				saved := shortest - s.moves
-				if saved >= 50 && s.cheated {
-					k := cheat{start: s.cheatedPosStart, end: s.cheatedPosEnd}
-					if !res[k] {
-						res[k] = true
+				if saved >= minSaves {
+					c := cheat{start: s.cheatedPosStart, end: s.prevPos}
+					if !res[c] {
+						res[c] = true
 						count[saved]++
 					}
 				}
@@ -316,7 +316,7 @@ func countCheats2(all map[aoc.Position]int, board aoc.Board[cell], start, end ao
 			continue
 		}
 
-		k := key2{pos: s.pos, cheated: s.cheated, cheating: s.currentlyCheating, cheatStart: s.cheatedPosStart, cheatEnd: s.cheatedPosEnd}
+		k := key2{pos: s.pos, currentlyCheating: s.currentlyCheating, cheatStart: s.cheatedPosStart, cheatEnd: s.cheatedPosEnd}
 		if visited[k] {
 			continue
 		}
@@ -325,9 +325,6 @@ func countCheats2(all map[aoc.Position]int, board aoc.Board[cell], start, end ao
 			continue
 		}
 		if board.Get(s.pos) == wall {
-			if s.cheated {
-				continue
-			}
 			if s.currentlyCheating {
 				s.cheatingRemaining--
 				if s.cheatingRemaining < 0 {
@@ -338,26 +335,17 @@ func countCheats2(all map[aoc.Position]int, board aoc.Board[cell], start, end ao
 				s.cheatingRemaining = 19
 				s.cheatedPosStart = s.prevPos
 			}
-		} else {
-			if s.cheated {
-				panic("cheated")
-			} else if s.currentlyCheating {
-				s.cheated = true
-				s.currentlyCheating = false
-				s.cheatedPosEnd = s.pos
-
-				solution := s.moves + all[s.pos]
-
-				saved := shortest - solution
-				if saved >= 50 && s.cheated {
-					k := cheat{start: s.cheatedPosStart, end: s.cheatedPosEnd}
-					if !res[k] {
-						res[k] = true
-						count[saved]++
-					}
+		} else if s.currentlyCheating {
+			solution := s.moves + all[s.pos]
+			saved := shortest - solution
+			if saved >= minSaves {
+				c := cheat{start: s.cheatedPosStart, end: s.prevPos}
+				if !res[c] {
+					res[c] = true
+					count[saved]++
 				}
-				continue
 			}
+			continue
 		}
 
 		s.moves++
