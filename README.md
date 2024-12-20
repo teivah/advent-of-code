@@ -32,6 +32,7 @@ In 2023, I shared my experience with the Advent of Code on my blog:
 
 ## 2024
 
+* [Day 20](https://adventofcode.com/2024/day/20): [Go](2024/day20-go/main.go)
 * [Day 19](https://adventofcode.com/2024/day/19): [Go](2024/day19-go/main.go)
 * [Day 18](https://adventofcode.com/2024/day/18): [Go](2024/day18-go/main.go)
 * [Day 17](https://adventofcode.com/2024/day/17): [Go](2024/day17-go/main.go)
