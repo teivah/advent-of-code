@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"math"
 
 	"github.com/teivah/go-aoc"
 )
@@ -51,42 +52,87 @@ func fs1(input io.Reader) int {
 	codes := aoc.ReaderToStrings(input)
 	numKeypad := formatNumericKeypad()
 	robotA := getPosition(button{isA: true}, numKeypad)
+	dirKeypad := formatDirectionalKeypad()
 	for _, code := range codes {
 		buttons := expectedButtons(code)
-		ins := getInstructions(numKeypad, buttons, robotA)
-		fmt.Println(code, stringInstructions(ins))
+		insRobotA := getInstructions(numKeypad, buttons, robotA)
+
+		robotB := getPosition(button{isA: true}, dirKeypad)
+		insRobotB := directionalRobotInstructions(robotB, dirKeypad, insRobotA)
+		fmt.Println(insRobotB)
 	}
 	return 42
 }
 
-func getInstructions(board aoc.Board[button], buttons []button, from aoc.Position) []instruction {
-	var instructions []instruction
+func directionalRobotInstructions(pos aoc.Position, board aoc.Board[button], instructions []map[instruction]int) []map[instruction]int {
+	cur := pos
+	var res []map[instruction]int
+	for _, set := range instructions {
+		for len(set) != 0 {
+			minDistance := math.MaxInt
+			var bestButton button
+			var best instruction
+			var bestPosition aoc.Position
+			for ins := range set {
+				if len(set) > 1 && ins.isA {
+					continue
+				}
+				var b button
+				if ins.isA {
+					b = button{isA: true}
+				} else {
+					b = button{isDirection: true, direction: ins.dir}
+				}
+				dst := getPosition(b, board)
+				v := cur.Manhattan(dst)
+				if v < minDistance {
+					minDistance = v
+					bestButton = b
+					best = ins
+					bestPosition = dst
+				}
+				minDistance = min(minDistance, cur.Manhattan(dst))
+			}
+			if minDistance == math.MaxInt {
+				panic("not found")
+			}
+			ins := getInstructions(board, []button{bestButton}, cur)
+			res = append(res, ins...)
+			delete(set, best)
+			cur = bestPosition
+		}
+	}
+	return res
+}
+
+func getInstructions(board aoc.Board[button], buttons []button, from aoc.Position) []map[instruction]int {
+	var instructions []map[instruction]int
 	cur := from
 	for _, b := range buttons {
 		row, col := delta(cur, b, board)
 		ins := instructionsFromDelta(cur, board, row, col)
-		instructions = append(instructions, ins...)
+		instructions = append(instructions, ins)
 		cur = getPosition(b, board)
 	}
 	return instructions
 }
 
-func instructionsFromDelta(pos aoc.Position, board aoc.Board[button], row, col int) []instruction {
-	var instructions []instruction
+func instructionsFromDelta(pos aoc.Position, board aoc.Board[button], row, col int) map[instruction]int {
+	instructions := make(map[instruction]int)
 	cur := pos
 	for row != 0 {
 		if row < 0 {
 			p := cur.Move(aoc.Up, 1)
 			if contains(board, p) {
 				cur = p
-				instructions = append(instructions, instruction{isDir: true, dir: aoc.Up})
+				instructions[instruction{isDir: true, dir: aoc.Up}]++
 			} else {
 				if col < 0 {
 					cur = cur.Move(aoc.Left, 1)
-					instructions = append(instructions, instruction{isDir: true, dir: aoc.Left})
+					instructions[instruction{isDir: true, dir: aoc.Left}]++
 				} else if col > 0 {
 					cur = cur.Move(aoc.Right, 1)
-					instructions = append(instructions, instruction{isDir: true, dir: aoc.Right})
+					instructions[instruction{isDir: true, dir: aoc.Right}]++
 				} else {
 					panic("unknown")
 				}
@@ -96,14 +142,14 @@ func instructionsFromDelta(pos aoc.Position, board aoc.Board[button], row, col i
 			p := cur.Move(aoc.Down, 1)
 			if contains(board, p) {
 				cur = p
-				instructions = append(instructions, instruction{isDir: true, dir: aoc.Down})
+				instructions[instruction{isDir: true, dir: aoc.Down}]++
 			} else {
 				if col < 0 {
 					cur = cur.Move(aoc.Left, 1)
-					instructions = append(instructions, instruction{isDir: true, dir: aoc.Left})
+					instructions[instruction{isDir: true, dir: aoc.Left}]++
 				} else if col > 0 {
 					cur = cur.Move(aoc.Right, 1)
-					instructions = append(instructions, instruction{isDir: true, dir: aoc.Right})
+					instructions[instruction{isDir: true, dir: aoc.Right}]++
 				} else {
 					panic("unknown")
 				}
@@ -115,15 +161,16 @@ func instructionsFromDelta(pos aoc.Position, board aoc.Board[button], row, col i
 	for col != 0 {
 		if col < 0 {
 			cur = cur.Move(aoc.Left, 1)
-			instructions = append(instructions, instruction{isDir: true, dir: aoc.Left})
+			instructions[instruction{isDir: true, dir: aoc.Left}]++
 			col++
 		} else {
 			cur = cur.Move(aoc.Right, 1)
-			instructions = append(instructions, instruction{isDir: true, dir: aoc.Right})
+			instructions[instruction{isDir: true, dir: aoc.Right}]++
 			col--
 		}
 	}
-	return append(instructions, instruction{isA: true})
+	instructions[instruction{isA: true}]++
+	return instructions
 }
 
 func contains(board aoc.Board[button], pos aoc.Position) bool {
@@ -180,9 +227,9 @@ func formatDirectionalKeypad() aoc.Board[button] {
 	elements := []aoc.BoardElement[button]{
 		{T: button{isDirection: true, direction: aoc.Up}, Pos: aoc.NewPosition(0, 1)},
 		{T: button{isA: true}, Pos: aoc.NewPosition(0, 2)},
-		{T: button{isDirection: true, direction: aoc.Up}, Pos: aoc.NewPosition(1, 0)},
-		{T: button{isDirection: true, direction: aoc.Up}, Pos: aoc.NewPosition(1, 1)},
-		{T: button{isDirection: true, direction: aoc.Up}, Pos: aoc.NewPosition(1, 2)},
+		{T: button{isDirection: true, direction: aoc.Left}, Pos: aoc.NewPosition(1, 0)},
+		{T: button{isDirection: true, direction: aoc.Down}, Pos: aoc.NewPosition(1, 1)},
+		{T: button{isDirection: true, direction: aoc.Right}, Pos: aoc.NewPosition(1, 2)},
 	}
 	return aoc.NewBoardFromElements(elements, 2, 3)
 }
