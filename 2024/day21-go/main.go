@@ -50,6 +50,8 @@ type button struct {
 
 var buttonA = button{isA: true}
 
+// <vA<AA>>^AAvA<^A>AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A
+// map[A:1 v:1 <:2] map[A:1 ^:1 >:2] map[A:1] map[A:1 v:1 <:1] map[A:1 <:1] map[A:1 ^:1 >:2] map[A:1] map[A:1 v:1] map[A:1] map[A:1 ^:1 <:1] map[A:1 >:1] map[A:1 v:1 <:1] map[A:1 ^:1 >:1] map[A:1] map[A:1 <:1] map[A:1 >:1] map[A:1 v:1 <:1] map[A:1 <:1] map[A:1 ^:1 >:2] map[A:1] map[A:1] map[A:1 <:1] map[A:1 v:1 >:1] map[A:1 ^:1]]
 func fs1(input io.Reader) int {
 	codes := aoc.ReaderToStrings(input)
 	numKeypad := formatNumericKeypad()
@@ -60,18 +62,27 @@ func fs1(input io.Reader) int {
 		buttons := expectedButtons(code)
 
 		insRobotA := getInstructions(numKeypad, buttons, robotA)
+
 		robotB := dirKeypad.buttons[buttonA]
 		insRobotB := directionalRobotInstructions(robotB, dirKeypad, insRobotA)
 
 		robotC := dirKeypad.buttons[buttonA]
 		insRobotC := directionalRobotInstructions(robotC, dirKeypad, insRobotB)
+		fmt.Println(insRobotC)
 
-		robotD := dirKeypad.buttons[buttonA]
-		insRobotD := directionalRobotInstructions(robotD, dirKeypad, insRobotC)
+		iCode := aoc.StringToInt(code[:len(code)-1])
+		res += iCode * count(insRobotC)
+		fmt.Println(count(insRobotC), iCode)
+	}
+	return res
+}
 
-		iCode := code[:len(code)-1]
-		res += aoc.StringToInt(iCode) * len(insRobotD)
-		fmt.Println(iCode, len(insRobotD))
+func count(ins []map[instruction]int) int {
+	res := 0
+	for _, i := range ins {
+		for _, c := range i {
+			res += c
+		}
 	}
 	return res
 }
@@ -80,6 +91,13 @@ func directionalRobotInstructions(pos aoc.Position, board Board, instructions []
 	cur := pos
 	var res []map[instruction]int
 	for _, set := range instructions {
+		mult := false
+		for _, v := range set {
+			if v > 1 {
+				mult = true
+			}
+		}
+		_ = mult
 		for len(set) != 0 {
 			minDistance := math.MaxInt
 			var bestButton button
