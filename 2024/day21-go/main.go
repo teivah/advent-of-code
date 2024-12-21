@@ -50,8 +50,6 @@ type button struct {
 
 var buttonA = button{isA: true}
 
-// <vA<AA>>^AAvA<^A>AAvA^A<vA>^AA<A>A<v<A>A>^AAAvA<^A>A
-// map[A:1 v:1 <:2] map[A:1 ^:1 >:2] map[A:1] map[A:1 v:1 <:1] map[A:1 <:1] map[A:1 ^:1 >:2] map[A:1] map[A:1 v:1] map[A:1] map[A:1 ^:1 <:1] map[A:1 >:1] map[A:1 v:1 <:1] map[A:1 ^:1 >:1] map[A:1] map[A:1 <:1] map[A:1 >:1] map[A:1 v:1 <:1] map[A:1 <:1] map[A:1 ^:1 >:2] map[A:1] map[A:1] map[A:1 <:1] map[A:1 v:1 >:1] map[A:1 ^:1]]
 func fs1(input io.Reader) int {
 	codes := aoc.ReaderToStrings(input)
 	numKeypad := formatNumericKeypad()
@@ -62,9 +60,11 @@ func fs1(input io.Reader) int {
 		buttons := expectedButtons(code)
 
 		insRobotA := getInstructions(numKeypad, buttons, robotA)
+		fmt.Println(insRobotA)
 
 		robotB := dirKeypad.buttons[buttonA]
 		insRobotB := directionalRobotInstructions(robotB, dirKeypad, insRobotA)
+		fmt.Println(insRobotB)
 
 		robotC := dirKeypad.buttons[buttonA]
 		insRobotC := directionalRobotInstructions(robotC, dirKeypad, insRobotB)
