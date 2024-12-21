@@ -257,21 +257,16 @@ func fs2(input io.Reader, minSaves int) int {
 	//offload(all)
 	all := load()
 
-	uniqueCheats := make(map[cheat]int)
-	count := 0
+	cheats := make(map[aoc.Pair[aoc.Position, aoc.Position]]int)
 
-	for p1, d1 := range all {
-		for p2, d2 := range all {
-			if d2-d1-p1.Manhattan(p2) >= minSaves && p1.Manhattan(p2) <= 20 {
-				uniqueCheats[cheat{start: p1, end: p2}] = d2 - d1
-				count++
+	savings := 20
+	for pos1, distance1 := range all {
+		for pos2, distance2 := range all {
+			if pos1.Manhattan(pos2) <= savings && distance2-distance1-pos1.Manhattan(pos2) >= minSaves {
+				k := aoc.Pair[aoc.Position, aoc.Position]{pos1, pos2}
+				cheats[k] = distance2 - distance1
 			}
 		}
 	}
-	return count
-}
-
-type cheat struct {
-	start aoc.Position
-	end   aoc.Position
+	return len(cheats)
 }
