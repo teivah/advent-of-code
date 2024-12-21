@@ -247,38 +247,56 @@ func fs2(input io.Reader, minSaves int) int {
 	})
 	shortest := shortestPath(board, start, end)
 
-	all := make(map[aoc.Position]int)
-	for pos, c := range board.Positions {
-		if c != track {
-			continue
-		}
-		all[pos] = shortestPathWithAll(board, pos, end)
-	}
+	//all := make(map[aoc.Position]int)
+	//for pos, c := range board.Positions {
+	//	if c != track {
+	//		continue
+	//	}
+	//	all[pos] = shortestPathWithAll(board, pos, end)
+	//}
+	_ = shortest
 	//offload(all)
-	//all := load()
+	all := load()
 
-	res := 0
-	cur := start
-	visited := make(map[aoc.Position]bool)
-	log := make(map[int]int)
-	for i := 0; ; i++ {
-		fmt.Println(i)
-		res += count(log, all, board, cur, i, shortest, minSaves, end)
-		visited[cur] = true
-		cur = getNext(visited, board, cur)
-		if cur == end {
-			break
+	//cur := start
+	//visited := make(map[aoc.Position]bool)
+	//log := make(map[int]int)
+	//solutions := make(map[Solution]bool)
+	//for i := 0; ; i++ {
+	//	count(log, all, board, cur, i, shortest, minSaves, end, solutions)
+	//	visited[cur] = true
+	//	cur = getNext(visited, board, cur)
+	//	if cur == end {
+	//		break
+	//	}
+	//}
+	////ks := aoc.MapKeysToSlice(log)
+	////sort.Slice(ks, func(i, j int) bool {
+	////	return ks[j] > ks[i]
+	////})
+	////for _, k := range ks {
+	////	fmt.Printf("There are %d that save %d\n", log[k], k)
+	////}
+	//
+	//return len(solutions)
+
+	uniqueCheats := make(map[cheat]int)
+	count := 0
+
+	for p1, d1 := range all {
+		for p2, d2 := range all {
+			if d2-d1-p1.Manhattan(p2) >= minSaves && p1.Manhattan(p2) <= 20 {
+				uniqueCheats[cheat{start: p1, end: p2}] = d2 - d1
+				count++
+			}
 		}
 	}
-	ks := aoc.MapKeysToSlice(log)
-	sort.Slice(ks, func(i, j int) bool {
-		return ks[j] > ks[i]
-	})
-	for _, k := range ks {
-		fmt.Printf("There are %d that save %d\n", log[k], k)
-	}
+	return count
+}
 
-	return res
+type Cheat struct {
+	start aoc.Position
+	end   aoc.Position
 }
 
 func getNext(visited map[aoc.Position]bool, board aoc.Board[cell], pos aoc.Position) aoc.Position {
@@ -345,7 +363,13 @@ func display(pos, spos, end aoc.Position, board aoc.Board[cell]) {
 
 }
 
-func count(log map[int]int, all map[aoc.Position]int, board aoc.Board[cell], pos aoc.Position, moves, shortest, minSaves int, end aoc.Position) int {
+type Solution struct {
+	start aoc.Position
+	end   aoc.Position
+	saved int
+}
+
+func count(log map[int]int, all map[aoc.Position]int, board aoc.Board[cell], pos aoc.Position, moves, shortest, minSaves int, end aoc.Position, solutions map[Solution]bool) {
 	type state struct {
 		pos       aoc.Position
 		moves     int
@@ -366,8 +390,7 @@ func count(log map[int]int, all map[aoc.Position]int, board aoc.Board[cell], pos
 			remaining: 19,
 		})
 	}
-	visited := make(map[aoc.Position]bool)
-	res := make(map[aoc.Position]bool)
+	visited := make(map[state]bool)
 	for len(q) != 0 {
 		s := q[0]
 		q = q[1:]
@@ -380,18 +403,16 @@ func count(log map[int]int, all map[aoc.Position]int, board aoc.Board[cell], pos
 		if !board.Contains(s.pos) {
 			continue
 		}
-		if visited[s.pos] {
+		if visited[s] {
 			continue
 		}
-		visited[s.pos] = true
+		visited[s] = true
 
 		if s.pos == end {
-			res[end] = true
-			log[shortest-s.moves]++
-			//if shortest-s.moves == 72 {
-			//	display(pos, s.pos, end, board)
+			//if !res[end] {
+			//	log[shortest-s.moves]++
 			//}
-
+			solutions[Solution{start: pos, end: end, saved: shortest - s.moves}] = true
 		} else if board.Get(s.pos) == wall {
 			for _, dir := range []aoc.Direction{aoc.Up, aoc.Down, aoc.Left, aoc.Right} {
 				q = append(q, state{pos: s.pos.Move(dir, 1), moves: s.moves + 1, remaining: s.remaining - 1})
@@ -400,17 +421,15 @@ func count(log map[int]int, all map[aoc.Position]int, board aoc.Board[cell], pos
 			solution := s.moves + all[s.pos]
 			saved := shortest - solution
 			if saved >= minSaves {
-				res[s.pos] = true
-				log[saved]++
-				//if saved == 72 {
-				//	display(pos, s.pos, end, board)
+				//if !res[s.pos] {
+				//	log[saved]++
 				//}
+				solutions[Solution{start: pos, end: s.pos, saved: saved}] = true
 			}
 		} else {
 			panic("what?")
 		}
 	}
-	return len(res)
 }
 
 func countCheats2(all map[aoc.Position]int, board aoc.Board[cell], start, end aoc.Position, shortest int) int {
