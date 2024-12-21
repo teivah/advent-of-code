@@ -4,7 +4,7 @@ go 1.23.3
 
 require (
 	github.com/stretchr/testify v1.10.0
-	github.com/teivah/go-aoc v1.0.9
+	github.com/teivah/go-aoc v1.0.11
 )
 
 require (
