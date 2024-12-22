@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"math"
 
 	"github.com/teivah/go-aoc"
 )
@@ -87,6 +86,16 @@ func count(ins []map[instruction]int) int {
 	return res
 }
 
+/*
+[map[A:1 ^:2 <:2] map[A:1 >:1] map[A:1 >:1] map[A:1 v:2]]
+[map[A:1 v:1 <:2] map[A:1] map[A:1 ^:1 >:1] map[A:1] map[A:1 >:1] map[A:1 v:1] map[A:1 ^:1] map[A:1 v:1] map[A:1 ^:1] map[A:1 v:1 <:1] map[A:1] map[A:1 ^:1 >:1]]
+[map[A:1 v:1 <:2] map[A:1] map[A:1 >:1] map[A:1 ^:1 >:1] map[A:1] map[A:1 <:1] map[A:1 v:1 >:1] map[A:1 ^:1] map[A:1] map[A:1 v:1] map[A:1 ^:1] map[A:1 v:1 <:1] map[A:1 ^:1 >:1] map[A:1 <:1] map[A:1 >:1] map[A:1 v:1 <:1] map[A:1 ^:1 >:1] map[A:1 <:1] map[A:1 >:1] map[A:1 v:1 <:2] map[A:1 >:1] map[A:1 ^:1 >:1] map[A:1] map[A:1 <:1] map[A:1 v:1 >:1] map[A:1 ^:1]]
+
+[map[A:1 ^:2 <:2] map[A:1 >:1] map[A:1 >:1] map[A:1 v:2]]
+ xmap[A:1 ^:1 >:1] map[A:1] map[A:1 >:1] map[A:1 v:1] map[A:1 ^:1] map[A:1 v:1] map[A:1 ^:1] map[A:1 v:1 <:1] map[A:1] map[A:1 ^:1 >:1]]
+ map[A:1 <:1] map[A:1 v:1 >:1] map[A:1 ^:1] map[A:1] map[A:1 v:1] map[A:1 ^:1] map[A:1 v:1 <:1] map[A:1 ^:1 >:1] map[A:1 <:1] map[A:1 >:1] map[A:1 v:1 <:1] map[A:1 ^:1 >:1] map[A:1 <:1] map[A:1 >:1] map[A:1 v:1 <:2] map[A:1 >:1] map[A:1 ^:1 >:1] map[A:1] map[A:1 <:1] map[A:1 v:1 >:1] map[A:1 ^:1]]
+*/
+
 func directionalRobotInstructions(pos aoc.Position, board Board, instructions []map[instruction]int) []map[instruction]int {
 	cur := pos
 	var res []map[instruction]int
@@ -99,7 +108,7 @@ func directionalRobotInstructions(pos aoc.Position, board Board, instructions []
 		}
 		_ = mult
 		for len(set) != 0 {
-			minDistance := math.MaxInt
+			bestDistance := -1
 			var bestButton button
 			var best instruction
 			var bestCount int
@@ -116,16 +125,15 @@ func directionalRobotInstructions(pos aoc.Position, board Board, instructions []
 				}
 				dst := board.buttons[b]
 				v := cur.Manhattan(dst)
-				if v < minDistance {
-					minDistance = v
+				if v == 0 || (v > bestDistance && bestDistance != 0) {
+					bestDistance = v
 					bestButton = b
 					best = ins
 					bestPosition = dst
 					bestCount = count
 				}
-				minDistance = min(minDistance, cur.Manhattan(dst))
 			}
-			if minDistance == math.MaxInt {
+			if bestDistance == -1 {
 				panic("not found")
 			}
 			ins := getInstructions(board, []button{bestButton}, cur)
