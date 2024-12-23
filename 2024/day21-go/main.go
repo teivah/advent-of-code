@@ -3,281 +3,136 @@ package main
 import (
 	"fmt"
 	"io"
+	"math"
+	"strconv"
 
 	"github.com/teivah/go-aoc"
 )
 
-type instruction struct {
-	isDir bool
-	dir   aoc.Direction
-	isA   bool
+type index struct {
+	r, c int
 }
 
-func stringInstructions(instructions []instruction) string {
-	s := ""
-	for _, ins := range instructions {
-		s += ins.String()
+type direction struct {
+	dr, dc int
+}
+
+var dirMap = map[rune]direction{
+	'^': {-1, 0},
+	'v': {1, 0},
+	'>': {0, 1},
+	'<': {0, -1},
+}
+
+var numericKeypad = map[rune]index{
+	'7': {0, 0}, '8': {0, 1}, '9': {0, 2},
+	'4': {1, 0}, '5': {1, 1}, '6': {1, 2},
+	'1': {2, 0}, '2': {2, 1}, '3': {2, 2},
+	'0': {3, 1}, 'A': {3, 2},
+}
+
+var directionKeypad = map[rune]index{
+	'^': {0, 1}, 'A': {0, 2},
+	'<': {1, 0}, 'v': {1, 1}, '>': {1, 2},
+}
+
+var revDirectionKeypad = getReverseMap(directionKeypad)
+var revNumericKeypad = getReverseMap(numericKeypad)
+
+var pairsMinDistanceCache map[string]int
+var pathsCache map[string][]string
+
+func fs(input io.Reader, count int) int {
+	pairsMinDistanceCache = make(map[string]int)
+	pathsCache = make(map[string][]string)
+
+	lines := aoc.ReaderToStrings(input)
+	return solve(lines, count)
+}
+
+func solve(input []string, depth int) (res int) {
+	for _, str := range input {
+		temp := getCost("A"+str, depth)
+		coeff, _ := strconv.Atoi(str[:len(str)-1])
+		res += temp * coeff
 	}
-	return s
+	return
 }
 
-func (i instruction) String() string {
-	if i.isDir {
-		switch i.dir {
-		default:
-			panic(i.dir)
-		case aoc.Up:
-			return "^"
-		case aoc.Down:
-			return "v"
-		case aoc.Left:
-			return "<"
-		case aoc.Right:
-			return ">"
+func getCost(str string, depth int) (res int) {
+	for i := 0; i < len(str)-1; i++ {
+		currPairCost := getPairCost(rune(str[i]), rune(str[i+1]), numericKeypad, revNumericKeypad, depth)
+		res += currPairCost
+	}
+	return
+}
+
+func getPairCost(a, b rune, charToIndex map[rune]index, indexToChar map[index]rune, depth int) int {
+	keypadCode := 'd'
+	if _, ok := charToIndex['0']; ok {
+		keypadCode = 'n'
+	}
+	key := fmt.Sprintf("%c%c%c%d", a, b, keypadCode, depth)
+
+	if dist, ok := pairsMinDistanceCache[key]; ok {
+		return dist
+	}
+
+	if depth == 0 {
+		minLen := math.MaxInt
+		for _, path := range getAllPaths(a, b, directionKeypad, revDirectionKeypad) {
+			minLen = min(minLen, len(path))
+		}
+		return minLen
+	}
+
+	allPaths := getAllPaths(a, b, charToIndex, indexToChar)
+	minCost := math.MaxInt
+
+	for _, path := range allPaths {
+		path = "A" + path
+		var currCost int
+
+		for i := 0; i < len(path)-1; i++ {
+			currCost += getPairCost(rune(path[i]), rune(path[i+1]), directionKeypad, revDirectionKeypad, depth-1)
+		}
+		minCost = min(minCost, currCost)
+	}
+
+	pairsMinDistanceCache[key] = minCost
+	return minCost
+}
+
+func getAllPaths(a, b rune, charToIndex map[rune]index, indexToChar map[index]rune) (allPaths []string) {
+	key := fmt.Sprintf("%c %c", a, b)
+	if paths, ok := pathsCache[key]; ok {
+		return paths
+	}
+	dfs(charToIndex[a], charToIndex[b], []rune{}, charToIndex, indexToChar, make(map[index]bool), &allPaths)
+	pathsCache[key] = allPaths
+	return
+}
+
+func dfs(curr, end index, path []rune, charToIndex map[rune]index, indexToChar map[index]rune, visited map[index]bool, allPaths *[]string) {
+	if curr == end {
+		*allPaths = append(*allPaths, string(path)+"A")
+		return
+	}
+	visited[curr] = true
+	for char, dir := range dirMap {
+		nIdx := index{curr.r + dir.dr, curr.c + dir.dc}
+		if _, ok := indexToChar[nIdx]; ok && !visited[nIdx] {
+			newPath := aoc.SliceCopy(path)
+			dfs(nIdx, end, append(newPath, char), charToIndex, indexToChar, visited, allPaths)
 		}
 	}
-	return "A"
+	visited[curr] = false
 }
 
-type button struct {
-	isDigit     bool
-	digit       int
-	isA         bool
-	isDirection bool
-	direction   aoc.Direction
-}
-
-var buttonA = button{isA: true}
-
-func fs1(input io.Reader) int {
-	codes := aoc.ReaderToStrings(input)
-	numKeypad := formatNumericKeypad()
-	robotA := numKeypad.buttons[buttonA]
-	dirKeypad := formatDirectionalKeypad()
-	res := 0
-	for _, code := range codes {
-		buttons := expectedButtons(code)
-
-		insRobotA := getInstructions(numKeypad, buttons, robotA)
-		fmt.Println(insRobotA)
-
-		robotB := dirKeypad.buttons[buttonA]
-		insRobotB := directionalRobotInstructions(robotB, dirKeypad, insRobotA)
-		fmt.Println(insRobotB)
-
-		robotC := dirKeypad.buttons[buttonA]
-		insRobotC := directionalRobotInstructions(robotC, dirKeypad, insRobotB)
-		fmt.Println(insRobotC)
-
-		iCode := aoc.StringToInt(code[:len(code)-1])
-		res += iCode * count(insRobotC)
-		fmt.Println(count(insRobotC), iCode)
+func getReverseMap(m map[rune]index) (w map[index]rune) {
+	w = make(map[index]rune)
+	for r, i := range m {
+		w[i] = r
 	}
-	return res
-}
-
-func count(ins []map[instruction]int) int {
-	res := 0
-	for _, i := range ins {
-		for _, c := range i {
-			res += c
-		}
-	}
-	return res
-}
-
-func directionalRobotInstructions(pos aoc.Position, board Board, instructions []map[instruction]int) []map[instruction]int {
-	cur := pos
-	var res []map[instruction]int
-	for _, set := range instructions {
-		mult := false
-		for _, v := range set {
-			if v > 1 {
-				mult = true
-			}
-		}
-		_ = mult
-		for len(set) != 0 {
-			bestDistance := -1
-			var bestButton button
-			var best instruction
-			var bestCount int
-			var bestPosition aoc.Position
-			for ins, count := range set {
-				if len(set) > 1 && ins.isA {
-					continue
-				}
-				var b button
-				if ins.isA {
-					b = buttonA
-				} else {
-					b = button{isDirection: true, direction: ins.dir}
-				}
-				dst := board.buttons[b]
-				v := cur.Manhattan(dst)
-				if v == 0 || (v > bestDistance && bestDistance != 0) {
-					bestDistance = v
-					bestButton = b
-					best = ins
-					bestPosition = dst
-					bestCount = count
-				}
-			}
-			if bestDistance == -1 {
-				panic("not found")
-			}
-			ins := getInstructions(board, []button{bestButton}, cur)
-			res = append(res, ins...)
-			if bestCount == 1 {
-				delete(set, best)
-			} else {
-				set[best]--
-			}
-			cur = bestPosition
-		}
-	}
-	return res
-}
-
-func getInstructions(board Board, buttons []button, from aoc.Position) []map[instruction]int {
-	var instructions []map[instruction]int
-	cur := from
-	for _, b := range buttons {
-		row, col := delta(cur, b, board)
-		ins := instructionsFromDelta(cur, board, row, col)
-		instructions = append(instructions, ins)
-		cur = board.buttons[b]
-	}
-	return instructions
-}
-
-func instructionsFromDelta(pos aoc.Position, board Board, row, col int) map[instruction]int {
-	instructions := make(map[instruction]int)
-	cur := pos
-	for row != 0 {
-		if row < 0 {
-			p := cur.Move(aoc.Up, 1)
-			if board.contains(p) {
-				cur = p
-				instructions[instruction{isDir: true, dir: aoc.Up}]++
-				row++
-			} else {
-				if col < 0 {
-					cur = cur.Move(aoc.Left, 1)
-					instructions[instruction{isDir: true, dir: aoc.Left}]++
-					col++
-				} else if col > 0 {
-					cur = cur.Move(aoc.Right, 1)
-					instructions[instruction{isDir: true, dir: aoc.Right}]++
-					col--
-				} else {
-					panic("unknown")
-				}
-			}
-		} else {
-			p := cur.Move(aoc.Down, 1)
-			if board.contains(p) {
-				cur = p
-				instructions[instruction{isDir: true, dir: aoc.Down}]++
-				row--
-			} else {
-				if col < 0 {
-					cur = cur.Move(aoc.Left, 1)
-					instructions[instruction{isDir: true, dir: aoc.Left}]++
-					col++
-				} else if col > 0 {
-					cur = cur.Move(aoc.Right, 1)
-					instructions[instruction{isDir: true, dir: aoc.Right}]++
-					col--
-				} else {
-					panic("unknown")
-				}
-			}
-		}
-	}
-
-	for col != 0 {
-		if col < 0 {
-			cur = cur.Move(aoc.Left, 1)
-			instructions[instruction{isDir: true, dir: aoc.Left}]++
-			col++
-		} else {
-			cur = cur.Move(aoc.Right, 1)
-			instructions[instruction{isDir: true, dir: aoc.Right}]++
-			col--
-		}
-	}
-	instructions[instruction{isA: true}]++
-	return instructions
-}
-
-func expectedButtons(s string) []button {
-	var buttons []button
-	for _, c := range s {
-		if c == 'A' {
-			buttons = append(buttons, buttonA)
-			continue
-		}
-		buttons = append(buttons, button{isDigit: true, digit: aoc.RuneToInt(c)})
-	}
-	return buttons
-}
-
-func delta(pos aoc.Position, to button, board Board) (row, col int) {
-	toPos := board.buttons[to]
-	return toPos.Row - pos.Row, toPos.Col - pos.Col
-}
-
-func formatNumericKeypad() Board {
-	m := map[button]aoc.Position{
-		button{isDigit: true, digit: 7}: aoc.NewPosition(0, 0),
-		button{isDigit: true, digit: 8}: aoc.NewPosition(0, 1),
-		button{isDigit: true, digit: 9}: aoc.NewPosition(0, 2),
-		button{isDigit: true, digit: 4}: aoc.NewPosition(1, 0),
-		button{isDigit: true, digit: 5}: aoc.NewPosition(1, 1),
-		button{isDigit: true, digit: 6}: aoc.NewPosition(1, 2),
-		button{isDigit: true, digit: 1}: aoc.NewPosition(2, 0),
-		button{isDigit: true, digit: 2}: aoc.NewPosition(2, 1),
-		button{isDigit: true, digit: 3}: aoc.NewPosition(2, 2),
-		button{isDigit: true, digit: 0}: aoc.NewPosition(3, 1),
-		buttonA:                         aoc.NewPosition(3, 2),
-	}
-	return newBoard(m)
-}
-
-type Board struct {
-	buttons   map[button]aoc.Position
-	positions map[aoc.Position]button
-}
-
-func newBoard(buttons map[button]aoc.Position) Board {
-	positions := make(map[aoc.Position]button, len(buttons))
-	for b, p := range buttons {
-		positions[p] = b
-	}
-	return Board{
-		buttons:   buttons,
-		positions: positions,
-	}
-}
-
-func (b Board) contains(pos aoc.Position) bool {
-	_, ok := b.positions[pos]
-	return ok
-}
-
-func formatDirectionalKeypad() Board {
-	m := map[button]aoc.Position{
-		button{isDirection: true, direction: aoc.Up}: aoc.NewPosition(0, 1),
-		buttonA: aoc.NewPosition(0, 2),
-		button{isDirection: true, direction: aoc.Left}:  aoc.NewPosition(1, 0),
-		button{isDirection: true, direction: aoc.Down}:  aoc.NewPosition(1, 1),
-		button{isDirection: true, direction: aoc.Right}: aoc.NewPosition(1, 2),
-	}
-	return newBoard(m)
-}
-
-func fs2(input io.Reader) int {
-	_ = aoc.ReaderToStrings(input)
-	return 42
+	return
 }
