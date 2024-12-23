@@ -9,10 +9,6 @@ import (
 	"github.com/teivah/go-aoc"
 )
 
-type index struct {
-	r, c int
-}
-
 type direction struct {
 	dr, dc int
 }
@@ -24,14 +20,14 @@ var dirMap = map[rune]direction{
 	'<': {0, -1},
 }
 
-var numericKeypad = map[rune]index{
+var numericKeypad = map[rune]aoc.Position{
 	'7': {0, 0}, '8': {0, 1}, '9': {0, 2},
 	'4': {1, 0}, '5': {1, 1}, '6': {1, 2},
 	'1': {2, 0}, '2': {2, 1}, '3': {2, 2},
 	'0': {3, 1}, 'A': {3, 2},
 }
 
-var directionKeypad = map[rune]index{
+var directionKeypad = map[rune]aoc.Position{
 	'^': {0, 1}, 'A': {0, 2},
 	'<': {1, 0}, 'v': {1, 1}, '>': {1, 2},
 }
@@ -67,7 +63,7 @@ func getCost(str string, depth int) (res int) {
 	return
 }
 
-func getPairCost(a, b rune, charToIndex map[rune]index, indexToChar map[index]rune, depth int) int {
+func getPairCost(a, b rune, charToIndex map[rune]aoc.Position, indexToChar map[aoc.Position]rune, depth int) int {
 	keypadCode := 'd'
 	if _, ok := charToIndex['0']; ok {
 		keypadCode = 'n'
@@ -103,24 +99,24 @@ func getPairCost(a, b rune, charToIndex map[rune]index, indexToChar map[index]ru
 	return minCost
 }
 
-func getAllPaths(a, b rune, charToIndex map[rune]index, indexToChar map[index]rune) (allPaths []string) {
+func getAllPaths(a, b rune, charToIndex map[rune]aoc.Position, indexToChar map[aoc.Position]rune) (allPaths []string) {
 	key := fmt.Sprintf("%c %c", a, b)
 	if paths, ok := pathsCache[key]; ok {
 		return paths
 	}
-	dfs(charToIndex[a], charToIndex[b], []rune{}, charToIndex, indexToChar, make(map[index]bool), &allPaths)
+	dfs(charToIndex[a], charToIndex[b], []rune{}, charToIndex, indexToChar, make(map[aoc.Position]bool), &allPaths)
 	pathsCache[key] = allPaths
 	return
 }
 
-func dfs(curr, end index, path []rune, charToIndex map[rune]index, indexToChar map[index]rune, visited map[index]bool, allPaths *[]string) {
+func dfs(curr, end aoc.Position, path []rune, charToIndex map[rune]aoc.Position, indexToChar map[aoc.Position]rune, visited map[aoc.Position]bool, allPaths *[]string) {
 	if curr == end {
 		*allPaths = append(*allPaths, string(path)+"A")
 		return
 	}
 	visited[curr] = true
 	for char, dir := range dirMap {
-		nIdx := index{curr.r + dir.dr, curr.c + dir.dc}
+		nIdx := aoc.NewPosition(curr.Row+dir.dr, curr.Col+dir.dc)
 		if _, ok := indexToChar[nIdx]; ok && !visited[nIdx] {
 			newPath := aoc.SliceCopy(path)
 			dfs(nIdx, end, append(newPath, char), charToIndex, indexToChar, visited, allPaths)
@@ -129,8 +125,8 @@ func dfs(curr, end index, path []rune, charToIndex map[rune]index, indexToChar m
 	visited[curr] = false
 }
 
-func getReverseMap(m map[rune]index) (w map[index]rune) {
-	w = make(map[index]rune)
+func getReverseMap(m map[rune]aoc.Position) (w map[aoc.Position]rune) {
+	w = make(map[aoc.Position]rune)
 	for r, i := range m {
 		w[i] = r
 	}
