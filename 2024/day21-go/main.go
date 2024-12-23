@@ -86,16 +86,6 @@ func count(ins []map[instruction]int) int {
 	return res
 }
 
-/*
-[map[A:1 ^:2 <:2] map[A:1 >:1] map[A:1 >:1] map[A:1 v:2]]
-[map[A:1 v:1 <:2] map[A:1] map[A:1 ^:1 >:1] map[A:1] map[A:1 >:1] map[A:1 v:1] map[A:1 ^:1] map[A:1 v:1] map[A:1 ^:1] map[A:1 v:1 <:1] map[A:1] map[A:1 ^:1 >:1]]
-[map[A:1 v:1 <:2] map[A:1] map[A:1 >:1] map[A:1 ^:1 >:1] map[A:1] map[A:1 <:1] map[A:1 v:1 >:1] map[A:1 ^:1] map[A:1] map[A:1 v:1] map[A:1 ^:1] map[A:1 v:1 <:1] map[A:1 ^:1 >:1] map[A:1 <:1] map[A:1 >:1] map[A:1 v:1 <:1] map[A:1 ^:1 >:1] map[A:1 <:1] map[A:1 >:1] map[A:1 v:1 <:2] map[A:1 >:1] map[A:1 ^:1 >:1] map[A:1] map[A:1 <:1] map[A:1 v:1 >:1] map[A:1 ^:1]]
-
-[map[A:1 ^:2 <:2] map[A:1 >:1] map[A:1 >:1] map[A:1 v:2]]
- xmap[A:1 ^:1 >:1] map[A:1] map[A:1 >:1] map[A:1 v:1] map[A:1 ^:1] map[A:1 v:1] map[A:1 ^:1] map[A:1 v:1 <:1] map[A:1] map[A:1 ^:1 >:1]]
- map[A:1 <:1] map[A:1 v:1 >:1] map[A:1 ^:1] map[A:1] map[A:1 v:1] map[A:1 ^:1] map[A:1 v:1 <:1] map[A:1 ^:1 >:1] map[A:1 <:1] map[A:1 >:1] map[A:1 v:1 <:1] map[A:1 ^:1 >:1] map[A:1 <:1] map[A:1 >:1] map[A:1 v:1 <:2] map[A:1 >:1] map[A:1 ^:1 >:1] map[A:1] map[A:1 <:1] map[A:1 v:1 >:1] map[A:1 ^:1]]
-*/
-
 func directionalRobotInstructions(pos aoc.Position, board Board, instructions []map[instruction]int) []map[instruction]int {
 	cur := pos
 	var res []map[instruction]int
