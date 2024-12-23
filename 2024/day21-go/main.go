@@ -47,61 +47,59 @@ func fs(input io.Reader, count int) int {
 
 func solve(input []string, depth int) (res int) {
 	for _, str := range input {
-		res += getCost("A"+str, depth) * aoc.StringToInt(str[:len(str)-1])
+		res += cost("A"+str, depth) * aoc.StringToInt(str[:len(str)-1])
 	}
 	return
 }
 
-func getCost(str string, depth int) (res int) {
+func cost(str string, depth int) (res int) {
 	for i := 0; i < len(str)-1; i++ {
-		currPairCost := getPairCost(rune(str[i]), rune(str[i+1]), numericKeypad, revNumericKeypad, depth)
+		currPairCost := pairCost(rune(str[i]), rune(str[i+1]), numericKeypad, revNumericKeypad, depth)
 		res += currPairCost
 	}
 	return
 }
 
-func getPairCost(a, b rune, charToIndex map[rune]aoc.Position, indexToChar map[aoc.Position]rune, depth int) int {
-	keypadCode := 'd'
+func pairCost(a, b rune, charToIndex map[rune]aoc.Position, indexToChar map[aoc.Position]rune, depth int) int {
+	code := 'd'
 	if _, ok := charToIndex['0']; ok {
-		keypadCode = 'n'
+		code = 'n'
 	}
-	key := fmt.Sprintf("%c%c%c%d", a, b, keypadCode, depth)
+	key := fmt.Sprintf("%c%c%c%d", a, b, code, depth)
 
 	if dist, ok := minDistanceCache[key]; ok {
 		return dist
 	}
 
 	if depth == 0 {
-		minLen := math.MaxInt
-		for _, path := range getAllPaths(a, b, directionKeypad, revDirectionKeypad) {
-			minLen = min(minLen, len(path))
+		m := math.MaxInt
+		for _, path := range allPaths(a, b, directionKeypad, revDirectionKeypad) {
+			m = min(m, len(path))
 		}
-		return minLen
+		return m
 	}
 
-	allPaths := getAllPaths(a, b, charToIndex, indexToChar)
-	minCost := math.MaxInt
-
-	for _, path := range allPaths {
+	paths := allPaths(a, b, charToIndex, indexToChar)
+	m := math.MaxInt
+	for _, path := range paths {
 		path = "A" + path
-		var currCost int
-
+		currCost := 0
 		for i := 0; i < len(path)-1; i++ {
-			currCost += getPairCost(rune(path[i]), rune(path[i+1]), directionKeypad, revDirectionKeypad, depth-1)
+			currCost += pairCost(rune(path[i]), rune(path[i+1]), directionKeypad, revDirectionKeypad, depth-1)
 		}
-		minCost = min(minCost, currCost)
+		m = min(m, currCost)
 	}
 
-	minDistanceCache[key] = minCost
-	return minCost
+	minDistanceCache[key] = m
+	return m
 }
 
-func getAllPaths(a, b rune, charToIndex map[rune]aoc.Position, indexToChar map[aoc.Position]rune) []string {
+func allPaths(a, b rune, charToIndex map[rune]aoc.Position, indexToChar map[aoc.Position]rune) []string {
 	key := fmt.Sprintf("%c %c", a, b)
 	if paths, ok := pathsCache[key]; ok {
 		return paths
 	}
-	paths := make([]string, 0)
+	var paths []string
 	dfs(charToIndex[a], charToIndex[b], []rune{}, charToIndex, indexToChar, make(map[aoc.Position]bool), &paths)
 	pathsCache[key] = paths
 	return paths
