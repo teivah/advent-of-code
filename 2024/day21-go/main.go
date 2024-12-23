@@ -20,27 +20,36 @@ var (
 		'>': {0, 1},
 		'<': {0, -1},
 	}
-	numericKeypad = map[rune]aoc.Position{
-		'7': {0, 0}, '8': {0, 1}, '9': {0, 2},
-		'4': {1, 0}, '5': {1, 1}, '6': {1, 2},
-		'1': {2, 0}, '2': {2, 1}, '3': {2, 2},
-		'0': {3, 1}, 'A': {3, 2},
+	numericKeypadPerButton = map[rune]aoc.Position{
+		'7': aoc.NewPosition(0, 0),
+		'8': aoc.NewPosition(0, 1),
+		'9': aoc.NewPosition(0, 2),
+		'4': aoc.NewPosition(1, 0),
+		'5': aoc.NewPosition(1, 1),
+		'6': aoc.NewPosition(1, 2),
+		'1': aoc.NewPosition(2, 0),
+		'2': aoc.NewPosition(2, 1),
+		'3': aoc.NewPosition(2, 2),
+		'0': aoc.NewPosition(3, 1),
+		'A': aoc.NewPosition(3, 2),
 	}
-	directionKeypad = map[rune]aoc.Position{
-		'^': {0, 1}, 'A': {0, 2},
-		'<': {1, 0}, 'v': {1, 1}, '>': {1, 2},
+	dirKeypadPerButton = map[rune]aoc.Position{
+		'^': aoc.NewPosition(0, 1),
+		'A': aoc.NewPosition(0, 2),
+		'<': aoc.NewPosition(1, 0),
+		'v': aoc.NewPosition(1, 1),
+		'>': aoc.NewPosition(1, 2),
 	}
 
-	revDirectionKeypad = aoc.MapSwitch(directionKeypad)
-	revNumericKeypad   = aoc.MapSwitch(numericKeypad)
-	minDistanceCache   map[string]int
-	pathsCache         map[string][]string
+	dirKeypadPerPosition     = aoc.MapSwitch(dirKeypadPerButton)
+	numericKeypadPerPosition = aoc.MapSwitch(numericKeypadPerButton)
+	minDistanceCache         map[string]int
+	pathsCache               map[string][]string
 )
 
 func fs(input io.Reader, count int) int {
 	minDistanceCache = make(map[string]int)
 	pathsCache = make(map[string][]string)
-
 	lines := aoc.ReaderToStrings(input)
 	return solve(lines, count)
 }
@@ -54,7 +63,7 @@ func solve(input []string, depth int) (res int) {
 
 func cost(str string, depth int) (res int) {
 	for i := 0; i < len(str)-1; i++ {
-		currPairCost := pairCost(rune(str[i]), rune(str[i+1]), numericKeypad, revNumericKeypad, depth)
+		currPairCost := pairCost(rune(str[i]), rune(str[i+1]), numericKeypadPerButton, numericKeypadPerPosition, depth)
 		res += currPairCost
 	}
 	return
@@ -73,7 +82,7 @@ func pairCost(a, b rune, charToIndex map[rune]aoc.Position, indexToChar map[aoc.
 
 	if depth == 0 {
 		m := math.MaxInt
-		for _, path := range allPaths(a, b, directionKeypad, revDirectionKeypad) {
+		for _, path := range allPaths(a, b, dirKeypadPerButton, dirKeypadPerPosition) {
 			m = min(m, len(path))
 		}
 		return m
@@ -85,7 +94,7 @@ func pairCost(a, b rune, charToIndex map[rune]aoc.Position, indexToChar map[aoc.
 		path = "A" + path
 		currCost := 0
 		for i := 0; i < len(path)-1; i++ {
-			currCost += pairCost(rune(path[i]), rune(path[i+1]), directionKeypad, revDirectionKeypad, depth-1)
+			currCost += pairCost(rune(path[i]), rune(path[i+1]), dirKeypadPerButton, dirKeypadPerPosition, depth-1)
 		}
 		m = min(m, currCost)
 	}
