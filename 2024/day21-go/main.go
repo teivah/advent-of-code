@@ -4,42 +4,41 @@ import (
 	"fmt"
 	"io"
 	"math"
-	"strconv"
 
 	"github.com/teivah/go-aoc"
 )
 
 type direction struct {
-	dr, dc int
+	row int
+	col int
 }
 
-var dirMap = map[rune]direction{
-	'^': {-1, 0},
-	'v': {1, 0},
-	'>': {0, 1},
-	'<': {0, -1},
-}
+var (
+	dirMap = map[rune]direction{
+		'^': {-1, 0},
+		'v': {1, 0},
+		'>': {0, 1},
+		'<': {0, -1},
+	}
+	numericKeypad = map[rune]aoc.Position{
+		'7': {0, 0}, '8': {0, 1}, '9': {0, 2},
+		'4': {1, 0}, '5': {1, 1}, '6': {1, 2},
+		'1': {2, 0}, '2': {2, 1}, '3': {2, 2},
+		'0': {3, 1}, 'A': {3, 2},
+	}
+	directionKeypad = map[rune]aoc.Position{
+		'^': {0, 1}, 'A': {0, 2},
+		'<': {1, 0}, 'v': {1, 1}, '>': {1, 2},
+	}
 
-var numericKeypad = map[rune]aoc.Position{
-	'7': {0, 0}, '8': {0, 1}, '9': {0, 2},
-	'4': {1, 0}, '5': {1, 1}, '6': {1, 2},
-	'1': {2, 0}, '2': {2, 1}, '3': {2, 2},
-	'0': {3, 1}, 'A': {3, 2},
-}
-
-var directionKeypad = map[rune]aoc.Position{
-	'^': {0, 1}, 'A': {0, 2},
-	'<': {1, 0}, 'v': {1, 1}, '>': {1, 2},
-}
-
-var revDirectionKeypad = getReverseMap(directionKeypad)
-var revNumericKeypad = getReverseMap(numericKeypad)
-
-var pairsMinDistanceCache map[string]int
-var pathsCache map[string][]string
+	revDirectionKeypad = aoc.MapSwitch(directionKeypad)
+	revNumericKeypad   = aoc.MapSwitch(numericKeypad)
+	minDistanceCache   map[string]int
+	pathsCache         map[string][]string
+)
 
 func fs(input io.Reader, count int) int {
-	pairsMinDistanceCache = make(map[string]int)
+	minDistanceCache = make(map[string]int)
 	pathsCache = make(map[string][]string)
 
 	lines := aoc.ReaderToStrings(input)
@@ -48,9 +47,7 @@ func fs(input io.Reader, count int) int {
 
 func solve(input []string, depth int) (res int) {
 	for _, str := range input {
-		temp := getCost("A"+str, depth)
-		coeff, _ := strconv.Atoi(str[:len(str)-1])
-		res += temp * coeff
+		res += getCost("A"+str, depth) * aoc.StringToInt(str[:len(str)-1])
 	}
 	return
 }
@@ -70,7 +67,7 @@ func getPairCost(a, b rune, charToIndex map[rune]aoc.Position, indexToChar map[a
 	}
 	key := fmt.Sprintf("%c%c%c%d", a, b, keypadCode, depth)
 
-	if dist, ok := pairsMinDistanceCache[key]; ok {
+	if dist, ok := minDistanceCache[key]; ok {
 		return dist
 	}
 
@@ -95,18 +92,19 @@ func getPairCost(a, b rune, charToIndex map[rune]aoc.Position, indexToChar map[a
 		minCost = min(minCost, currCost)
 	}
 
-	pairsMinDistanceCache[key] = minCost
+	minDistanceCache[key] = minCost
 	return minCost
 }
 
-func getAllPaths(a, b rune, charToIndex map[rune]aoc.Position, indexToChar map[aoc.Position]rune) (allPaths []string) {
+func getAllPaths(a, b rune, charToIndex map[rune]aoc.Position, indexToChar map[aoc.Position]rune) []string {
 	key := fmt.Sprintf("%c %c", a, b)
 	if paths, ok := pathsCache[key]; ok {
 		return paths
 	}
-	dfs(charToIndex[a], charToIndex[b], []rune{}, charToIndex, indexToChar, make(map[aoc.Position]bool), &allPaths)
-	pathsCache[key] = allPaths
-	return
+	paths := make([]string, 0)
+	dfs(charToIndex[a], charToIndex[b], []rune{}, charToIndex, indexToChar, make(map[aoc.Position]bool), &paths)
+	pathsCache[key] = paths
+	return paths
 }
 
 func dfs(curr, end aoc.Position, path []rune, charToIndex map[rune]aoc.Position, indexToChar map[aoc.Position]rune, visited map[aoc.Position]bool, allPaths *[]string) {
@@ -116,19 +114,11 @@ func dfs(curr, end aoc.Position, path []rune, charToIndex map[rune]aoc.Position,
 	}
 	visited[curr] = true
 	for char, dir := range dirMap {
-		nIdx := aoc.NewPosition(curr.Row+dir.dr, curr.Col+dir.dc)
+		nIdx := aoc.NewPosition(curr.Row+dir.row, curr.Col+dir.col)
 		if _, ok := indexToChar[nIdx]; ok && !visited[nIdx] {
 			newPath := aoc.SliceCopy(path)
 			dfs(nIdx, end, append(newPath, char), charToIndex, indexToChar, visited, allPaths)
 		}
 	}
 	visited[curr] = false
-}
-
-func getReverseMap(m map[rune]aoc.Position) (w map[aoc.Position]rune) {
-	w = make(map[aoc.Position]rune)
-	for r, i := range m {
-		w[i] = r
-	}
-	return
 }
