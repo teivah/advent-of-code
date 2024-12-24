@@ -6,13 +6,41 @@ import (
 	"slices"
 	"sort"
 	"strconv"
-	"strings"
 
 	"github.com/teivah/go-aoc"
 )
 
 func fs1(input io.Reader) int {
 	gates, operations := parse(input)
+
+	set := make(map[string]struct{})
+	edges := make(map[string][]string)
+	for id := range gates {
+		set[id] = struct{}{}
+	}
+	for _, op := range operations {
+		set[op.c] = struct{}{}
+		edges[op.a] = append(edges[op.a], op.c)
+		edges[op.b] = append(edges[op.b], op.c)
+	}
+	vertices := aoc.MapKeysToSlice(set)
+
+	t := aoc.TopologicalSort(vertices, func(s string) []string {
+		return edges[s]
+	})
+	s := make(map[string]int)
+	for i, v := range t {
+		s[v] = i
+	}
+
+	sort.Slice(operations, func(i, j int) bool {
+		if s[operations[i].a] < s[operations[j].a] &&
+			s[operations[i].b] < s[operations[j].b] {
+			return true
+		}
+		return false
+	})
+
 	i := 0
 	for len(operations) != 0 {
 		i++
@@ -73,6 +101,18 @@ const (
 	xor
 )
 
+func newOperation(a, b, c string, op operator) operation {
+	if b < a {
+		a, b = b, a
+	}
+	return operation{
+		a:  a,
+		b:  b,
+		c:  c,
+		op: op,
+	}
+}
+
 type operation struct {
 	a  string
 	b  string
@@ -103,64 +143,116 @@ func parse(input io.Reader) (map[string]int, []operation) {
 		case "XOR":
 			op = xor
 		}
-		operations = append(operations, operation{
-			a:  del.GetString(0),
-			b:  del.GetString(2),
-			c:  del.GetString(4),
-			op: op,
-		})
+		o := newOperation(del.GetString(0), del.GetString(2), del.GetString(4), op)
+		operations = append(operations, o)
 	}
 
 	return m, operations
 }
 
 func fs2(input io.Reader) int {
-	gates, operations := parse(input)
-	_, _ = gates, operations
-	digits := getMax('x', gates)
-	maxValue := fromBinary(strings.Repeat("1", digits))
-	x := maxValue
-	y := maxValue
-	if x > maxValue || y > maxValue {
-		panic(fmt.Sprintf("x=%d, y=%d", x, y))
+	_, operations := parse(input)
+
+	src := make(map[string][]operation)
+	dst := make(map[string][]operation)
+	for _, o := range operations {
+		src[o.a] = append(src[o.a], o)
+		src[o.b] = append(src[o.b], o)
+		dst[o.c] = append(dst[o.c], o)
 	}
 
-	var ids []string
-	for id := range gates {
-		ids = append(ids, id)
-	}
-	sort.Strings(ids)
+	c := "kqn"
+	// This part will panic every time there's an input issue
+	for i := 1; i <= 44; i++ {
+		x := format("x", i)
+		y := format("y", i)
+		z := format("z", i)
 
-	for i := 0; i < len(operations); i++ {
-		fmt.Println("i: ", i)
-		for j := i + 1; j < len(operations); j++ {
-			for k := j + 1; k < len(operations); k++ {
-				for l := k + 1; l < len(operations); l++ {
-					for m := l + 1; m < len(operations); m++ {
-						for n := m + 1; n < len(operations); n++ {
-							fmt.Println("x: ", n)
-							for o := n + 1; o < len(operations); o++ {
-								for p := o + 1; p < len(operations); p++ {
-									g := aoc.MapCopy(gates)
-									op := aoc.SliceCopy(operations)
-									op[i].c, op[j].c = op[j].c, op[i].c
-									op[k].c, op[l].c = op[l].c, op[k].c
-									op[m].c, op[n].c = op[n].c, op[m].c
-									op[o].c, op[p].c = op[p].c, op[o].c
-									if check(digits, x, y, g, op) {
-										fmt.Println(operations[i], operations[j], operations[k], operations[l])
-									}
-								}
-							}
-						}
-					}
-				}
+		op, found := find(operations, func(o operation) bool {
+			return o.a == x && o.b == y && o.op == xor
+		})
+		if !found {
+			stop(i, c, "a")
+		}
+		a := op.c
+
+		_, found = find(operations, func(o operation) bool {
+			if o.op != xor {
+				return false
 			}
+			if o.c != z {
+				return false
+			}
+			if (o.a == a && o.b == c) || (o.a == c || o.b == a) {
+				return true
+			}
+			return false
+		})
+		if !found {
+			stop(i, c, "z")
+		}
+
+		op, found = find(operations, func(o operation) bool {
+			if o.op != and {
+				return false
+			}
+			if o.a == x && o.b == y {
+				return true
+			}
+			return false
+		})
+		if !found {
+			stop(i, c, "b")
+		}
+		b := op.c
+
+		op, found = find(operations, func(o operation) bool {
+			if o.op != and {
+				return false
+			}
+			if (o.a == a && o.b == c) || (o.a == c || o.b == a) {
+				return true
+			}
+			return false
+		})
+		if !found {
+			stop(i, c, "d")
+		}
+		d := op.c
+
+		op, found = find(operations, func(o operation) bool {
+			if o.op != or {
+				return false
+			}
+			if (o.a == b && o.b == d) || (o.a == d || o.b == b) {
+				return true
+			}
+			return false
+		})
+		if !found {
+			stop(i, c, "c")
+		}
+		c = op.c
+		fmt.Println(c)
+	}
+	return 0
+}
+
+func stop(i int, carry string, msg any) {
+	panic(fmt.Sprintf("%d (carry=%s): %v", i, carry, msg))
+}
+
+func find(operations []operation, f func(o operation) bool) (operation, bool) {
+	for _, o := range operations {
+		if f(o) {
+			return o, true
 		}
 	}
+	return operation{}, false
+}
 
-	fmt.Printf("%v\n", check(digits, x, y, gates, operations))
-	return 0
+func format(v string, i int) string {
+	return fmt.Sprintf("%s%02d", v, i)
 }
 
 func check(digits, x, y int, gates map[string]int, operations []operation) bool {
@@ -264,4 +356,30 @@ func fromBinary(s string) int {
 
 func toBinary(digits, i int) string {
 	return fmt.Sprintf("%0*b", digits, i)
+}
+
+func add(x, y int) int {
+	n := 64
+	xb := toBinary(n, x)
+	yb := toBinary(n, y)
+	carry := 0
+	res := make([]rune, n+1)
+	for i := n - 1; i >= 0; i-- {
+		xv := aoc.StringToInt(string(xb[i]))
+		yv := aoc.StringToInt(string(yb[i]))
+		v := xv ^ yv ^ carry
+		if v == 0 {
+			res[i+1] = '0'
+		} else {
+			res[i+1] = '1'
+		}
+		carry = (xv & yv) | (carry & (xv ^ yv))
+	}
+	if carry == 0 {
+		res[0] = '0'
+	} else {
+		res[0] = '1'
+	}
+
+	return fromBinary(string(res))
 }
