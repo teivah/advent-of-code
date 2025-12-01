@@ -19,6 +19,7 @@ In 2023, I shared my experience with the Advent of Code on my blog:
 
 ## Solutions
 
+* [2025](#2025)
 * [2024](#2024)
 * [2023](#2023)
 * [2022](#2022)
@@ -30,9 +31,12 @@ In 2023, I shared my experience with the Advent of Code on my blog:
 * [2016](#2016)
 * [2015](#2015)
 
-## 2024
+## 2025
 
 * [Day 1](https://adventofcode.com/2025/day/1): [Go](2025/day1-go/main.go)
+
+## 2024
+
 * [Day 25](https://adventofcode.com/2024/day/25): [Go](2024/day25-go/main.go)
 * [Day 24](https://adventofcode.com/2024/day/24): [Go](2024/day24-go/main.go)
 * [Day 23](https://adventofcode.com/2024/day/23): [Go](2024/day23-go/main.go)
